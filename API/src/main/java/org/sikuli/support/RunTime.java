@@ -11,6 +11,7 @@ import org.sikuli.support.devices.HelpDevice;
 
 import java.io.*;
 import java.net.MalformedURLException;
+import java.nio.charset.StandardCharsets;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.security.CodeSource;
@@ -1176,8 +1177,8 @@ public class RunTime {
       }
       //TODO use ProcessRunner
       Process process = Runtime.getRuntime().exec(args);
-      BufferedReader stdInput = new BufferedReader(new InputStreamReader(process.getInputStream()));
-      BufferedReader stdError = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+      BufferedReader stdInput = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8));
+      BufferedReader stdError = new BufferedReader(new InputStreamReader(process.getErrorStream(), StandardCharsets.UTF_8));
       String s;
       while ((s = stdInput.readLine()) != null) {
         if (!s.isEmpty()) {

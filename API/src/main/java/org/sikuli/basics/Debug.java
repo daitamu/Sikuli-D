@@ -7,7 +7,9 @@ import org.sikuli.support.Commons;
 import org.sikuli.support.FileManager;
 
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 import java.lang.reflect.Method;
 import java.text.DateFormat;
 import java.util.Arrays;
@@ -458,7 +460,7 @@ public class Debug {
         if (printout != null) {
           printout.close();
         }
-        printout = new PrintStream(fileName);
+        printout = new PrintStream(new FileOutputStream(fileName), true, StandardCharsets.UTF_8);
         log(3, "Debug: setLogFile: " + fileName);
         return true;
       } catch (Exception ex) {
@@ -500,10 +502,10 @@ public class Debug {
         if (printoutuser != null) {
           printoutuser.close();
         }
-        printoutuser = new PrintStream(fileName);
-        log(3, "Debug: setLogFile: " + fileName);
+        printoutuser = new PrintStream(new FileOutputStream(fileName), true, StandardCharsets.UTF_8);
+        log(3, "Debug: setUserLogFile: " + fileName);
         return true;
-      } catch (FileNotFoundException ex) {
+      } catch (Exception ex) {
         System.out.printf("[Error] User logfile %s not accessible - check given path", fileName);
         System.out.println();
         return false;

@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -195,14 +196,14 @@ public class EditorConsolePane extends JPanel implements Runnable {
 
       // redirect System IO to IDE message area
       PipedOutputStream oout = new PipedOutputStream(pin[0]);
-      PrintStream ops = new PrintStream(oout, true);
+      PrintStream ops = new PrintStream(oout, true, StandardCharsets.UTF_8);
       System.setOut(ops);
       reader[0] = new Thread(EditorConsolePane.this);
       reader[0].setDaemon(true);
       reader[0].start();
 
       PipedOutputStream eout = new PipedOutputStream(pin[1]);
-      PrintStream eps = new PrintStream(eout, true);
+      PrintStream eps = new PrintStream(eout, true, StandardCharsets.UTF_8);
       System.setErr(eps);
 
       reader[1] = new Thread(EditorConsolePane.this);
