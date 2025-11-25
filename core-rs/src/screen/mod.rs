@@ -1,22 +1,25 @@
 //! Screen capture and input control module
+//! スクリーンキャプチャと入力制御モジュール
 //!
 //! This module provides cross-platform screen capture, mouse control,
 //! and keyboard input functionality.
+//! このモジュールはクロスプラットフォームのスクリーンキャプチャ、マウス制御、
+//! キーボード入力機能を提供します。
 //!
-//! # Example
+//! # Example / 使用例
 //!
 //! ```no_run
 //! use sikulix_core::screen::{Screen, Mouse, Keyboard, Key};
 //!
-//! // Capture screen
+//! // Capture screen / スクリーンキャプチャ
 //! let mut screen = Screen::primary();
 //! let screenshot = screen.capture().unwrap();
 //!
-//! // Mouse control
+//! // Mouse control / マウス制御
 //! Mouse::move_to(100, 100).unwrap();
 //! Mouse::click().unwrap();
 //!
-//! // Keyboard control
+//! // Keyboard control / キーボード制御
 //! Keyboard::type_text("Hello").unwrap();
 //! Keyboard::hotkey(&[Key::Ctrl, Key::S]).unwrap();
 //! ```
@@ -37,11 +40,14 @@ mod macos;
 mod linux;
 
 /// Screen capture and control
+/// スクリーンキャプチャと制御
 ///
 /// Provides methods for capturing screenshots and querying screen properties.
 /// Supports multi-monitor setups with index-based monitor selection.
+/// スクリーンショットの取得と画面プロパティの照会メソッドを提供します。
+/// インデックスベースのモニター選択によるマルチモニター設定をサポートします。
 ///
-/// # Example
+/// # Example / 使用例
 ///
 /// ```no_run
 /// use sikulix_core::Screen;
@@ -51,9 +57,9 @@ mod linux;
 /// let screenshot = screen.capture().unwrap();
 /// ```
 pub struct Screen {
-    /// Screen index (0 = primary)
+    /// Screen index (0 = primary) / スクリーンインデックス（0 = プライマリ）
     index: u32,
-    /// Cached screen dimensions
+    /// Cached screen dimensions / キャッシュされた画面サイズ
     dimensions: Option<(u32, u32)>,
 }
 
@@ -174,39 +180,45 @@ impl Screen {
 }
 
 /// Mouse control
+/// マウス制御
 ///
 /// Provides methods for mouse movement and clicking.
 /// All operations are immediate and do not require an instance.
+/// マウスの移動とクリックのメソッドを提供します。
+/// すべての操作は即時実行され、インスタンスを必要としません。
 ///
-/// # Example
+/// # Example / 使用例
 ///
 /// ```no_run
 /// use sikulix_core::Mouse;
 ///
-/// // Move and click
+/// // Move and click / 移動してクリック
 /// Mouse::move_to(500, 300).unwrap();
 /// Mouse::click().unwrap();
 ///
-/// // Double-click
+/// // Double-click / ダブルクリック
 /// Mouse::double_click().unwrap();
 ///
-/// // Right-click
+/// // Right-click / 右クリック
 /// Mouse::right_click().unwrap();
 /// ```
 pub struct Mouse;
 
 impl Mouse {
     /// Move mouse to absolute position
+    /// マウスを絶対座標に移動
     pub fn move_to(x: i32, y: i32) -> Result<()> {
         Self::move_to_impl(x, y)
     }
 
     /// Click at current position
+    /// 現在位置でクリック
     pub fn click() -> Result<()> {
         Self::click_impl()
     }
 
     /// Double click at current position
+    /// 現在位置でダブルクリック
     pub fn double_click() -> Result<()> {
         Self::click_impl()?;
         std::thread::sleep(std::time::Duration::from_millis(50));
@@ -214,11 +226,13 @@ impl Mouse {
     }
 
     /// Right click at current position
+    /// 現在位置で右クリック
     pub fn right_click() -> Result<()> {
         Self::right_click_impl()
     }
 
     /// Get current mouse position
+    /// 現在のマウス位置を取得
     pub fn position() -> Result<(i32, i32)> {
         Self::position_impl()
     }
@@ -305,22 +319,25 @@ impl Mouse {
 }
 
 /// Keyboard control
+/// キーボード制御
 ///
 /// Provides methods for typing text and pressing keys.
 /// Supports individual key press/release and hotkey combinations.
+/// テキスト入力とキー押下のメソッドを提供します。
+/// 個別のキー押下/解放とホットキーの組み合わせをサポートします。
 ///
-/// # Example
+/// # Example / 使用例
 ///
 /// ```no_run
 /// use sikulix_core::screen::{Keyboard, Key};
 ///
-/// // Type text
+/// // Type text / テキスト入力
 /// Keyboard::type_text("Hello, World!").unwrap();
 ///
-/// // Press hotkey combination (Ctrl+S)
+/// // Press hotkey combination (Ctrl+S) / ホットキー（Ctrl+S）
 /// Keyboard::hotkey(&[Key::Ctrl, Key::S]).unwrap();
 ///
-/// // Individual key press/release
+/// // Individual key press/release / 個別キー押下/解放
 /// Keyboard::press(Key::Shift).unwrap();
 /// Keyboard::type_text("CAPS").unwrap();
 /// Keyboard::release(Key::Shift).unwrap();
@@ -329,21 +346,25 @@ pub struct Keyboard;
 
 impl Keyboard {
     /// Type a string
+    /// 文字列を入力
     pub fn type_text(text: &str) -> Result<()> {
         Self::type_text_impl(text)
     }
 
     /// Press a key
+    /// キーを押下
     pub fn press(key: Key) -> Result<()> {
         Self::press_impl(key)
     }
 
     /// Release a key
+    /// キーを解放
     pub fn release(key: Key) -> Result<()> {
         Self::release_impl(key)
     }
 
     /// Press and release a key combination
+    /// キーの組み合わせを押下して解放
     pub fn hotkey(keys: &[Key]) -> Result<()> {
         for key in keys {
             Self::press(*key)?;
@@ -422,16 +443,17 @@ impl Keyboard {
 }
 
 /// Key codes for keyboard input
+/// キーボード入力用キーコード
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u8)]
 pub enum Key {
-    // Modifier keys
+    // Modifier keys / 修飾キー
     Shift,
     Ctrl,
     Alt,
-    Meta, // Windows key / Command key
+    Meta, // Windows key / Command key / Windowsキー / Commandキー
 
-    // Function keys
+    // Function keys / ファンクションキー
     F1,
     F2,
     F3,
@@ -445,7 +467,7 @@ pub enum Key {
     F11,
     F12,
 
-    // Navigation keys
+    // Navigation keys / ナビゲーションキー
     Enter,
     Tab,
     Space,
@@ -461,7 +483,7 @@ pub enum Key {
     Left,
     Right,
 
-    // Letter keys
+    // Letter keys / 文字キー
     A,
     B,
     C,
@@ -489,7 +511,7 @@ pub enum Key {
     Y,
     Z,
 
-    // Number keys
+    // Number keys / 数字キー
     Num0,
     Num1,
     Num2,
