@@ -124,15 +124,42 @@ mvn clean install -DskipTests
 
 ---
 
-## コミットルール
+## コミットルール / Commit Rules
 
-- コミットメッセージは変更内容を簡潔に記述
-- フッターに以下を付与：
-  ```
-  🤖 Generated with [Claude Code](https://claude.ai/claude-code)
+### メッセージ形式 / Message Format
 
-  Co-Authored-By: Claude <noreply@anthropic.com>
-  ```
+コミットメッセージは **日本語/英語の併記** で記述する：
+Commit messages should be written in **bilingual (Japanese/English)** format:
+
+```
+English summary line
+日本語の要約行
+
+- English detail point
+  日本語の詳細ポイント
+- Another English point
+  別の日本語ポイント
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
+
+### 例 / Example
+
+```
+Update README with bilingual documentation
+README を日英併記のドキュメントに更新
+
+- Add Japanese/English descriptions
+  日本語/英語の説明を追加
+- Update requirements section
+  要件セクションを更新
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
 
 ---
 
