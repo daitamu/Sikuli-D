@@ -116,6 +116,7 @@ fn cg_image_to_dynamic_image(cg_image: &CGImage) -> Result<DynamicImage> {
     use core_graphics::color_space::CGColorSpace;
     use core_graphics::context::CGContext;
     use core_graphics::geometry::{CGRect, CGSize};
+    use std::ffi::c_void;
 
     let width = cg_image.width();
     let height = cg_image.height();
@@ -127,7 +128,7 @@ fn cg_image_to_dynamic_image(cg_image: &CGImage) -> Result<DynamicImage> {
     // Create color space and bitmap context
     let color_space = CGColorSpace::create_device_rgb();
     let context = CGContext::create_bitmap_context(
-        Some(&mut buffer),
+        Some(buffer.as_mut_ptr() as *mut c_void),
         width,
         height,
         8, // bits per component
