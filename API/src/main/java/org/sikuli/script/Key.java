@@ -450,17 +450,11 @@ public class Key {
 
   public static boolean isRepeatable(String token) {
     int key = toJavaKeyCodeFromText(token);
-    switch (key) {
-      case KeyEvent.VK_UP: return true;
-      case KeyEvent.VK_DOWN: return true;
-      case KeyEvent.VK_RIGHT: return true;
-      case KeyEvent.VK_LEFT: return true;
-      case -KeyEvent.VK_TAB: return true;
-      case KeyEvent.VK_TAB: return true;
-      case KeyEvent.VK_ENTER: return true;
-      case KeyEvent.VK_BACK_SPACE: return true;
-    }
-    return false;
+    return switch (key) {
+      case KeyEvent.VK_UP, KeyEvent.VK_DOWN, KeyEvent.VK_RIGHT, KeyEvent.VK_LEFT,
+           KeyEvent.VK_TAB, KeyEvent.VK_ENTER, KeyEvent.VK_BACK_SPACE -> true;
+      default -> key == -KeyEvent.VK_TAB;
+    };
   }
 
   public static boolean isModifier(String token) {
@@ -536,78 +530,74 @@ public class Key {
    * @return a printable version of a special key
    */
   public static String toJavaKeyCodeText(char key) {
-    switch (key) {
-//RETURN, BACKSPACE, TAB
-      case '\b': return "#BACK.";
-      case '\t': return "#TAB.";
-      case C_NEXT: return "#TAB.";
-      case '\r': return "#ENTER.";
-      case '\n': return "#ENTER.";
-//Cursor movement
-      case Key.C_UP: return "#UP.";
-      case Key.C_RIGHT: return "#RIGHT.";
-      case Key.C_DOWN: return "#DOWN.";
-      case Key.C_LEFT: return "#LEFT.";
-      case Key.C_PAGE_UP: return "#PUP.";
-      case Key.C_PAGE_DOWN: return "#PDOWN.";
-      case Key.C_END: return "#END.";
-      case Key.C_HOME: return "#HOME.";
-      case Key.C_DELETE: return "#DEL.";
-//Function keys
-      case Key.C_ESC: return "#ESC.";
-      case Key.C_F1: return "#F1.";
-      case Key.C_F2: return "#F2.";
-      case Key.C_F3: return "#F3.";
-      case Key.C_F4: return "#F4.";
-      case Key.C_F5: return "#F5.";
-      case Key.C_F6: return "#F6.";
-      case Key.C_F7: return "#F7.";
-      case Key.C_F8: return "#F8.";
-      case Key.C_F9: return "#F9.";
-      case Key.C_F10: return "#F10.";
-      case Key.C_F11: return "#F11.";
-      case Key.C_F12: return "#F12.";
-      case Key.C_F13: return "#F13.";
-      case Key.C_F14: return "#F14.";
-      case Key.C_F15: return "#F15.";
-//Toggling kezs
-      case Key.C_SCROLL_LOCK: return "#SCROLL_LOCK.";
-      case Key.C_NUM_LOCK: return "#NUM_LOCK.";
-      case Key.C_CAPS_LOCK: return "#CAPS_LOCK.";
-      case Key.C_INSERT: return "#INS.";
-//Windows special
-      case Key.C_PAUSE: return "#PAUSE.";
-      case Key.C_PRINTSCREEN: return "#PRINTSCREEN.";
-      case Key.C_WIN:   return "#WIN.";
-//Num pad
-      case Key.C_NUM0: return "#NUM0.";
-      case Key.C_NUM1: return "#NUM1.";
-      case Key.C_NUM2: return "#NUM2.";
-      case Key.C_NUM3: return "#NUM3.";
-      case Key.C_NUM4: return "#NUM4.";
-      case Key.C_NUM5: return "#NUM5.";
-      case Key.C_NUM6: return "#NUM6.";
-      case Key.C_NUM7: return "#NUM7.";
-      case Key.C_NUM8: return "#NUM8.";
-      case Key.C_NUM9: return "#NUM9.";
-//Num pad special
-      case Key.C_SEPARATOR: return "#NSEP.";
-      case Key.C_ADD: return "#NADD.";
-      case Key.C_MINUS: return "#NSUB.";
-      case Key.C_MULTIPLY: return "#NMUL";
-      case Key.C_DIVIDE: return "#NDIV.";
-      case Key.C_DECIMAL: return "#NDEC.";
-      case Key.C_CONTEXT: return "#NCON.";
-//KeyModifiers
-      case Key.C_SHIFT: return "#SHIFT.";
-      case Key.C_CTRL:  return "#CTRL.";
-      case Key.C_ALT:   return "#ALT.";
-      case Key.C_META:  return "#META.";
-      case Key.C_ALTGR: return "#ALTGR.";
-
-      default:
-        return "" + key;
-    }
+    return switch (key) {
+      // RETURN, BACKSPACE, TAB
+      case '\b' -> "#BACK.";
+      case '\t', C_NEXT -> "#TAB.";
+      case '\r', '\n' -> "#ENTER.";
+      // Cursor movement
+      case C_UP -> "#UP.";
+      case C_RIGHT -> "#RIGHT.";
+      case C_DOWN -> "#DOWN.";
+      case C_LEFT -> "#LEFT.";
+      case C_PAGE_UP -> "#PUP.";
+      case C_PAGE_DOWN -> "#PDOWN.";
+      case C_END -> "#END.";
+      case C_HOME -> "#HOME.";
+      case C_DELETE -> "#DEL.";
+      // Function keys
+      case C_ESC -> "#ESC.";
+      case C_F1 -> "#F1.";
+      case C_F2 -> "#F2.";
+      case C_F3 -> "#F3.";
+      case C_F4 -> "#F4.";
+      case C_F5 -> "#F5.";
+      case C_F6 -> "#F6.";
+      case C_F7 -> "#F7.";
+      case C_F8 -> "#F8.";
+      case C_F9 -> "#F9.";
+      case C_F10 -> "#F10.";
+      case C_F11 -> "#F11.";
+      case C_F12 -> "#F12.";
+      case C_F13 -> "#F13.";
+      case C_F14 -> "#F14.";
+      case C_F15 -> "#F15.";
+      // Toggling keys
+      case C_SCROLL_LOCK -> "#SCROLL_LOCK.";
+      case C_NUM_LOCK -> "#NUM_LOCK.";
+      case C_CAPS_LOCK -> "#CAPS_LOCK.";
+      case C_INSERT -> "#INS.";
+      // Windows special
+      case C_PAUSE -> "#PAUSE.";
+      case C_PRINTSCREEN -> "#PRINTSCREEN.";
+      case C_WIN -> "#WIN.";
+      // Num pad
+      case C_NUM0 -> "#NUM0.";
+      case C_NUM1 -> "#NUM1.";
+      case C_NUM2 -> "#NUM2.";
+      case C_NUM3 -> "#NUM3.";
+      case C_NUM4 -> "#NUM4.";
+      case C_NUM5 -> "#NUM5.";
+      case C_NUM6 -> "#NUM6.";
+      case C_NUM7 -> "#NUM7.";
+      case C_NUM8 -> "#NUM8.";
+      case C_NUM9 -> "#NUM9.";
+      // Num pad special
+      case C_SEPARATOR -> "#NSEP.";
+      case C_ADD -> "#NADD.";
+      case C_MINUS -> "#NSUB.";
+      case C_MULTIPLY -> "#NMUL";
+      case C_DIVIDE -> "#NDIV.";
+      case C_DECIMAL -> "#NDEC.";
+      case C_CONTEXT -> "#NCON.";
+      // KeyModifiers
+      case C_SHIFT -> "#SHIFT.";
+      case C_CTRL -> "#CTRL.";
+      case C_ALT -> "#ALT.";
+      case C_META -> "#META.";
+      case C_ALTGR -> "#ALTGR.";
+      default -> String.valueOf(key);
+    };
   }
 
   protected static int convertModifiers(String mod) {

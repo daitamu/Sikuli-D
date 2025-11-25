@@ -149,22 +149,18 @@ public class Offset {
   }
 
   public <RMILO> Offset(RMILO whatEver) {
-    if (whatEver instanceof Region || whatEver instanceof Match) {
-      Region what = (Region) whatEver;
+    if (whatEver instanceof Region what) {
       x = what.w;
       y = what.h;
-    } else if (whatEver instanceof Image) {
-      Image what = (Image) whatEver;
+    } else if (whatEver instanceof Image what) {
       if (null != what.get()) {
         x = what.get().getWidth();
         y = what.get().getHeight();
       }
-    } else if (whatEver instanceof Location) {
-      Location what = (Location) whatEver;
+    } else if (whatEver instanceof Location what) {
       x = what.x;
       y = what.y;
-    } else if (whatEver instanceof Offset) {
-      Offset what = (Offset) whatEver;
+    } else if (whatEver instanceof Offset what) {
       x = what.x;
       y = what.y;
     }

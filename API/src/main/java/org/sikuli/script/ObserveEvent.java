@@ -189,8 +189,8 @@ public class ObserveEvent {
   }
 
   public void setRegion(Object r) {
-    if (r instanceof Region) {
-      region = (Region) r;
+    if (r instanceof Region reg) {
+      region = reg;
     }
   }
 
@@ -202,8 +202,8 @@ public class ObserveEvent {
   }
 
   public void setMatch(Object m) {
-    if (null != m && m instanceof Match) {
-      match = new Match((Match) m);
+    if (m instanceof Match mat) {
+      match = new Match(mat);
     }
   }
 
@@ -234,12 +234,12 @@ public class ObserveEvent {
 
   public void setPattern(Object p) {
     if (null != p) {
-      if (p.getClass().isInstance("")) {
-        pattern = new Pattern((String) p);
-      } else if (p instanceof Pattern) {
-        pattern = new Pattern((Pattern) p);
-      } else if (p instanceof Image) {
-        pattern = new Pattern((Image) p);
+      if (p instanceof String str) {
+        pattern = new Pattern(str);
+      } else if (p instanceof Pattern pat) {
+        pattern = new Pattern(pat);
+      } else if (p instanceof Image img) {
+        pattern = new Pattern(img);
       }
     }
   }

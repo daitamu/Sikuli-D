@@ -79,7 +79,7 @@ public class Commons {
   }
 
   static {
-    startMoment = new Date().getTime();
+    startMoment = System.currentTimeMillis();
 
     if (!System.getProperty("os.arch").contains("64")) {
       throw new SikuliXception("SikuliX fatal Error: System must be 64-Bit");
@@ -137,7 +137,7 @@ public class Commons {
   }
 
   public static double getSinceStart() {
-    return (new Date().getTime() - startMoment) / 1000.0;
+    return (System.currentTimeMillis() - startMoment) / 1000.0;
   }
   //</editor-fold>
 
@@ -436,13 +436,13 @@ public class Commons {
 
   public static File setWorkDir(Object path) {
     File file = getWorkDir();
-    if (path instanceof String) {
-      file = new File((String) path);
+    if (path instanceof String pathStr) {
+      file = new File(pathStr);
       if (!file.exists()) {
-        file = new File(getWorkDir(), (String) path);
+        file = new File(getWorkDir(), pathStr);
       }
-    } else if (path instanceof File) {
-      file = (File) path;
+    } else if (path instanceof File pathFile) {
+      file = pathFile;
     }
     if (!file.exists()) {
       file = getWorkDir();
@@ -1565,13 +1565,13 @@ public class Commons {
 
   public static Object runFunctionScriptingSupport(Object reference, String function, Object[] args) {
     Class<?> classSup = null;
-    if (reference == null || (reference instanceof String && ((String) reference).contains("org.python"))) {
+    if (reference == null || (reference instanceof String refStr && refStr.contains("org.python"))) {
       try {
         classSup = Class.forName("org.sikuli.support.ide.JythonSupport");
       } catch (ClassNotFoundException e) {
         RunTime.terminate(999, "Commons: JythonSupport: %s", e.getMessage());
       }
-    } else if (reference instanceof String && ((String) reference).contains("org.jruby")) {
+    } else if (reference instanceof String refStr && refStr.contains("org.jruby")) {
       try {
         classSup = Class.forName("org.sikuli.support.ide.JRubySupport");
       } catch (ClassNotFoundException e) {

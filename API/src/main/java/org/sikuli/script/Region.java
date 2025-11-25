@@ -2227,7 +2227,7 @@ public class Region extends Element {
         break;
       }
     }
-    log(logLevel, "wait: %s did not appear [%d msec]", targetStr, new Date().getTime() - lastFindTime);
+    log(logLevel, "wait: %s did not appear [%d msec]", targetStr, System.currentTimeMillis() - lastFindTime);
     if (!shouldAbort.isEmpty()) {
       throw new FindFailed(shouldAbort);
     }
@@ -2288,7 +2288,7 @@ public class Region extends Element {
         log(logLevel, "find: %s appeared (%s)", targetStr, lastMatch);
         break;
       }
-      log(logLevel, "find: %s did not appear [%d msec]", targetStr, new Date().getTime() - lastFindTime);
+      log(logLevel, "find: %s did not appear [%d msec]", targetStr, System.currentTimeMillis() - lastFindTime);
       if (null == lastMatch) {
         response = handleFindFailed(target, img);
       }
@@ -2361,7 +2361,7 @@ public class Region extends Element {
       return lastMatch;
     }
     if (!(timeout > 0)) {
-      log(logLevel, "exists: %s did not appear [%d msec]", targetStr, new Date().getTime() - lastFindTime);
+      log(logLevel, "exists: %s did not appear [%d msec]", targetStr, System.currentTimeMillis() - lastFindTime);
     }
     return null;
   }
@@ -2787,20 +2787,20 @@ public class Region extends Element {
       finder.setRepeating();
       if (Settings.FindProfiling) {
         Debug.logp("[FindProfiling] Region.doFind repeat: %d msec",
-            new Date().getTime() - lastSearchTimeRepeat);
+            System.currentTimeMillis() - lastSearchTimeRepeat);
       }
-      lastSearchTime = (new Date()).getTime();
+      lastSearchTime = System.currentTimeMillis();
       finder.findRepeat();
     } else {
       //screen = getScreen();
-      lastFindTime = (new Date()).getTime();
-      if (ptn instanceof String) {
-        if (((String) ptn).startsWith("\t") && ((String) ptn).endsWith("\t")) {
+      lastFindTime = System.currentTimeMillis();
+      if (ptn instanceof String ptnStr) {
+        if (ptnStr.startsWith("\t") && ptnStr.endsWith("\t")) {
           findingText = true;
-          someText = ((String) ptn).replaceAll("\\t", "");
+          someText = ptnStr.replaceAll("\\t", "");
         } else {
           if (img.isValid()) {
-            lastSearchTime = (new Date()).getTime();
+            lastSearchTime = System.currentTimeMillis();
             finder = checkLastSeenAndCreateFinder(img, findTimeout, null);
             if (!finder.hasNext()) {
               runFinder(finder, img);
@@ -2813,20 +2813,20 @@ public class Region extends Element {
         if (findingText) {
           log(logLevel, "doFind: Switching to TextSearch");
           finder = new Finder(this);
-          lastSearchTime = (new Date()).getTime();
+          lastSearchTime = System.currentTimeMillis();
           finder.findText(someText);
         }
-      } else if (ptn instanceof Pattern) {
+      } else if (ptn instanceof Pattern ptnPattern) {
         if (img.isValid()) {
-          lastSearchTime = (new Date()).getTime();
-          finder = checkLastSeenAndCreateFinder(img, findTimeout, (Pattern) ptn);
+          lastSearchTime = System.currentTimeMillis();
+          finder = checkLastSeenAndCreateFinder(img, findTimeout, ptnPattern);
           if (!finder.hasNext()) {
             runFinder(finder, ptn);
           }
         }
       } else if (ptn instanceof Image || ptn instanceof ScreenImage) {
         if (img.isValid()) {
-          lastSearchTime = (new Date()).getTime();
+          lastSearchTime = System.currentTimeMillis();
           finder = checkLastSeenAndCreateFinder(img, findTimeout, null);
           if (!finder.hasNext()) {
             runFinder(finder, img);
@@ -2842,9 +2842,9 @@ public class Region extends Element {
     }
     if (finder != null) {
       lastSearchTimeRepeat = lastSearchTime;
-      lastSearchTime = (new Date()).getTime() - lastSearchTime;
+      lastSearchTime = System.currentTimeMillis() - lastSearchTime;
       if (finder.hasNext()) {
-        lastFindTime = (new Date()).getTime() - lastFindTime;
+        lastFindTime = System.currentTimeMillis() - lastFindTime;
         match = finder.next();
         match.setTimes(lastFindTime, lastSearchTime);
         if (Settings.Highlight) {
@@ -2864,10 +2864,10 @@ public class Region extends Element {
         highlight(2, "#000255000");
       }
     }
-    if (target instanceof Image) {
-      f.find((Image) target);
-    } else if (target instanceof Pattern) {
-      f.find((Pattern) target);
+    if (target instanceof Image img) {
+      f.find(img);
+    } else if (target instanceof Pattern ptn) {
+      f.find(ptn);
     }
   }
 
@@ -2929,10 +2929,10 @@ public class Region extends Element {
       finder.findAllRepeat();
     } else {
       Image img = null;
-      if (ptn instanceof String) {
-        if (((String) ptn).startsWith("\t") && ((String) ptn).endsWith("\t")) {
+      if (ptn instanceof String ptnStr) {
+        if (ptnStr.startsWith("\t") && ptnStr.endsWith("\t")) {
           findingText = true;
-          someText = ((String) ptn).replaceAll("\\t", "");
+          someText = ptnStr.replaceAll("\\t", "");
         } else {
           img = repeating._image;//Image.create((String) ptn);
           if (img.isValid()) {
@@ -2947,11 +2947,11 @@ public class Region extends Element {
           finder = new Finder(this);
           finder.findAllText(someText);
         }
-      } else if (ptn instanceof Pattern) {
-        if (((Pattern) ptn).isValid()) {
-          img = ((Pattern) ptn).getImage();
+      } else if (ptn instanceof Pattern ptnPattern) {
+        if (ptnPattern.isValid()) {
+          img = ptnPattern.getImage();
           finder = new Finder(getScreen().capture(x, y, w, h), this);
-          finder.findAll((Pattern) ptn);
+          finder.findAll(ptnPattern);
         }
       } else if (ptn instanceof Image) {
         if (((Image) ptn).isValid()) {
@@ -3002,19 +3002,19 @@ public class Region extends Element {
       findTimeout = timeout;
       int MaxTimePerScan = (int) (1000.0 / waitScanRate);
       int timeoutMilli = (int) (timeout * 1000);
-      long begin_t = (new Date()).getTime();
+      long begin_t = System.currentTimeMillis();
       do {
         if (null != shouldStop && shouldStop.get()) {
           break;
         }
-        long before_find = (new Date()).getTime();
+        long before_find = System.currentTimeMillis();
         run();
         if (ifSuccessful()) {
           return true;
         } else if (timeoutMilli < MaxTimePerScan) {
           return false;
         }
-        long after_find = (new Date()).getTime();
+        long after_find = System.currentTimeMillis();
         if (after_find - before_find < MaxTimePerScan) {
           try {
             Thread.sleep(MaxTimePerScan - (after_find - before_find));
@@ -3028,7 +3028,7 @@ public class Region extends Element {
             return false;
           }
         }
-      } while (begin_t + timeout * 1000 > (new Date()).getTime());
+      } while (begin_t + timeout * 1000 > System.currentTimeMillis());
       return false;
     }
   }
@@ -3737,7 +3737,7 @@ public class Region extends Element {
     }
     log(logLevel, "observe: starting in " + this.toStringShort() + " for " + secs + " seconds");
     int MaxTimePerScan = (int) (1000.0 / observeScanRate);
-    long begin_t = (new Date()).getTime();
+    long begin_t = System.currentTimeMillis();
     long stop_t;
     if (secs > Long.MAX_VALUE) {
       stop_t = Long.MAX_VALUE;
@@ -3747,8 +3747,8 @@ public class Region extends Element {
     regionObserver.initialize();
     observing = true;
     Observing.addRunningObserver(this);
-    while (observing && stop_t > (new Date()).getTime()) {
-      long before_find = (new Date()).getTime();
+    while (observing && stop_t > System.currentTimeMillis()) {
+      long before_find = System.currentTimeMillis();
       ScreenImage simg = getScreen().capture(x, y, w, h);
       if (!regionObserver.update(simg)) {
         observing = false;
@@ -3757,7 +3757,7 @@ public class Region extends Element {
       if (!observing) {
         break;
       }
-      long after_find = (new Date()).getTime();
+      long after_find = System.currentTimeMillis();
       try {
         if (after_find - before_find < MaxTimePerScan) {
           Thread.sleep((int) (MaxTimePerScan - (after_find - before_find)));

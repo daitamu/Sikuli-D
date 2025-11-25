@@ -277,9 +277,11 @@ public class GifDecoder {
   public int read(InputStream is) {
     init();
     if (is != null) {
-      if (!(is instanceof BufferedInputStream))
-        is = new BufferedInputStream(is);
-      in = (BufferedInputStream) is;
+      if (is instanceof BufferedInputStream bis) {
+        in = bis;
+      } else {
+        in = new BufferedInputStream(is);
+      }
       readHeader();
       if (!err()) {
         readContents();
