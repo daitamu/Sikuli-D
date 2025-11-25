@@ -226,14 +226,15 @@ public class SX {
             panel.add(Box.createVerticalStrut(10));
             panel.add(messageText);
             int retval = JOptionPane.showConfirmDialog(frame, panel, title, JOptionPane.OK_CANCEL_OPTION);
-            returnValue = "";
             if (0 == retval) {
+              returnValue = "";
               char[] pwchar = passwordField.getPassword();
               for (int i = 0; i < pwchar.length; i++) {
                 returnValue = (String) returnValue + pwchar[i];
                 pwchar[i] = 0;
               }
             }
+            // If canceled (retval != 0), returnValue stays null
           }
         } else if (PopType.POPSELECT.equals(popType)) {
           Object[] realOptions = new Object[0];

@@ -225,7 +225,7 @@ public class Sikulix {
    */
   public static String input(String msg, String preset, String title, boolean hidden) {
     JFrame anchor = popLocation();
-    String ret = "";
+    String ret = null;
     if (!hidden) {
       if ("".equals(title)) {
         title = "Sikuli input request";
@@ -248,12 +248,14 @@ public class Sikulix {
       pnl.add(tm);
       int retval = JOptionPane.showConfirmDialog(anchor, pnl, title, JOptionPane.OK_CANCEL_OPTION);
       if (0 == retval) {
+        ret = "";
         char[] pwc = pw.getPassword();
         for (int i = 0; i < pwc.length; i++) {
           ret = ret + pwc[i];
           pwc[i] = 0;
         }
       }
+      // If canceled (retval != 0), ret stays null
     }
     if (anchor != null) {
       anchor.dispose();

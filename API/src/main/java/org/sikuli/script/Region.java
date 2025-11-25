@@ -3193,26 +3193,47 @@ public class Region extends Element {
       nobj++;
     }
     Debug.log(logLevel, "findAnyCollect: waiting for SubFindRuns");
+    long maxWaitTime = time > 0 ? (long) (time * 1000) : 60000; // Default 60s timeout
+    long startTime = System.currentTimeMillis();
     if (time > 0) {
       boolean any = false;
-      while (!any) {
-        any = false;
+      while (!any && (System.currentTimeMillis() - startTime) < maxWaitTime) {
         for (SubFindRun sub : theSubs) {
-          if (sub.hasFinished()) {
+          if (sub != null && sub.hasFinished()) {
             any = true;
+            break;
+          }
+        }
+        if (!any) {
+          try {
+            Thread.sleep(10); // Prevent CPU spinning
+          } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             break;
           }
         }
       }
       for (SubFindRun sub : theSubs) {
-        sub.shouldStop();
+        if (sub != null) {
+          sub.shouldStop();
+        }
       }
     } else {
       boolean all = false;
-      while (!all) {
+      while (!all && (System.currentTimeMillis() - startTime) < maxWaitTime) {
         all = true;
         for (SubFindRun sub : theSubs) {
-          all &= sub.hasFinished();
+          if (sub != null) {
+            all &= sub.hasFinished();
+          }
+        }
+        if (!all) {
+          try {
+            Thread.sleep(10); // Prevent CPU spinning
+          } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            break;
+          }
         }
       }
     }
