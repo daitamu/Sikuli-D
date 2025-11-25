@@ -1,8 +1,10 @@
 //! Image processing and matching module
 
 mod matcher;
+pub mod ocr;
 
 pub use matcher::*;
+pub use ocr::{OcrConfig, OcrEngine, OcrLanguage, OcrResult};
 
 use crate::{Region, Result, SikulixError};
 use image::DynamicImage;

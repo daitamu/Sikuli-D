@@ -19,8 +19,8 @@ imageproc = "0.25"
 # OpenCV bindings (optional, for advanced matching)
 # opencv = { version = "0.92", features = ["imgproc", "imgcodecs"], optional = true }
 
-# OCR - Tesseract bindings
-# tesseract = { version = "0.15", optional = true }
+# OCR - Tesseract bindings via leptess
+leptess = { version = "0.14", optional = true }
 
 # Python integration
 pyo3 = { version = "0.21", features = ["auto-initialize", "extension-module"], optional = true }
@@ -60,7 +60,7 @@ x11rb = "0.13"
 default = []
 python = ["pyo3"]
 opencv = []
-ocr = []
+ocr = ["leptess"]
 async = ["tokio"]
 full = ["python", "opencv", "ocr", "async"]
 

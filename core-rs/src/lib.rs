@@ -15,6 +15,7 @@ pub mod screen;
 
 // Re-export commonly used types
 pub use image::ImageMatcher;
+pub use image::{OcrConfig, OcrEngine, OcrLanguage, OcrResult};
 pub use python::{PythonVersion, SyntaxAnalyzer};
 pub use screen::{Key, Keyboard, Mouse, Screen};
 
