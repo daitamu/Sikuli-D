@@ -164,6 +164,9 @@ public class Runner {
   public static final int NOT_SUPPORTED = 257;
 
   public static String[] resolveRelativeFiles(String[] givenScripts) {
+    if (givenScripts == null || givenScripts.length == 0) {
+      return new String[0];
+    }
     String[] runScripts = new String[givenScripts.length];
     String baseDir = Commons.getWorkDir().getPath();
     for (int i = 0; i < runScripts.length; i++) {

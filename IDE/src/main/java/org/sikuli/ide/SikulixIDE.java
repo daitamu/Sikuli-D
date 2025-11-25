@@ -1064,7 +1064,7 @@ public class SikulixIDE extends JFrame {
       String msg = "";
       boolean success = true;
       try {
-        pane.write(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), "UTF8")));
+        pane.write(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), Charset.forName("utf-8"))));
         notDirty();
       } catch (IOException e) {
         msg = String.format(" did not work: %s", e.getMessage());
