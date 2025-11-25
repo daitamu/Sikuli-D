@@ -7,11 +7,8 @@ use crate::{Region, Result, SikulixError};
 use image::{DynamicImage, RgbaImage};
 
 #[cfg(target_os = "macos")]
-use core_foundation::base::TCFType;
-#[cfg(target_os = "macos")]
 use core_graphics::display::{
     kCGNullWindowID, kCGWindowListOptionOnScreenOnly, CGDisplay, CGDisplayBounds, CGMainDisplayID,
-    CGWindowListCopyWindowInfo,
 };
 #[cfg(target_os = "macos")]
 use core_graphics::event::{
@@ -83,7 +80,8 @@ pub fn capture_screen(index: u32) -> Result<DynamicImage> {
 pub fn capture_region(index: u32, region: &Region) -> Result<DynamicImage> {
     use core_graphics::geometry::{CGRect, CGSize};
 
-    let display_id = if index == 0 {
+    // Validate monitor index exists
+    let _display_id = if index == 0 {
         unsafe { CGMainDisplayID() }
     } else {
         let displays = CGDisplay::active_displays().map_err(|e| {
@@ -111,63 +109,42 @@ pub fn capture_region(index: u32, region: &Region) -> Result<DynamicImage> {
     cg_image_to_dynamic_image(&cg_image)
 }
 
-/// Convert CGImage to DynamicImage
+/// Convert CGImage to DynamicImage using CGBitmapContext
 #[cfg(target_os = "macos")]
 fn cg_image_to_dynamic_image(cg_image: &CGImage) -> Result<DynamicImage> {
+    use core_graphics::base::kCGImageAlphaPremultipliedLast;
+    use core_graphics::color_space::CGColorSpace;
+    use core_graphics::context::CGContext;
+    use core_graphics::geometry::{CGRect, CGSize};
+
     let width = cg_image.width();
     let height = cg_image.height();
-    let bytes_per_row = cg_image.bytes_per_row();
-    let bits_per_pixel = cg_image.bits_per_pixel();
+    let bytes_per_row = width * 4;
 
-    // Get raw pixel data
-    let data_provider = cg_image
-        .data_provider()
-        .ok_or_else(|| SikulixError::ScreenCaptureError("No data provider".to_string()))?;
-    let raw_data = data_provider.copy_data();
-    let bytes: &[u8] = raw_data.bytes();
+    // Create buffer for RGBA data
+    let mut buffer = vec![0u8; height * bytes_per_row];
 
-    // Handle different pixel formats
-    let mut rgba_buffer = Vec::with_capacity(width * height * 4);
+    // Create color space and bitmap context
+    let color_space = CGColorSpace::create_device_rgb();
+    let context = CGContext::create_bitmap_context(
+        Some(&mut buffer),
+        width,
+        height,
+        8, // bits per component
+        bytes_per_row,
+        &color_space,
+        kCGImageAlphaPremultipliedLast,
+    );
 
-    match bits_per_pixel {
-        32 => {
-            // BGRA or RGBA format
-            for y in 0..height {
-                for x in 0..width {
-                    let offset = y * bytes_per_row + x * 4;
-                    if offset + 3 < bytes.len() {
-                        // Assume BGRA, convert to RGBA
-                        rgba_buffer.push(bytes[offset + 2]); // R
-                        rgba_buffer.push(bytes[offset + 1]); // G
-                        rgba_buffer.push(bytes[offset]); // B
-                        rgba_buffer.push(bytes[offset + 3]); // A
-                    }
-                }
-            }
-        }
-        24 => {
-            // RGB format
-            for y in 0..height {
-                for x in 0..width {
-                    let offset = y * bytes_per_row + x * 3;
-                    if offset + 2 < bytes.len() {
-                        rgba_buffer.push(bytes[offset]); // R
-                        rgba_buffer.push(bytes[offset + 1]); // G
-                        rgba_buffer.push(bytes[offset + 2]); // B
-                        rgba_buffer.push(255); // A
-                    }
-                }
-            }
-        }
-        _ => {
-            return Err(SikulixError::ScreenCaptureError(format!(
-                "Unsupported bits per pixel: {}",
-                bits_per_pixel
-            )));
-        }
-    }
+    // Draw the CGImage into the context
+    let rect = CGRect::new(
+        &CGPoint::new(0.0, 0.0),
+        &CGSize::new(width as f64, height as f64),
+    );
+    context.draw_image(rect, cg_image);
 
-    let img = RgbaImage::from_raw(width as u32, height as u32, rgba_buffer)
+    // The buffer now contains RGBA pixel data
+    let img = RgbaImage::from_raw(width as u32, height as u32, buffer)
         .ok_or_else(|| SikulixError::ScreenCaptureError("Failed to create image".to_string()))?;
 
     Ok(DynamicImage::ImageRgba8(img))

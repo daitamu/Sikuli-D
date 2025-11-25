@@ -9,7 +9,7 @@ use image::{DynamicImage, RgbaImage};
 #[cfg(target_os = "linux")]
 use x11rb::connection::Connection;
 #[cfg(target_os = "linux")]
-use x11rb::protocol::xproto::{ConnectionExt, ImageFormat, Screen as X11Screen, Window};
+use x11rb::protocol::xproto::{ConnectionExt, ImageFormat};
 #[cfg(target_os = "linux")]
 use x11rb::rust_connection::RustConnection;
 
@@ -110,7 +110,7 @@ fn convert_x11_image_to_rgba(data: &[u8], width: u32, height: u32, depth: u8) ->
         24 | 32 => {
             // Typically BGRA or BGRX format
             let bytes_per_pixel = if depth == 32 { 4 } else { 3 };
-            let row_bytes = ((width as usize * bytes_per_pixel + 3) / 4) * 4; // X11 pads rows
+            let row_bytes = (width as usize * bytes_per_pixel).div_ceil(4) * 4; // X11 pads rows
 
             for y in 0..(height as usize) {
                 for x in 0..(width as usize) {
