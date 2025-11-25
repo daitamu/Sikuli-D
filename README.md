@@ -52,7 +52,7 @@ Sikuli-Dは、デスクトップ画面上のあらゆる操作を自動化でき
 
 | Component | Version |
 |-----------|---------|
-| Java | 8+ (recommended: 11+) |
+| Java | 17+ (LTS) |
 | Maven | 3.6+ |
 | Tesseract | 5.x (for OCR) |
 

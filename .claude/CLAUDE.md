@@ -56,7 +56,7 @@ Sikuli-D/
 
 ## 技術スタック
 
-- **言語**: Java 8+（2.0.5）/ Java 11+（2.0.6以降）
+- **言語**: Java 17+ (LTS)
 - **ビルドツール**: Maven
 - **画像認識**: OpenCV
 - **OCR**: Tesseract 5
