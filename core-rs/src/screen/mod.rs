@@ -1,6 +1,30 @@
 //! Screen capture and input control module
+//!
+//! This module provides cross-platform screen capture, mouse control,
+//! and keyboard input functionality.
+//!
+//! # Example
+//!
+//! ```no_run
+//! use sikulix_core::screen::{Screen, Mouse, Keyboard, Key};
+//!
+//! // Capture screen
+//! let mut screen = Screen::primary();
+//! let screenshot = screen.capture().unwrap();
+//!
+//! // Mouse control
+//! Mouse::move_to(100, 100).unwrap();
+//! Mouse::click().unwrap();
+//!
+//! // Keyboard control
+//! Keyboard::type_text("Hello").unwrap();
+//! Keyboard::hotkey(&[Key::Ctrl, Key::S]).unwrap();
+//! ```
 
 use crate::{Region, Result};
+
+#[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux")))]
+use crate::SikulixError;
 use image::DynamicImage;
 
 #[cfg(target_os = "windows")]
@@ -13,6 +37,19 @@ mod macos;
 mod linux;
 
 /// Screen capture and control
+///
+/// Provides methods for capturing screenshots and querying screen properties.
+/// Supports multi-monitor setups with index-based monitor selection.
+///
+/// # Example
+///
+/// ```no_run
+/// use sikulix_core::Screen;
+///
+/// let mut screen = Screen::primary();
+/// let (width, height) = screen.dimensions().unwrap();
+/// let screenshot = screen.capture().unwrap();
+/// ```
 pub struct Screen {
     /// Screen index (0 = primary)
     index: u32,
@@ -137,6 +174,25 @@ impl Screen {
 }
 
 /// Mouse control
+///
+/// Provides methods for mouse movement and clicking.
+/// All operations are immediate and do not require an instance.
+///
+/// # Example
+///
+/// ```no_run
+/// use sikulix_core::Mouse;
+///
+/// // Move and click
+/// Mouse::move_to(500, 300).unwrap();
+/// Mouse::click().unwrap();
+///
+/// // Double-click
+/// Mouse::double_click().unwrap();
+///
+/// // Right-click
+/// Mouse::right_click().unwrap();
+/// ```
 pub struct Mouse;
 
 impl Mouse {
@@ -249,6 +305,26 @@ impl Mouse {
 }
 
 /// Keyboard control
+///
+/// Provides methods for typing text and pressing keys.
+/// Supports individual key press/release and hotkey combinations.
+///
+/// # Example
+///
+/// ```no_run
+/// use sikulix_core::screen::{Keyboard, Key};
+///
+/// // Type text
+/// Keyboard::type_text("Hello, World!").unwrap();
+///
+/// // Press hotkey combination (Ctrl+S)
+/// Keyboard::hotkey(&[Key::Ctrl, Key::S]).unwrap();
+///
+/// // Individual key press/release
+/// Keyboard::press(Key::Shift).unwrap();
+/// Keyboard::type_text("CAPS").unwrap();
+/// Keyboard::release(Key::Shift).unwrap();
+/// ```
 pub struct Keyboard;
 
 impl Keyboard {
