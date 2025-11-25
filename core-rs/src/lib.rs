@@ -10,13 +10,13 @@
 //! - Python scripting support (Python 2/3 dual runtime)
 
 pub mod image;
-pub mod screen;
 pub mod python;
+pub mod screen;
 
 // Re-export commonly used types
 pub use image::ImageMatcher;
-pub use screen::{Screen, Mouse, Keyboard, Key};
 pub use python::{PythonVersion, SyntaxAnalyzer};
+pub use screen::{Key, Keyboard, Mouse, Screen};
 
 #[cfg(feature = "python")]
 pub use python::PythonRuntime;
@@ -64,7 +64,12 @@ pub struct Region {
 
 impl Region {
     pub fn new(x: i32, y: i32, width: u32, height: u32) -> Self {
-        Self { x, y, width, height }
+        Self {
+            x,
+            y,
+            width,
+            height,
+        }
     }
 
     /// Get the center point of the region

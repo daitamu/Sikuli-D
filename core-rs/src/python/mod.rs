@@ -111,7 +111,9 @@ impl SyntaxAnalyzer {
     /// Check for Python 3 specific syntax
     fn is_python3_syntax(line: &str) -> bool {
         // print function with keywords
-        if line.contains("print(") && (line.contains("end=") || line.contains("sep=") || line.contains("file=")) {
+        if line.contains("print(")
+            && (line.contains("end=") || line.contains("sep=") || line.contains("file="))
+        {
             return true;
         }
 
@@ -126,8 +128,11 @@ impl SyntaxAnalyzer {
         }
 
         // async/await
-        if line.starts_with("async ") || line.contains(" async ") ||
-           line.starts_with("await ") || line.contains(" await ") {
+        if line.starts_with("async ")
+            || line.contains(" async ")
+            || line.starts_with("await ")
+            || line.contains(" await ")
+        {
             return true;
         }
 
@@ -173,7 +178,7 @@ impl SyntaxAnalyzer {
         let version = Self::detect_version(source);
         match version {
             PythonVersion::Mixed => Err(SikulixError::PythonError(
-                "Source code contains mixed Python 2 and 3 syntax".to_string()
+                "Source code contains mixed Python 2 and 3 syntax".to_string(),
             )),
             _ => Ok(version),
         }
@@ -204,7 +209,7 @@ impl PythonRuntime {
 
         if detected == PythonVersion::Python2 {
             return Err(SikulixError::PythonError(
-                "Python 2 syntax detected. Please update to Python 3 syntax.".to_string()
+                "Python 2 syntax detected. Please update to Python 3 syntax.".to_string(),
             ));
         }
 
@@ -238,7 +243,7 @@ pub struct PythonRuntime;
 impl PythonRuntime {
     pub fn new() -> Result<Self> {
         Err(SikulixError::PythonError(
-            "Python support not compiled. Enable 'python' feature.".to_string()
+            "Python support not compiled. Enable 'python' feature.".to_string(),
         ))
     }
 }
@@ -250,13 +255,19 @@ mod tests {
     #[test]
     fn test_detect_python2_print() {
         let source = "print 'hello'";
-        assert_eq!(SyntaxAnalyzer::detect_version(source), PythonVersion::Python2);
+        assert_eq!(
+            SyntaxAnalyzer::detect_version(source),
+            PythonVersion::Python2
+        );
     }
 
     #[test]
     fn test_detect_python3_fstring() {
         let source = "name = 'world'\nprint(f\"hello {name}\")";
-        assert_eq!(SyntaxAnalyzer::detect_version(source), PythonVersion::Python3);
+        assert_eq!(
+            SyntaxAnalyzer::detect_version(source),
+            PythonVersion::Python3
+        );
     }
 
     #[test]
@@ -268,19 +279,28 @@ mod tests {
     #[test]
     fn test_detect_unknown() {
         let source = "x = 1\ny = 2\nz = x + y";
-        assert_eq!(SyntaxAnalyzer::detect_version(source), PythonVersion::Unknown);
+        assert_eq!(
+            SyntaxAnalyzer::detect_version(source),
+            PythonVersion::Unknown
+        );
     }
 
     #[test]
     fn test_detect_xrange() {
         let source = "for i in xrange(10): pass";
-        assert_eq!(SyntaxAnalyzer::detect_version(source), PythonVersion::Python2);
+        assert_eq!(
+            SyntaxAnalyzer::detect_version(source),
+            PythonVersion::Python2
+        );
     }
 
     #[test]
     fn test_detect_async() {
         let source = "async def foo(): await bar()";
-        assert_eq!(SyntaxAnalyzer::detect_version(source), PythonVersion::Python3);
+        assert_eq!(
+            SyntaxAnalyzer::detect_version(source),
+            PythonVersion::Python3
+        );
     }
 
     #[test]

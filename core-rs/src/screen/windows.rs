@@ -1,15 +1,13 @@
 //! Windows-specific screen capture and input implementation
 
-use crate::{Region, Result, SikulixError};
 use crate::screen::Key;
+use crate::{Region, Result, SikulixError};
 use image::{DynamicImage, RgbaImage};
 
 #[cfg(target_os = "windows")]
 use windows::{
-    Win32::Foundation::*,
-    Win32::Graphics::Gdi::*,
+    Win32::Foundation::*, Win32::Graphics::Gdi::*, Win32::UI::Input::KeyboardAndMouse::*,
     Win32::UI::WindowsAndMessaging::*,
-    Win32::UI::Input::KeyboardAndMouse::*,
 };
 
 /// Get screen dimensions for the given monitor index
@@ -22,9 +20,10 @@ pub fn get_screen_dimensions(index: u32) -> Result<(u32, u32)> {
             Ok((width, height))
         } else {
             // TODO: Multi-monitor support
-            Err(SikulixError::ScreenCaptureError(
-                format!("Monitor {} not found", index)
-            ))
+            Err(SikulixError::ScreenCaptureError(format!(
+                "Monitor {} not found",
+                index
+            )))
         }
     }
 }
@@ -42,13 +41,17 @@ pub fn capture_region(_index: u32, region: &Region) -> Result<DynamicImage> {
     unsafe {
         let hdc_screen = GetDC(HWND::default());
         if hdc_screen.is_invalid() {
-            return Err(SikulixError::ScreenCaptureError("Failed to get screen DC".to_string()));
+            return Err(SikulixError::ScreenCaptureError(
+                "Failed to get screen DC".to_string(),
+            ));
         }
 
         let hdc_mem = CreateCompatibleDC(hdc_screen);
         if hdc_mem.is_invalid() {
             ReleaseDC(HWND::default(), hdc_screen);
-            return Err(SikulixError::ScreenCaptureError("Failed to create memory DC".to_string()));
+            return Err(SikulixError::ScreenCaptureError(
+                "Failed to create memory DC".to_string(),
+            ));
         }
 
         let width = region.width as i32;
@@ -58,21 +61,15 @@ pub fn capture_region(_index: u32, region: &Region) -> Result<DynamicImage> {
         if hbitmap.is_invalid() {
             let _ = DeleteDC(hdc_mem);
             ReleaseDC(HWND::default(), hdc_screen);
-            return Err(SikulixError::ScreenCaptureError("Failed to create bitmap".to_string()));
+            return Err(SikulixError::ScreenCaptureError(
+                "Failed to create bitmap".to_string(),
+            ));
         }
 
         let old_bitmap = SelectObject(hdc_mem, hbitmap);
 
         let result = BitBlt(
-            hdc_mem,
-            0,
-            0,
-            width,
-            height,
-            hdc_screen,
-            region.x,
-            region.y,
-            SRCCOPY,
+            hdc_mem, 0, 0, width, height, hdc_screen, region.x, region.y, SRCCOPY,
         );
 
         if result.is_err() {
@@ -80,7 +77,9 @@ pub fn capture_region(_index: u32, region: &Region) -> Result<DynamicImage> {
             let _ = DeleteObject(hbitmap);
             let _ = DeleteDC(hdc_mem);
             ReleaseDC(HWND::default(), hdc_screen);
-            return Err(SikulixError::ScreenCaptureError("BitBlt failed".to_string()));
+            return Err(SikulixError::ScreenCaptureError(
+                "BitBlt failed".to_string(),
+            ));
         }
 
         // Get bitmap data
@@ -123,8 +122,9 @@ pub fn capture_region(_index: u32, region: &Region) -> Result<DynamicImage> {
         let _ = DeleteDC(hdc_mem);
         ReleaseDC(HWND::default(), hdc_screen);
 
-        let img = RgbaImage::from_raw(width as u32, height as u32, buffer)
-            .ok_or_else(|| SikulixError::ScreenCaptureError("Failed to create image".to_string()))?;
+        let img = RgbaImage::from_raw(width as u32, height as u32, buffer).ok_or_else(|| {
+            SikulixError::ScreenCaptureError("Failed to create image".to_string())
+        })?;
 
         Ok(DynamicImage::ImageRgba8(img))
     }
@@ -138,7 +138,9 @@ pub fn mouse_move(x: i32, y: i32) -> Result<()> {
         if result.is_ok() {
             Ok(())
         } else {
-            Err(SikulixError::MouseError("Failed to move cursor".to_string()))
+            Err(SikulixError::MouseError(
+                "Failed to move cursor".to_string(),
+            ))
         }
     }
 }
@@ -228,7 +230,9 @@ pub fn mouse_position() -> Result<(i32, i32)> {
         if result.is_ok() {
             Ok((point.x, point.y))
         } else {
-            Err(SikulixError::MouseError("Failed to get cursor position".to_string()))
+            Err(SikulixError::MouseError(
+                "Failed to get cursor position".to_string(),
+            ))
         }
     }
 }
@@ -245,34 +249,33 @@ pub fn keyboard_type(text: &str) -> Result<()> {
 #[cfg(target_os = "windows")]
 fn keyboard_type_char(ch: char) -> Result<()> {
     unsafe {
-        let mut inputs: Vec<INPUT> = Vec::new();
-
         // Use Unicode input
-        inputs.push(INPUT {
-            r#type: INPUT_KEYBOARD,
-            Anonymous: INPUT_0 {
-                ki: KEYBDINPUT {
-                    wVk: VIRTUAL_KEY(0),
-                    wScan: ch as u16,
-                    dwFlags: KEYEVENTF_UNICODE,
-                    time: 0,
-                    dwExtraInfo: 0,
+        let inputs = [
+            INPUT {
+                r#type: INPUT_KEYBOARD,
+                Anonymous: INPUT_0 {
+                    ki: KEYBDINPUT {
+                        wVk: VIRTUAL_KEY(0),
+                        wScan: ch as u16,
+                        dwFlags: KEYEVENTF_UNICODE,
+                        time: 0,
+                        dwExtraInfo: 0,
+                    },
                 },
             },
-        });
-
-        inputs.push(INPUT {
-            r#type: INPUT_KEYBOARD,
-            Anonymous: INPUT_0 {
-                ki: KEYBDINPUT {
-                    wVk: VIRTUAL_KEY(0),
-                    wScan: ch as u16,
-                    dwFlags: KEYEVENTF_UNICODE | KEYEVENTF_KEYUP,
-                    time: 0,
-                    dwExtraInfo: 0,
+            INPUT {
+                r#type: INPUT_KEYBOARD,
+                Anonymous: INPUT_0 {
+                    ki: KEYBDINPUT {
+                        wVk: VIRTUAL_KEY(0),
+                        wScan: ch as u16,
+                        dwFlags: KEYEVENTF_UNICODE | KEYEVENTF_KEYUP,
+                        time: 0,
+                        dwExtraInfo: 0,
+                    },
                 },
             },
-        });
+        ];
 
         SendInput(&inputs, std::mem::size_of::<INPUT>() as i32);
         Ok(())

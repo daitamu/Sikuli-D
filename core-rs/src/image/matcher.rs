@@ -31,11 +31,7 @@ impl ImageMatcher {
     /// Find a pattern in the screen image
     ///
     /// Uses normalized cross-correlation for template matching
-    pub fn find(
-        &self,
-        screen: &DynamicImage,
-        pattern: &Pattern,
-    ) -> Result<Option<Match>> {
+    pub fn find(&self, screen: &DynamicImage, pattern: &Pattern) -> Result<Option<Match>> {
         let template = super::load_image_from_bytes(&pattern.image_data)?;
 
         let screen_gray = screen.to_luma8();
@@ -65,12 +61,7 @@ impl ImageMatcher {
         let threshold = pattern.similarity.max(self.min_similarity);
 
         if best_score >= threshold {
-            let region = Region::new(
-                best_pos.0 as i32,
-                best_pos.1 as i32,
-                tw,
-                th,
-            );
+            let region = Region::new(best_pos.0 as i32, best_pos.1 as i32, tw, th);
             Ok(Some(Match::new(region, best_score)))
         } else {
             Ok(None)
@@ -78,11 +69,7 @@ impl ImageMatcher {
     }
 
     /// Find all occurrences of a pattern
-    pub fn find_all(
-        &self,
-        screen: &DynamicImage,
-        pattern: &Pattern,
-    ) -> Result<Vec<Match>> {
+    pub fn find_all(&self, screen: &DynamicImage, pattern: &Pattern) -> Result<Vec<Match>> {
         let template = super::load_image_from_bytes(&pattern.image_data)?;
 
         let screen_gray = screen.to_luma8();
@@ -174,10 +161,7 @@ impl ImageMatcher {
                     continue;
                 }
 
-                let overlap = self.calculate_overlap(
-                    &matches[i].region,
-                    &matches[j].region,
-                );
+                let overlap = self.calculate_overlap(&matches[i].region, &matches[j].region);
 
                 // Suppress if overlap > 50%
                 if overlap > 0.5 {

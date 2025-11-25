@@ -116,17 +116,23 @@ impl Screen {
     // Fallback for unsupported platforms
     #[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux")))]
     fn get_dimensions_impl(&self) -> Result<(u32, u32)> {
-        Err(SikulixError::ScreenCaptureError("Unsupported platform".to_string()))
+        Err(SikulixError::ScreenCaptureError(
+            "Unsupported platform".to_string(),
+        ))
     }
 
     #[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux")))]
     fn capture_impl(&self) -> Result<DynamicImage> {
-        Err(SikulixError::ScreenCaptureError("Unsupported platform".to_string()))
+        Err(SikulixError::ScreenCaptureError(
+            "Unsupported platform".to_string(),
+        ))
     }
 
     #[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux")))]
     fn capture_region_impl(&self, _region: &Region) -> Result<DynamicImage> {
-        Err(SikulixError::ScreenCaptureError("Unsupported platform".to_string()))
+        Err(SikulixError::ScreenCaptureError(
+            "Unsupported platform".to_string(),
+        ))
     }
 }
 
@@ -319,17 +325,23 @@ impl Keyboard {
 
     #[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux")))]
     fn type_text_impl(_text: &str) -> Result<()> {
-        Err(SikulixError::KeyboardError("Unsupported platform".to_string()))
+        Err(SikulixError::KeyboardError(
+            "Unsupported platform".to_string(),
+        ))
     }
 
     #[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux")))]
     fn press_impl(_key: Key) -> Result<()> {
-        Err(SikulixError::KeyboardError("Unsupported platform".to_string()))
+        Err(SikulixError::KeyboardError(
+            "Unsupported platform".to_string(),
+        ))
     }
 
     #[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux")))]
     fn release_impl(_key: Key) -> Result<()> {
-        Err(SikulixError::KeyboardError("Unsupported platform".to_string()))
+        Err(SikulixError::KeyboardError(
+            "Unsupported platform".to_string(),
+        ))
     }
 }
 
@@ -344,7 +356,18 @@ pub enum Key {
     Meta, // Windows key / Command key
 
     // Function keys
-    F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12,
+    F1,
+    F2,
+    F3,
+    F4,
+    F5,
+    F6,
+    F7,
+    F8,
+    F9,
+    F10,
+    F11,
+    F12,
 
     // Navigation keys
     Enter,
@@ -363,12 +386,44 @@ pub enum Key {
     Right,
 
     // Letter keys
-    A, B, C, D, E, F, G, H, I, J, K, L, M,
-    N, O, P, Q, R, S, T, U, V, W, X, Y, Z,
+    A,
+    B,
+    C,
+    D,
+    E,
+    F,
+    G,
+    H,
+    I,
+    J,
+    K,
+    L,
+    M,
+    N,
+    O,
+    P,
+    Q,
+    R,
+    S,
+    T,
+    U,
+    V,
+    W,
+    X,
+    Y,
+    Z,
 
     // Number keys
-    Num0, Num1, Num2, Num3, Num4,
-    Num5, Num6, Num7, Num8, Num9,
+    Num0,
+    Num1,
+    Num2,
+    Num3,
+    Num4,
+    Num5,
+    Num6,
+    Num7,
+    Num8,
+    Num9,
 }
 
 #[cfg(test)]

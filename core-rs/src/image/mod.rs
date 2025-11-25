@@ -19,7 +19,8 @@ pub fn load_image_from_bytes(data: &[u8]) -> Result<DynamicImage> {
 
 /// Save an image to file
 pub fn save_image(img: &DynamicImage, path: &str) -> Result<()> {
-    img.save(path).map_err(|e| SikulixError::ImageLoadError(e.to_string()))
+    img.save(path)
+        .map_err(|e| SikulixError::ImageLoadError(e.to_string()))
 }
 
 /// Crop a region from an image

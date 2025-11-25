@@ -1,8 +1,8 @@
 //! Benchmarks for image matching performance
 
-use criterion::{black_box, criterion_group, criterion_main, Criterion, BenchmarkId};
+use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
+use image::{DynamicImage, Rgba, RgbaImage};
 use sikulix_core::{ImageMatcher, Pattern, Region};
-use image::{DynamicImage, RgbaImage, Rgba};
 
 /// Create a test image with a known pattern
 fn create_test_image(width: u32, height: u32) -> DynamicImage {
@@ -36,12 +36,14 @@ fn create_template() -> Vec<u8> {
 
     let mut buffer = Vec::new();
     let encoder = image::codecs::png::PngEncoder::new(&mut buffer);
-    encoder.encode(
-        img.as_raw(),
-        img.width(),
-        img.height(),
-        image::ExtendedColorType::Rgba8,
-    ).unwrap();
+    encoder
+        .encode(
+            img.as_raw(),
+            img.width(),
+            img.height(),
+            image::ExtendedColorType::Rgba8,
+        )
+        .unwrap();
 
     buffer
 }
@@ -59,11 +61,7 @@ fn benchmark_find(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("screen_size", format!("{}x{}", size, size * 9 / 16)),
             &(&screen, &pattern),
-            |b, (screen, pattern)| {
-                b.iter(|| {
-                    matcher.find(black_box(*screen), black_box(*pattern))
-                })
-            },
+            |b, (screen, pattern)| b.iter(|| matcher.find(black_box(*screen), black_box(*pattern))),
         );
     }
 
@@ -102,9 +100,7 @@ fn benchmark_find_all(c: &mut Criterion) {
     let matcher = ImageMatcher::new();
 
     group.bench_function("multiple_matches", |b| {
-        b.iter(|| {
-            matcher.find_all(black_box(&screen), black_box(&pattern))
-        })
+        b.iter(|| matcher.find_all(black_box(&screen), black_box(&pattern)))
     });
 
     group.finish();
@@ -124,12 +120,14 @@ fn benchmark_ncc_calculation(c: &mut Criterion) {
 
         let mut buffer = Vec::new();
         let encoder = image::codecs::png::PngEncoder::new(&mut buffer);
-        encoder.encode(
-            template_img.as_raw(),
-            template_img.width(),
-            template_img.height(),
-            image::ExtendedColorType::Rgba8,
-        ).unwrap();
+        encoder
+            .encode(
+                template_img.as_raw(),
+                template_img.width(),
+                template_img.height(),
+                image::ExtendedColorType::Rgba8,
+            )
+            .unwrap();
 
         let pattern = Pattern::new(buffer).similar(0.7);
         let matcher = ImageMatcher::new();
@@ -137,11 +135,7 @@ fn benchmark_ncc_calculation(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("template_size", template_size),
             &(&screen, &pattern),
-            |b, (screen, pattern)| {
-                b.iter(|| {
-                    matcher.find(black_box(*screen), black_box(*pattern))
-                })
-            },
+            |b, (screen, pattern)| b.iter(|| matcher.find(black_box(*screen), black_box(*pattern))),
         );
     }
 
