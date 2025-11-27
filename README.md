@@ -1,8 +1,8 @@
 # Sikuli-D (シクリッド / pronounced "sik-lid")
 
-**A next-generation GUI automation tool with image recognition, built in Rust.**
+**A GUI automation tool with image recognition, built in Rust.**
 
-**画像認識によるGUI自動化ツールの次世代版。Rustで構築。**
+**画像認識による GUI 自動化ツール。Rust で構築。**
 
 ---
 
@@ -13,18 +13,18 @@
 - **Python 2/3 Dual Support** - Run legacy SikuliX scripts without modification
 - **Built-in Python Runtime** - No separate Python installation required
 - **Japanese Language Support** - Full Unicode support in logs, output, and scripts
-- **High Performance** - Rust core with parallel image processing
+- **Built with Rust** - Parallel image processing for better performance
 - **Cross-platform** - Windows, macOS, Linux support
-- **SikuliX Compatible** - Familiar API for existing SikuliX users
+- **SikuliX Compatible** - We will continue to maintain the SikuliX API
 
 ### 日本語
 
-- **Python 2/3 両対応** - レガシーなSikuliXスクリプトをそのまま実行可能
-- **Pythonランタイム内蔵** - 別途Pythonのインストール不要
+- **Python 2/3 両対応** - レガシーな SikuliX スクリプトをそのまま実行可能
+- **Python ランタイム内蔵** - 別途 Python のインストール不要
 - **日本語完全対応** - ログ出力やスクリプトで日本語を使用してもエラーになりません
-- **高性能** - 並列画像処理によるRustコア
-- **クロスプラットフォーム** - Windows、macOS、Linux対応
-- **SikuliX互換** - 既存のSikuliXユーザーに馴染みのあるAPI
+- **Rust 言語で開発** - 並列画像処理による高いパフォーマンス
+- **クロスプラットフォーム** - Windows、macOS、Linux 対応
+- **SikuliX 互換** - SikuliX の API は今後も維持し続けます
 
 ---
 
@@ -32,7 +32,7 @@
 
 Sikuli-D consists of two main modules:
 
-Sikuli-Dは2つの主要モジュールで構成されます：
+Sikuli-D は 2 つの主要モジュールで構成されます：
 
 ### Sikuli-D IDE
 
@@ -52,7 +52,7 @@ See [ide-rs-tauri/README.md](ide-rs-tauri/README.md) for details.
 
 A standalone Python runtime for executing automation scripts.
 
-自動化スクリプトを実行するためのスタンドアロンPythonランタイム。
+自動化スクリプトを実行するためのスタンドアロン Python ランタイム。
 
 - Python 2/3 automatic detection and conversion
 - Built-in Python interpreter (no installation required)
@@ -65,7 +65,7 @@ See [runtime-rs/README.md](runtime-rs/README.md) for details.
 
 ## Quick Start / クイックスタート
 
-### Using the IDE / IDEを使用する場合
+### Using the IDE / IDE を使用する場合
 
 ```bash
 # Download and run the installer
@@ -97,17 +97,17 @@ wait("dialog.png", 10)
 
 ### For Users / 利用者向け
 
-| Component | Requirement |
-|-----------|-------------|
-| OS | Windows 10+, macOS 10.15+, Linux (X11) |
-| Tesseract | 5.x (optional, for OCR) |
+| Component | Requirement                            |
+| --------- | -------------------------------------- |
+| OS        | Windows 10+, macOS 10.15+, Linux (X11) |
+| Tesseract | 5.x (optional, for OCR)                |
 
 ### For Developers / 開発者向け
 
-| Component | Version |
-|-----------|---------|
-| Rust | 1.70+ |
-| Node.js | 18+ (for IDE) |
+| Component | Version       |
+| --------- | ------------- |
+| Rust      | 1.70+         |
+| Node.js   | 18+ (for IDE) |
 
 ---
 
@@ -135,7 +135,7 @@ This project is based on [SikuliX](https://github.com/RaiMan/SikuliX1), created 
 
 MIT License - see [LICENSE](LICENSE) for details.
 
-MITライセンス - 詳細は [LICENSE](LICENSE) を参照。
+MIT ライセンス - 詳細は [LICENSE](LICENSE) を参照。
 
 ---
 
@@ -143,4 +143,4 @@ MITライセンス - 詳細は [LICENSE](LICENSE) を参照。
 
 Contributions are welcome! Feel free to open issues or submit pull requests.
 
-貢献を歓迎します！Issueの作成やPull Requestの送信をお気軽にどうぞ。
+貢献を歓迎します！Issue の作成や Pull Request の送信をお気軽にどうぞ。
