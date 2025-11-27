@@ -1,0 +1,52 @@
+[package]
+name = "sikulix-ide-tauri"
+version = "0.3.0"
+edition = "2021"
+description = "SikuliX IDE - Tauri prototype"
+authors = ["Sikuli-D Team"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+# GUI framework
+tauri = { version = "2", features = [] }
+tauri-plugin-shell = "2"
+tauri-plugin-dialog = "2"
+tauri-plugin-fs = "2"
+
+# Core library
+sikulix-core = { path = "../core-rs" }
+
+# Async runtime
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "time", "process", "io-util"] }
+
+# UUID generation for process IDs
+uuid = { version = "1", features = ["v4"] }
+
+# Logging
+log = "0.4"
+env_logger = "0.11"
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Date/time and image
+chrono = "0.4"
+image = "0.25"
+
+# Zip extraction for plugin installation
+zip = "2"
+
+# Base64 encoding for thumbnails
+base64 = "0.22"
+
+[dev-dependencies]
+tempfile = "3"
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true
+opt-level = "s"

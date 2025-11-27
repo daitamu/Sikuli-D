@@ -1,0 +1,42 @@
+# SikuliX-D Rust Workspace
+# Rustワークスペース設定
+#
+# This workspace configuration allows building both core-rs and ide-rs-tauri
+# from the root directory with shared target directory.
+# このワークスペース設定により、ルートディレクトリから両方のクレートを
+# 共有targetディレクトリでビルドできます。
+#
+# Usage / 使用方法:
+#   cargo build --workspace       # Build all / 全てビルド
+#   cargo test --workspace        # Test all / 全てテスト
+#   cargo build -p sikulix-core   # Build core only / コアのみビルド
+#   cargo build -p sikulix-ide-tauri  # Build IDE only / IDEのみビルド
+
+[workspace]
+resolver = "2"
+members = [
+    "core-rs",
+    "ide-rs-tauri",
+]
+
+# Shared dependencies for workspace members
+# ワークスペースメンバー間で共有する依存関係
+[workspace.dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+log = "0.4"
+image = "0.25"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "time", "process", "io-util"] }
+
+# Shared profile settings
+# 共有プロファイル設定
+[profile.dev]
+# Faster dev builds with some optimization
+# 最適化を入れた高速開発ビルド
+opt-level = 0
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true
+opt-level = "s"

@@ -1,0 +1,270 @@
+# Sikuli-D Release Workflow
+# Sikuli-D リリースワークフロー
+#
+# Automatically builds and publishes releases when a version tag is pushed
+# バージョンタグがプッシュされたときに自動的にリリースをビルドして公開
+
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'  # Trigger on version tags like v1.0.0
+  workflow_dispatch:  # Allow manual triggering
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  # Create GitHub Release
+  # GitHubリリースを作成
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+      release_version: ${{ steps.get_version.outputs.version }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for changelog
+
+      - name: Get version from tag
+        id: get_version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          if [ -z "$PREVIOUS_TAG" ]; then
+            echo "First release"
+            CHANGELOG=$(git log --pretty=format:"- %s ([%h](https://github.com/${{ github.repository }}/commit/%H))" --reverse)
+          else
+            echo "Changes since $PREVIOUS_TAG"
+            CHANGELOG=$(git log $PREVIOUS_TAG..HEAD --pretty=format:"- %s ([%h](https://github.com/${{ github.repository }}/commit/%H))" --reverse)
+          fi
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.get_version.outputs.version }}
+          name: Release ${{ steps.get_version.outputs.version }}
+          body: |
+            ## Changes / 変更点
+
+            ${{ steps.changelog.outputs.changelog }}
+
+            ## Installation / インストール
+
+            Download the appropriate binary for your platform below.
+            以下からプラットフォームに合ったバイナリをダウンロードしてください。
+
+            - **Windows**: `sikulix-core-windows-*.zip`
+            - **macOS**: `sikulix-core-macos-*.tar.gz`
+            - **Linux**: `sikulix-core-linux-*.tar.gz`
+
+            ## Documentation / ドキュメント
+
+            See [README.md](https://github.com/${{ github.repository }}/blob/master/README.md) for usage instructions.
+            使用方法は [README.md](https://github.com/${{ github.repository }}/blob/master/README.md) を参照してください。
+          draft: false
+          prerelease: ${{ contains(steps.get_version.outputs.version, 'alpha') || contains(steps.get_version.outputs.version, 'beta') || contains(steps.get_version.outputs.version, 'rc') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Build and upload release artifacts
+  # リリース成果物をビルドしてアップロード
+  build-release:
+    name: Build ${{ matrix.os }}
+    needs: create-release
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            artifact_name: sikulix-core-windows-x64
+            archive_ext: zip
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            artifact_name: sikulix-core-macos-x64
+            archive_ext: tar.gz
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            artifact_name: sikulix-core-macos-arm64
+            archive_ext: tar.gz
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            artifact_name: sikulix-core-linux-x64
+            archive_ext: tar.gz
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install system dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            core-rs/target
+          key: ${{ runner.os }}-cargo-release-${{ hashFiles('core-rs/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-release-
+
+      - name: Build core-rs (Release)
+        working-directory: core-rs
+        run: cargo build --release --target ${{ matrix.target }} --verbose
+
+      - name: Prepare artifacts
+        run: |
+          mkdir -p release/${{ matrix.artifact_name }}
+          cp -r core-rs/target/${{ matrix.target }}/release/*.so release/${{ matrix.artifact_name }}/ 2>/dev/null || true
+          cp -r core-rs/target/${{ matrix.target }}/release/*.dll release/${{ matrix.artifact_name }}/ 2>/dev/null || true
+          cp -r core-rs/target/${{ matrix.target }}/release/*.dylib release/${{ matrix.artifact_name }}/ 2>/dev/null || true
+          cp -r core-rs/target/${{ matrix.target }}/release/*.rlib release/${{ matrix.artifact_name }}/ 2>/dev/null || true
+          cp LICENSE release/${{ matrix.artifact_name }}/
+          cp README.md release/${{ matrix.artifact_name }}/
+          cp VERSION release/${{ matrix.artifact_name }}/
+
+      - name: Create archive (Windows)
+        if: matrix.archive_ext == 'zip'
+        run: |
+          cd release
+          7z a -tzip ${{ matrix.artifact_name }}.zip ${{ matrix.artifact_name }}/
+
+      - name: Create archive (Unix)
+        if: matrix.archive_ext == 'tar.gz'
+        run: |
+          cd release
+          tar -czf ${{ matrix.artifact_name }}.tar.gz ${{ matrix.artifact_name }}/
+
+      - name: Upload Release Asset
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ needs.create-release.outputs.release_version }}
+          files: |
+            release/${{ matrix.artifact_name }}.${{ matrix.archive_ext }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Build IDE (Tauri application)
+  # IDE（Tauriアプリケーション）をビルド
+  build-ide:
+    name: Build IDE - ${{ matrix.os }}
+    needs: create-release
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            artifact_name: sikuli-ide-windows
+          - os: macos-latest
+            artifact_name: sikuli-ide-macos
+          - os: ubuntu-latest
+            artifact_name: sikuli-ide-linux
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install system dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ide-rs-tauri/target
+          key: ${{ runner.os }}-cargo-ide-release-${{ hashFiles('ide-rs-tauri/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-ide-release-
+
+      - name: Build IDE (if ide-rs-tauri exists)
+        working-directory: ide-rs-tauri
+        run: |
+          if [ -f "Cargo.toml" ]; then
+            cargo build --release --verbose
+          else
+            echo "ide-rs-tauri not yet implemented, skipping"
+          fi
+        shell: bash
+        continue-on-error: true
+
+      - name: Upload IDE artifacts
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: |
+            ide-rs-tauri/target/release/bundle/
+          retention-days: 30
+          if-no-files-found: warn
+
+  # Post-release actions
+  # リリース後のアクション
+  post-release:
+    name: Post-Release Actions
+    needs: [create-release, build-release]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create release summary
+        run: |
+          echo "## Release Summary" >> $GITHUB_STEP_SUMMARY
+          echo "Version: ${{ needs.create-release.outputs.release_version }}" >> $GITHUB_STEP_SUMMARY
+          echo "Build artifacts have been uploaded to the release." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "1. Verify the release artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "2. Update documentation if needed" >> $GITHUB_STEP_SUMMARY
+          echo "3. Announce the release" >> $GITHUB_STEP_SUMMARY

@@ -1,10 +1,13 @@
 //! Benchmarks for image matching performance
+//! 画像マッチングのパフォーマンスベンチマーク
 
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
-use image::{DynamicImage, Rgba, RgbaImage};
-use sikulix_core::{ImageMatcher, Pattern, Region};
+use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, SamplingMode};
+use std::time::Duration;
+use image::{DynamicImage, ImageEncoder, Rgba, RgbaImage};
+use sikulix_core::{ImageMatcher, Pattern};
 
 /// Create a test image with a known pattern
+/// 既知のパターンを持つテスト画像を作成
 fn create_test_image(width: u32, height: u32) -> DynamicImage {
     let mut img = RgbaImage::new(width, height);
 
@@ -26,6 +29,7 @@ fn create_test_image(width: u32, height: u32) -> DynamicImage {
 }
 
 /// Create a template from the test image
+/// テスト画像からテンプレートを作成
 fn create_template() -> Vec<u8> {
     let mut img = RgbaImage::new(100, 50);
 
@@ -37,7 +41,7 @@ fn create_template() -> Vec<u8> {
     let mut buffer = Vec::new();
     let encoder = image::codecs::png::PngEncoder::new(&mut buffer);
     encoder
-        .encode(
+        .write_image(
             img.as_raw(),
             img.width(),
             img.height(),
@@ -50,6 +54,10 @@ fn create_template() -> Vec<u8> {
 
 fn benchmark_find(c: &mut Criterion) {
     let mut group = c.benchmark_group("find");
+    // Configure for faster benchmarking
+    group.sample_size(10);
+    group.measurement_time(Duration::from_secs(5));
+    group.sampling_mode(SamplingMode::Flat);
 
     // Test different screen sizes
     for size in [800, 1920, 3840].iter() {
@@ -70,6 +78,10 @@ fn benchmark_find(c: &mut Criterion) {
 
 fn benchmark_find_all(c: &mut Criterion) {
     let mut group = c.benchmark_group("find_all");
+    // Configure for faster benchmarking
+    group.sample_size(10);
+    group.measurement_time(Duration::from_secs(5));
+    group.sampling_mode(SamplingMode::Flat);
 
     // Create image with multiple matches
     let mut img = RgbaImage::new(1920, 1080);
@@ -108,6 +120,10 @@ fn benchmark_find_all(c: &mut Criterion) {
 
 fn benchmark_ncc_calculation(c: &mut Criterion) {
     let mut group = c.benchmark_group("ncc");
+    // Configure for faster benchmarking
+    group.sample_size(10);
+    group.measurement_time(Duration::from_secs(5));
+    group.sampling_mode(SamplingMode::Flat);
 
     // Test different template sizes
     for template_size in [32, 64, 128].iter() {
@@ -121,7 +137,7 @@ fn benchmark_ncc_calculation(c: &mut Criterion) {
         let mut buffer = Vec::new();
         let encoder = image::codecs::png::PngEncoder::new(&mut buffer);
         encoder
-            .encode(
+            .write_image(
                 template_img.as_raw(),
                 template_img.width(),
                 template_img.height(),

@@ -1,6 +1,6 @@
 [package]
 name = "sikulix-core"
-version = "0.1.0"
+version = "0.3.0"
 edition = "2021"
 authors = ["Sikuli-D Team"]
 description = "Next-generation SikuliX core library in Rust"
@@ -23,7 +23,7 @@ imageproc = "0.25"
 leptess = { version = "0.14", optional = true }
 
 # Python integration
-pyo3 = { version = "0.21", features = ["auto-initialize", "extension-module"], optional = true }
+pyo3 = { version = "0.21", features = ["extension-module"], optional = true }
 
 # Serialization
 serde = { version = "1.0", features = ["derive"] }
@@ -37,6 +37,12 @@ anyhow = "1.0"
 log = "0.4"
 env_logger = "0.11"
 
+# Parallel processing
+rayon = "1.10"
+
+# Platform directories
+dirs = "6.0"
+
 # Async runtime (for future use)
 tokio = { version = "1", features = ["rt-multi-thread", "macros"], optional = true }
 
@@ -46,12 +52,20 @@ windows = { version = "0.58", features = [
     "Win32_UI_WindowsAndMessaging",
     "Win32_Graphics_Gdi",
     "Win32_System_LibraryLoader",
+    "Win32_System_Threading",
     "Win32_UI_Input_KeyboardAndMouse",
+    "Win32_UI_Shell",
+    "Win32_System_DataExchange",
+    "Win32_System_Memory",
+    "Win32_UI_HiDpi",
 ]}
 
 [target.'cfg(target_os = "macos")'.dependencies]
 core-graphics = "0.24"
 core-foundation = "0.10"
+cocoa = "0.25"
+objc = "0.2"
+objc-foundation = "0.1"
 
 [target.'cfg(target_os = "linux")'.dependencies]
 x11rb = { version = "0.13", features = ["xtest"] }
@@ -66,9 +80,18 @@ full = ["python", "opencv", "ocr", "async"]
 
 [dev-dependencies]
 criterion = "0.5"
+tempfile = "3"
 
 [[bench]]
 name = "matching"
+harness = false
+
+[[bench]]
+name = "screen_capture"
+harness = false
+
+[[bench]]
+name = "ncc_calculation"
 harness = false
 
 [profile.release]
@@ -76,3 +99,8 @@ lto = true
 codegen-units = 1
 strip = true
 opt-level = 3
+
+[profile.bench]
+inherits = "release"
+debug = true
+strip = false

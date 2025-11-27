@@ -22,3 +22,4 @@ original/
 .DS_Store
 native/
 .local/
+ide-rs-tauri/node_modules/

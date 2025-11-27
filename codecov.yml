@@ -1,0 +1,84 @@
+# Codecov Configuration for Sikuli-D
+# Sikuli-D用Codecov設定
+
+coverage:
+  status:
+    # Project-wide coverage target
+    # プロジェクト全体のカバレッジ目標
+    project:
+      default:
+        target: 85%
+        threshold: 2%
+        base: auto
+        if_ci_failed: error
+
+    # Patch coverage (PR changes)
+    # パッチカバレッジ（PR変更）
+    patch:
+      default:
+        target: 80%
+        threshold: 1%
+        base: auto
+        if_ci_failed: error
+
+  # Coverage precision / カバレッジ精度
+  precision: 2
+  round: down
+  range: "70...100"
+
+# Ignore certain paths / 特定のパスを無視
+ignore:
+  - "core-rs/benches"
+  - "core-rs/examples"
+  - "core-rs/tests"
+  - "*/tests/*"
+  - "*/build.rs"
+  - "ide-rs-tauri/src-tauri/target"
+
+# Comment settings / コメント設定
+comment:
+  layout: "header, diff, flags, components, files"
+  behavior: default
+  require_changes: false
+  require_base: false
+  require_head: true
+
+# GitHub checks / GitHubチェック
+github_checks:
+  annotations: true
+
+# Flags for different components / コンポーネント別フラグ
+flags:
+  core-rs:
+    paths:
+      - core-rs/src/
+    carryforward: false
+
+  ide-rs-tauri:
+    paths:
+      - ide-rs-tauri/src-tauri/src/
+    carryforward: false
+
+# Components to track separately / 個別に追跡するコンポーネント
+component_management:
+  default_rules:
+    statuses:
+      - type: project
+        target: 85%
+  individual_components:
+    - component_id: core_lib
+      name: "Core Library"
+      paths:
+        - core-rs/src/lib.rs
+        - core-rs/src/screen/
+        - core-rs/src/image/
+    - component_id: python_integration
+      name: "Python Integration"
+      paths:
+        - core-rs/src/python/
+    - component_id: platform_specific
+      name: "Platform Specific"
+      paths:
+        - core-rs/src/screen/windows.rs
+        - core-rs/src/screen/macos.rs
+        - core-rs/src/screen/linux.rs

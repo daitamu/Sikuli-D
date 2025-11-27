@@ -1,0 +1,73 @@
+# Dependabot Configuration for Sikuli-D
+# Sikuli-D用Dependabot設定
+#
+# Automatically creates PRs for dependency updates
+# 依存関係の更新を自動的にPRとして作成
+
+version: 2
+updates:
+  # Rust dependencies (core-rs)
+  # Rust依存関係（core-rs）
+  - package-ecosystem: "cargo"
+    directory: "/core-rs"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Tokyo"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "rust"
+      - "core-rs"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+    reviewers:
+      - "daitamu"
+    assignees:
+      - "daitamu"
+
+  # Rust dependencies (ide-rs-tauri)
+  # Rust依存関係（ide-rs-tauri）
+  - package-ecosystem: "cargo"
+    directory: "/ide-rs-tauri"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Tokyo"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "rust"
+      - "ide"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+    reviewers:
+      - "daitamu"
+    assignees:
+      - "daitamu"
+
+  # GitHub Actions
+  # GitHubアクション
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Tokyo"
+    open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+      - "github-actions"
+      - "ci"
+    commit-message:
+      prefix: "chore(ci)"
+      include: "scope"
+    reviewers:
+      - "daitamu"
+    assignees:
+      - "daitamu"

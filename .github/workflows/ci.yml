@@ -1,0 +1,306 @@
+# Sikuli-D CI/CD Pipeline
+# Sikuli-D CI/CDパイプライン
+#
+# Runs on push and pull request for core-rs and ide-rs-tauri
+# core-rsとide-rs-tauriのpush/PRでビルドとテストを実行
+
+name: CI
+
+on:
+  push:
+    branches: [master, develop]
+    paths:
+      - 'core-rs/**'
+      - 'ide-rs-tauri/**'
+      - '.github/workflows/**'
+  pull_request:
+    branches: [master, develop]
+    paths:
+      - 'core-rs/**'
+      - 'ide-rs-tauri/**'
+      - '.github/workflows/**'
+  workflow_dispatch:  # Allow manual triggering / 手動トリガーを許可
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  # Stage 1: Code Quality Checks
+  # ステージ1: コード品質チェック
+  code-quality:
+    name: Code Quality Checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+
+      - name: Check formatting (core-rs)
+        working-directory: core-rs
+        run: cargo fmt --all -- --check
+
+      - name: Run Clippy (core-rs)
+        working-directory: core-rs
+        run: cargo clippy --all-targets --all-features -- -D warnings
+
+      - name: Install cargo-audit
+        run: cargo install cargo-audit --locked
+
+      - name: Security audit (core-rs)
+        working-directory: core-rs
+        run: cargo audit
+
+      - name: Install cargo-deny
+        run: cargo install cargo-deny --locked
+
+      - name: License and dependency check (core-rs)
+        working-directory: core-rs
+        run: cargo deny check
+
+  # Stage 2: Unit Tests (Multi-platform)
+  # ステージ2: ユニットテスト（マルチプラットフォーム）
+  core-test:
+    name: Core Tests - ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    needs: code-quality
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            core-rs/target
+          key: ${{ runner.os }}-cargo-core-${{ hashFiles('core-rs/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-core-
+
+      - name: Build (core-rs)
+        working-directory: core-rs
+        run: cargo build --verbose
+
+      - name: Run unit tests
+        working-directory: core-rs
+        run: cargo test --lib --bins --verbose
+
+      - name: Run doc tests
+        working-directory: core-rs
+        run: cargo test --doc --verbose
+
+  # Stage 3: Integration Tests
+  # ステージ3: 統合テスト
+  integration-test:
+    name: Integration Tests - ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    needs: core-test
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            core-rs/target
+          key: ${{ runner.os }}-cargo-integration-${{ hashFiles('core-rs/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-integration-
+
+      - name: Run integration tests
+        working-directory: core-rs
+        run: cargo test --test '*' --verbose
+
+  # Stage 4: Code Coverage
+  # ステージ4: コードカバレッジ
+  coverage:
+    name: Code Coverage
+    runs-on: ubuntu-latest
+    needs: core-test
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: llvm-tools-preview
+
+      - name: Install cargo-llvm-cov
+        uses: taiki-e/install-action@cargo-llvm-cov
+
+      - name: Generate coverage report
+        working-directory: core-rs
+        run: |
+          cargo llvm-cov --all-features --workspace --lcov --output-path lcov.info
+          cargo llvm-cov report --html --output-dir coverage-report
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: core-rs/lcov.info
+          fail_ci_if_error: false
+          verbose: true
+
+      - name: Upload coverage report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: core-rs/coverage-report
+          retention-days: 30
+
+  # Stage 5: Performance Benchmarks (Optional)
+  # ステージ5: パフォーマンスベンチマーク（オプション）
+  benchmarks:
+    name: Performance Benchmarks
+    runs-on: ubuntu-latest
+    needs: core-test
+    if: github.event_name != 'pull_request'  # Only on push to main branches
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            core-rs/target
+          key: ubuntu-latest-cargo-bench-${{ hashFiles('core-rs/Cargo.lock') }}
+          restore-keys: |
+            ubuntu-latest-cargo-bench-
+
+      - name: Run benchmarks
+        working-directory: core-rs
+        run: cargo bench --no-fail-fast
+
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results
+          path: core-rs/target/criterion
+          retention-days: 30
+
+  # Stage 6: Build Artifacts
+  # ステージ6: ビルド成果物
+  build:
+    name: Build - ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    needs: [integration-test, coverage]
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install system dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            core-rs/target
+            ide-rs-tauri/target
+          key: ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-build-
+
+      - name: Build core-rs (Release)
+        working-directory: core-rs
+        run: cargo build --release --verbose
+
+      - name: Build ide-rs-tauri (Debug)
+        working-directory: ide-rs-tauri
+        run: cargo build --verbose
+
+      - name: Upload core-rs artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: core-rs-${{ matrix.os }}
+          path: |
+            core-rs/target/release/*.so
+            core-rs/target/release/*.dll
+            core-rs/target/release/*.dylib
+            core-rs/target/release/*.rlib
+          retention-days: 7
+          if-no-files-found: warn
+
+  # Summary job for required checks
+  # 必須チェックのサマリージョブ
+  ci-success:
+    name: CI Success
+    runs-on: ubuntu-latest
+    needs: [code-quality, core-test, integration-test, coverage, build]
+    if: always()
+
+    steps:
+      - name: Check all jobs status
+        run: |
+          if [[ "${{ needs.code-quality.result }}" != "success" ]]; then
+            echo "Code quality checks failed"
+            exit 1
+          fi
+          if [[ "${{ needs.core-test.result }}" != "success" ]]; then
+            echo "Core tests failed"
+            exit 1
+          fi
+          if [[ "${{ needs.integration-test.result }}" != "success" ]]; then
+            echo "Integration tests failed"
+            exit 1
+          fi
+          if [[ "${{ needs.coverage.result }}" != "success" ]]; then
+            echo "Coverage generation failed"
+            exit 1
+          fi
+          if [[ "${{ needs.build.result }}" != "success" ]]; then
+            echo "Build failed"
+            exit 1
+          fi
+          echo "All CI checks passed successfully!"

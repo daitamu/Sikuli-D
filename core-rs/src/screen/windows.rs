@@ -282,11 +282,15 @@ fn keyboard_type_char(ch: char) -> Result<()> {
     }
 }
 
-/// Press a key
+// ============================================================================
+// Internal helper functions (共通内部関数)
+// These are NOT public APIs - they provide shared low-level functionality
+// ============================================================================
+
+/// Internal: Send key down event by virtual key code
 #[cfg(target_os = "windows")]
-pub fn keyboard_press(key: Key) -> Result<()> {
+fn send_key_down_vk(vk: VIRTUAL_KEY) {
     unsafe {
-        let vk = key_to_vk(key);
         let input = INPUT {
             r#type: INPUT_KEYBOARD,
             Anonymous: INPUT_0 {
@@ -300,15 +304,13 @@ pub fn keyboard_press(key: Key) -> Result<()> {
             },
         };
         SendInput(&[input], std::mem::size_of::<INPUT>() as i32);
-        Ok(())
     }
 }
 
-/// Release a key
+/// Internal: Send key up event by virtual key code
 #[cfg(target_os = "windows")]
-pub fn keyboard_release(key: Key) -> Result<()> {
+fn send_key_up_vk(vk: VIRTUAL_KEY) {
     unsafe {
-        let vk = key_to_vk(key);
         let input = INPUT {
             r#type: INPUT_KEYBOARD,
             Anonymous: INPUT_0 {
@@ -322,8 +324,203 @@ pub fn keyboard_release(key: Key) -> Result<()> {
             },
         };
         SendInput(&[input], std::mem::size_of::<INPUT>() as i32);
+    }
+}
+
+/// Internal: Send mouse button down event
+#[cfg(target_os = "windows")]
+fn send_mouse_down(flags: MOUSE_EVENT_FLAGS) {
+    unsafe {
+        let input = INPUT {
+            r#type: INPUT_MOUSE,
+            Anonymous: INPUT_0 {
+                mi: MOUSEINPUT {
+                    dx: 0,
+                    dy: 0,
+                    mouseData: 0,
+                    dwFlags: flags,
+                    time: 0,
+                    dwExtraInfo: 0,
+                },
+            },
+        };
+        SendInput(&[input], std::mem::size_of::<INPUT>() as i32);
+    }
+}
+
+/// Internal: Send mouse button up event
+#[cfg(target_os = "windows")]
+fn send_mouse_up(flags: MOUSE_EVENT_FLAGS) {
+    unsafe {
+        let input = INPUT {
+            r#type: INPUT_MOUSE,
+            Anonymous: INPUT_0 {
+                mi: MOUSEINPUT {
+                    dx: 0,
+                    dy: 0,
+                    mouseData: 0,
+                    dwFlags: flags,
+                    time: 0,
+                    dwExtraInfo: 0,
+                },
+            },
+        };
+        SendInput(&[input], std::mem::size_of::<INPUT>() as i32);
+    }
+}
+
+/// Internal: Send mouse wheel event
+#[cfg(target_os = "windows")]
+fn send_mouse_wheel(flags: MOUSE_EVENT_FLAGS, delta: i32) {
+    unsafe {
+        let input = INPUT {
+            r#type: INPUT_MOUSE,
+            Anonymous: INPUT_0 {
+                mi: MOUSEINPUT {
+                    dx: 0,
+                    dy: 0,
+                    mouseData: delta as u32,
+                    dwFlags: flags,
+                    time: 0,
+                    dwExtraInfo: 0,
+                },
+            },
+        };
+        SendInput(&[input], std::mem::size_of::<INPUT>() as i32);
+    }
+}
+
+// ============================================================================
+// Public API functions (公開API関数)
+// ============================================================================
+
+/// Press a key
+#[cfg(target_os = "windows")]
+pub fn keyboard_press(key: Key) -> Result<()> {
+    let vk = key_to_vk(key);
+    send_key_down_vk(vk);
+    Ok(())
+}
+
+/// Release a key
+#[cfg(target_os = "windows")]
+pub fn keyboard_release(key: Key) -> Result<()> {
+    let vk = key_to_vk(key);
+    send_key_up_vk(vk);
+    Ok(())
+}
+
+/// Type text with delay between characters
+#[cfg(target_os = "windows")]
+pub fn keyboard_type_slow(text: &str, delay_ms: u64) -> Result<()> {
+    for ch in text.chars() {
+        keyboard_type_char(ch)?;
+        if delay_ms > 0 {
+            std::thread::sleep(std::time::Duration::from_millis(delay_ms));
+        }
+    }
+    Ok(())
+}
+
+/// Paste text via clipboard (uses internal helpers, not public APIs)
+#[cfg(target_os = "windows")]
+pub fn clipboard_paste_text(text: &str) -> Result<()> {
+    use windows::Win32::System::DataExchange::*;
+    use windows::Win32::System::Memory::*;
+
+    unsafe {
+        // Open clipboard
+        if OpenClipboard(HWND::default()).is_err() {
+            return Err(SikulixError::KeyboardError(
+                "Failed to open clipboard".to_string(),
+            ));
+        }
+
+        // Empty clipboard
+        let _ = EmptyClipboard();
+
+        // Convert text to wide string (UTF-16)
+        let wide: Vec<u16> = text.encode_utf16().chain(std::iter::once(0)).collect();
+        let byte_len = wide.len() * 2;
+
+        // Allocate global memory
+        let hmem = GlobalAlloc(GMEM_MOVEABLE, byte_len);
+        if hmem.is_err() {
+            let _ = CloseClipboard();
+            return Err(SikulixError::KeyboardError(
+                "Failed to allocate memory".to_string(),
+            ));
+        }
+        let hmem = hmem.unwrap();
+
+        // Lock and copy data
+        let ptr = GlobalLock(hmem);
+        if ptr.is_null() {
+            let _ = GlobalFree(hmem);
+            let _ = CloseClipboard();
+            return Err(SikulixError::KeyboardError(
+                "Failed to lock memory".to_string(),
+            ));
+        }
+        std::ptr::copy_nonoverlapping(wide.as_ptr(), ptr as *mut u16, wide.len());
+        let _ = GlobalUnlock(hmem);
+
+        // Set clipboard data (CF_UNICODETEXT = 13)
+        if SetClipboardData(13, windows::Win32::Foundation::HANDLE(hmem.0)).is_err() {
+            let _ = GlobalFree(hmem);
+            let _ = CloseClipboard();
+            return Err(SikulixError::KeyboardError(
+                "Failed to set clipboard data".to_string(),
+            ));
+        }
+
+        let _ = CloseClipboard();
+
+        // Send Ctrl+V using internal helpers (NOT public APIs)
+        send_key_down_vk(VK_CONTROL);
+        send_key_down_vk(VIRTUAL_KEY(0x56)); // V key
+        std::thread::sleep(std::time::Duration::from_millis(10));
+        send_key_up_vk(VIRTUAL_KEY(0x56)); // V key
+        send_key_up_vk(VK_CONTROL);
+
         Ok(())
     }
+}
+
+/// Press mouse button down (without releasing)
+#[cfg(target_os = "windows")]
+pub fn mouse_down() -> Result<()> {
+    send_mouse_down(MOUSEEVENTF_LEFTDOWN);
+    Ok(())
+}
+
+/// Release mouse button
+#[cfg(target_os = "windows")]
+pub fn mouse_up() -> Result<()> {
+    send_mouse_up(MOUSEEVENTF_LEFTUP);
+    Ok(())
+}
+
+/// Middle-click mouse button
+#[cfg(target_os = "windows")]
+pub fn mouse_middle_click() -> Result<()> {
+    send_mouse_down(MOUSEEVENTF_MIDDLEDOWN);
+    send_mouse_up(MOUSEEVENTF_MIDDLEUP);
+    Ok(())
+}
+
+/// Scroll mouse wheel vertically
+#[cfg(target_os = "windows")]
+pub fn mouse_scroll(clicks: i32) -> Result<()> {
+    send_mouse_wheel(MOUSEEVENTF_WHEEL, clicks * 120); // WHEEL_DELTA = 120
+    Ok(())
+}
+
+/// Scroll mouse wheel horizontally
+#[cfg(target_os = "windows")]
+pub fn mouse_scroll_horizontal(clicks: i32) -> Result<()> {
+    send_mouse_wheel(MOUSEEVENTF_HWHEEL, clicks * 120); // WHEEL_DELTA = 120
+    Ok(())
 }
 
 /// Convert Key enum to Windows virtual key code
@@ -448,4 +645,39 @@ pub fn keyboard_press(_key: Key) -> Result<()> {
 #[cfg(not(target_os = "windows"))]
 pub fn keyboard_release(_key: Key) -> Result<()> {
     Err(SikulixError::KeyboardError("Windows-only".to_string()))
+}
+
+#[cfg(not(target_os = "windows"))]
+pub fn keyboard_type_slow(_text: &str, _delay_ms: u64) -> Result<()> {
+    Err(SikulixError::KeyboardError("Windows-only".to_string()))
+}
+
+#[cfg(not(target_os = "windows"))]
+pub fn clipboard_paste_text(_text: &str) -> Result<()> {
+    Err(SikulixError::KeyboardError("Windows-only".to_string()))
+}
+
+#[cfg(not(target_os = "windows"))]
+pub fn mouse_down() -> Result<()> {
+    Err(SikulixError::MouseError("Windows-only".to_string()))
+}
+
+#[cfg(not(target_os = "windows"))]
+pub fn mouse_up() -> Result<()> {
+    Err(SikulixError::MouseError("Windows-only".to_string()))
+}
+
+#[cfg(not(target_os = "windows"))]
+pub fn mouse_middle_click() -> Result<()> {
+    Err(SikulixError::MouseError("Windows-only".to_string()))
+}
+
+#[cfg(not(target_os = "windows"))]
+pub fn mouse_scroll(_clicks: i32) -> Result<()> {
+    Err(SikulixError::MouseError("Windows-only".to_string()))
+}
+
+#[cfg(not(target_os = "windows"))]
+pub fn mouse_scroll_horizontal(_clicks: i32) -> Result<()> {
+    Err(SikulixError::MouseError("Windows-only".to_string()))
 }

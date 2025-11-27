@@ -1,0 +1,17 @@
+# Clippy Configuration for Sikuli-D
+# Sikuli-D用Clippy設定
+
+# Cognitive complexity threshold / 認知的複雑度の閾値
+cognitive-complexity-threshold = 30
+
+# Function arguments threshold / 関数引数の閾値
+too-many-arguments-threshold = 7
+
+# Type complexity threshold / 型の複雑度の閾値
+type-complexity-threshold = 250
+
+# Struct field threshold / 構造体フィールドの閾値
+too-many-lines-threshold = 100
+
+# Avoid breaking exported API / エクスポートされたAPIを壊さない
+avoid-breaking-exported-api = true

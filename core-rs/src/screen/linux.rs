@@ -245,6 +245,150 @@ pub fn mouse_position() -> Result<(i32, i32)> {
     Ok((reply.root_x as i32, reply.root_y as i32))
 }
 
+/// Press mouse button down (without releasing)
+#[cfg(target_os = "linux")]
+pub fn mouse_down() -> Result<()> {
+    let (conn, screen_num) = RustConnection::connect(None)
+        .map_err(|e| SikulixError::MouseError(format!("Failed to connect to X11: {}", e)))?;
+
+    let setup = conn.setup();
+    let screen = &setup.roots[screen_num];
+    let root = screen.root;
+
+    // Button press (1 = left button)
+    conn.xtest_fake_input(4, 1, 0, root, 0, 0, 0) // ButtonPress = 4
+        .map_err(|e| SikulixError::MouseError(format!("Failed to press button: {}", e)))?;
+
+    conn.flush()
+        .map_err(|e| SikulixError::MouseError(format!("Failed to flush: {}", e)))?;
+
+    Ok(())
+}
+
+/// Release mouse button
+#[cfg(target_os = "linux")]
+pub fn mouse_up() -> Result<()> {
+    let (conn, screen_num) = RustConnection::connect(None)
+        .map_err(|e| SikulixError::MouseError(format!("Failed to connect to X11: {}", e)))?;
+
+    let setup = conn.setup();
+    let screen = &setup.roots[screen_num];
+    let root = screen.root;
+
+    // Button release (1 = left button)
+    conn.xtest_fake_input(5, 1, 0, root, 0, 0, 0) // ButtonRelease = 5
+        .map_err(|e| SikulixError::MouseError(format!("Failed to release button: {}", e)))?;
+
+    conn.flush()
+        .map_err(|e| SikulixError::MouseError(format!("Failed to flush: {}", e)))?;
+
+    Ok(())
+}
+
+/// Middle-click mouse button
+#[cfg(target_os = "linux")]
+pub fn mouse_middle_click() -> Result<()> {
+    let (conn, screen_num) = RustConnection::connect(None)
+        .map_err(|e| SikulixError::MouseError(format!("Failed to connect to X11: {}", e)))?;
+
+    let setup = conn.setup();
+    let screen = &setup.roots[screen_num];
+    let root = screen.root;
+
+    // Button press (2 = middle button)
+    conn.xtest_fake_input(4, 2, 0, root, 0, 0, 0) // ButtonPress = 4
+        .map_err(|e| SikulixError::MouseError(format!("Failed to press button: {}", e)))?;
+
+    // Button release
+    conn.xtest_fake_input(5, 2, 0, root, 0, 0, 0) // ButtonRelease = 5
+        .map_err(|e| SikulixError::MouseError(format!("Failed to release button: {}", e)))?;
+
+    conn.flush()
+        .map_err(|e| SikulixError::MouseError(format!("Failed to flush: {}", e)))?;
+
+    Ok(())
+}
+
+/// Scroll mouse wheel vertically
+/// マウスホイールを垂直スクロール
+///
+/// # Arguments
+/// 引数
+///
+/// * `clicks` - Number of wheel clicks (positive = up, negative = down)
+///   ホイールクリック数（正 = 上、負 = 下）
+#[cfg(target_os = "linux")]
+pub fn mouse_scroll(clicks: i32) -> Result<()> {
+    let (conn, screen_num) = RustConnection::connect(None)
+        .map_err(|e| SikulixError::MouseError(format!("Failed to connect to X11: {}", e)))?;
+
+    let setup = conn.setup();
+    let screen = &setup.roots[screen_num];
+    let root = screen.root;
+
+    // In X11: button 4 = scroll up, button 5 = scroll down
+    let (button, count) = if clicks >= 0 {
+        (4u8, clicks.unsigned_abs())  // Button 4 = scroll up
+    } else {
+        (5u8, clicks.unsigned_abs())  // Button 5 = scroll down
+    };
+
+    for _ in 0..count {
+        // Button press
+        conn.xtest_fake_input(4, button, 0, root, 0, 0, 0) // ButtonPress = 4
+            .map_err(|e| SikulixError::MouseError(format!("Failed to press scroll: {}", e)))?;
+
+        // Button release
+        conn.xtest_fake_input(5, button, 0, root, 0, 0, 0) // ButtonRelease = 5
+            .map_err(|e| SikulixError::MouseError(format!("Failed to release scroll: {}", e)))?;
+    }
+
+    conn.flush()
+        .map_err(|e| SikulixError::MouseError(format!("Failed to flush: {}", e)))?;
+
+    Ok(())
+}
+
+/// Scroll mouse wheel horizontally
+/// マウスホイールを水平スクロール
+///
+/// # Arguments
+/// 引数
+///
+/// * `clicks` - Number of wheel clicks (positive = right, negative = left)
+///   ホイールクリック数（正 = 右、負 = 左）
+#[cfg(target_os = "linux")]
+pub fn mouse_scroll_horizontal(clicks: i32) -> Result<()> {
+    let (conn, screen_num) = RustConnection::connect(None)
+        .map_err(|e| SikulixError::MouseError(format!("Failed to connect to X11: {}", e)))?;
+
+    let setup = conn.setup();
+    let screen = &setup.roots[screen_num];
+    let root = screen.root;
+
+    // In X11: button 6 = scroll left, button 7 = scroll right
+    let (button, count) = if clicks >= 0 {
+        (7u8, clicks.unsigned_abs())  // Button 7 = scroll right
+    } else {
+        (6u8, clicks.unsigned_abs())  // Button 6 = scroll left
+    };
+
+    for _ in 0..count {
+        // Button press
+        conn.xtest_fake_input(4, button, 0, root, 0, 0, 0) // ButtonPress = 4
+            .map_err(|e| SikulixError::MouseError(format!("Failed to press scroll: {}", e)))?;
+
+        // Button release
+        conn.xtest_fake_input(5, button, 0, root, 0, 0, 0) // ButtonRelease = 5
+            .map_err(|e| SikulixError::MouseError(format!("Failed to release scroll: {}", e)))?;
+    }
+
+    conn.flush()
+        .map_err(|e| SikulixError::MouseError(format!("Failed to flush: {}", e)))?;
+
+    Ok(())
+}
+
 /// Type text using keyboard
 #[cfg(target_os = "linux")]
 pub fn keyboard_type(text: &str) -> Result<()> {
@@ -424,6 +568,118 @@ fn is_shifted_char(ch: char) -> bool {
     )
 }
 
+/// Paste text via clipboard (supports Japanese and other Unicode text)
+#[cfg(target_os = "linux")]
+pub fn clipboard_paste_text(text: &str) -> Result<()> {
+    use std::process::Command;
+
+    // Use xclip to set clipboard content (most common on Linux)
+    // Try xclip first, fall back to xsel if not available
+    let result = Command::new("xclip")
+        .args(["-selection", "clipboard"])
+        .stdin(std::process::Stdio::piped())
+        .spawn();
+
+    match result {
+        Ok(mut child) => {
+            if let Some(stdin) = child.stdin.as_mut() {
+                use std::io::Write;
+                stdin.write_all(text.as_bytes()).map_err(|e| {
+                    SikulixError::KeyboardError(format!("Failed to write to xclip: {}", e))
+                })?;
+            }
+            child.wait().map_err(|e| {
+                SikulixError::KeyboardError(format!("Failed to wait for xclip: {}", e))
+            })?;
+        }
+        Err(_) => {
+            // Try xsel as fallback
+            let mut child = Command::new("xsel")
+                .args(["--clipboard", "--input"])
+                .stdin(std::process::Stdio::piped())
+                .spawn()
+                .map_err(|e| {
+                    SikulixError::KeyboardError(format!(
+                        "Failed to spawn xsel (xclip also failed): {}",
+                        e
+                    ))
+                })?;
+
+            if let Some(stdin) = child.stdin.as_mut() {
+                use std::io::Write;
+                stdin.write_all(text.as_bytes()).map_err(|e| {
+                    SikulixError::KeyboardError(format!("Failed to write to xsel: {}", e))
+                })?;
+            }
+            child.wait().map_err(|e| {
+                SikulixError::KeyboardError(format!("Failed to wait for xsel: {}", e))
+            })?;
+        }
+    }
+
+    // Small delay to ensure clipboard is ready
+    std::thread::sleep(std::time::Duration::from_millis(10));
+
+    // Send Ctrl+V to paste
+    keyboard_press(Key::Ctrl)?;
+    keyboard_press(Key::V)?;
+    std::thread::sleep(std::time::Duration::from_millis(50));
+    keyboard_release(Key::V)?;
+    keyboard_release(Key::Ctrl)?;
+
+    Ok(())
+}
+
+/// Type text with delay between characters
+#[cfg(target_os = "linux")]
+pub fn keyboard_type_slow(text: &str, delay_ms: u64) -> Result<()> {
+    let (conn, screen_num) = RustConnection::connect(None)
+        .map_err(|e| SikulixError::KeyboardError(format!("Failed to connect to X11: {}", e)))?;
+
+    let setup = conn.setup();
+    let screen = &setup.roots[screen_num];
+    let root = screen.root;
+
+    for ch in text.chars() {
+        // For simplicity, only handle ASCII characters
+        if ch.is_ascii() {
+            let keycode = char_to_keycode(ch);
+            let need_shift = ch.is_ascii_uppercase() || is_shifted_char(ch);
+
+            if need_shift {
+                conn.xtest_fake_input(2, 50, 0, root, 0, 0, 0)
+                    .map_err(|e| {
+                        SikulixError::KeyboardError(format!("Failed to press shift: {}", e))
+                    })?;
+            }
+
+            conn.xtest_fake_input(2, keycode, 0, root, 0, 0, 0)
+                .map_err(|e| SikulixError::KeyboardError(format!("Failed to press key: {}", e)))?;
+
+            conn.xtest_fake_input(3, keycode, 0, root, 0, 0, 0)
+                .map_err(|e| {
+                    SikulixError::KeyboardError(format!("Failed to release key: {}", e))
+                })?;
+
+            if need_shift {
+                conn.xtest_fake_input(3, 50, 0, root, 0, 0, 0)
+                    .map_err(|e| {
+                        SikulixError::KeyboardError(format!("Failed to release shift: {}", e))
+                    })?;
+            }
+
+            conn.flush()
+                .map_err(|e| SikulixError::KeyboardError(format!("Failed to flush: {}", e)))?;
+
+            if delay_ms > 0 {
+                std::thread::sleep(std::time::Duration::from_millis(delay_ms));
+            }
+        }
+    }
+
+    Ok(())
+}
+
 /// Convert Key enum to X11 keycode
 #[cfg(target_os = "linux")]
 fn key_to_x11_keycode(key: Key) -> u8 {
@@ -563,6 +819,55 @@ pub fn keyboard_press(_key: Key) -> Result<()> {
 
 #[cfg(not(target_os = "linux"))]
 pub fn keyboard_release(_key: Key) -> Result<()> {
+    Err(SikulixError::KeyboardError(
+        "Linux implementation pending".to_string(),
+    ))
+}
+
+#[cfg(not(target_os = "linux"))]
+pub fn mouse_down() -> Result<()> {
+    Err(SikulixError::MouseError(
+        "Linux implementation pending".to_string(),
+    ))
+}
+
+#[cfg(not(target_os = "linux"))]
+pub fn mouse_up() -> Result<()> {
+    Err(SikulixError::MouseError(
+        "Linux implementation pending".to_string(),
+    ))
+}
+
+#[cfg(not(target_os = "linux"))]
+pub fn mouse_middle_click() -> Result<()> {
+    Err(SikulixError::MouseError(
+        "Linux implementation pending".to_string(),
+    ))
+}
+
+#[cfg(not(target_os = "linux"))]
+pub fn mouse_scroll(_clicks: i32) -> Result<()> {
+    Err(SikulixError::MouseError(
+        "Linux implementation pending".to_string(),
+    ))
+}
+
+#[cfg(not(target_os = "linux"))]
+pub fn mouse_scroll_horizontal(_clicks: i32) -> Result<()> {
+    Err(SikulixError::MouseError(
+        "Linux implementation pending".to_string(),
+    ))
+}
+
+#[cfg(not(target_os = "linux"))]
+pub fn clipboard_paste_text(_text: &str) -> Result<()> {
+    Err(SikulixError::KeyboardError(
+        "Linux implementation pending".to_string(),
+    ))
+}
+
+#[cfg(not(target_os = "linux"))]
+pub fn keyboard_type_slow(_text: &str, _delay_ms: u64) -> Result<()> {
     Err(SikulixError::KeyboardError(
         "Linux implementation pending".to_string(),
     ))

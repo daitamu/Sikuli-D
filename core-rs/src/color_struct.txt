@@ -1,0 +1,126 @@
+
+/// Represents a color with RGBA components
+/// RGBA成分を持つ色を表します
+///
+/// Used for pixel color retrieval and color operations.
+/// ピクセル色の取得と色操作に使用します。
+///
+/// # Example / 使用例
+///
+/// ```
+/// use sikulix_core::Color;
+///
+/// let red = Color::new(255, 0, 0, 255);
+/// assert_eq!(red.to_hex(), "#FF0000");
+/// ```
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Color {
+    /// Red component (0-255) / 赤成分（0-255）
+    pub r: u8,
+    /// Green component (0-255) / 緑成分（0-255）
+    pub g: u8,
+    /// Blue component (0-255) / 青成分（0-255）
+    pub b: u8,
+    /// Alpha component (0-255, 255 = opaque) / アルファ成分（0-255、255 = 不透明）
+    pub a: u8,
+}
+
+impl Color {
+    /// Create a new color with RGBA components
+    /// RGBA成分で新しい色を作成
+    pub fn new(r: u8, g: u8, b: u8, a: u8) -> Self {
+        Self { r, g, b, a }
+    }
+
+    /// Create a fully opaque color with RGB components
+    /// RGB成分で完全に不透明な色を作成
+    pub fn rgb(r: u8, g: u8, b: u8) -> Self {
+        Self { r, g, b, a: 255 }
+    }
+
+    /// Convert color to hex string format "#RRGGBB"
+    /// 色を16進数文字列形式 "#RRGGBB" に変換
+    pub fn to_hex(&self) -> String {
+        format!("#{:02X}{:02X}{:02X}", self.r, self.g, self.b)
+    }
+
+    /// Convert color to hex string format with alpha "#RRGGBBAA"
+    /// 色をアルファ付き16進数文字列形式 "#RRGGBBAA" に変換
+    pub fn to_hex_with_alpha(&self) -> String {
+        format!("#{:02X}{:02X}{:02X}{:02X}", self.r, self.g, self.b, self.a)
+    }
+
+    /// Parse a hex color string to create a Color
+    /// 16進数色文字列を解析してColorを作成
+    ///
+    /// Supports formats: "#RGB", "#RRGGBB", "#RRGGBBAA"
+    /// サポート形式: "#RGB", "#RRGGBB", "#RRGGBBAA"
+    pub fn from_hex(hex: &str) -> Result<Self> {
+        let hex = hex.trim_start_matches('#');
+
+        match hex.len() {
+            3 => {
+                let r = u8::from_str_radix(&hex[0..1], 16)
+                    .map_err(|_| SikulixError::ImageLoadError("Invalid hex color".to_string()))?;
+                let g = u8::from_str_radix(&hex[1..2], 16)
+                    .map_err(|_| SikulixError::ImageLoadError("Invalid hex color".to_string()))?;
+                let b = u8::from_str_radix(&hex[2..3], 16)
+                    .map_err(|_| SikulixError::ImageLoadError("Invalid hex color".to_string()))?;
+                Ok(Self::rgb(r * 17, g * 17, b * 17))
+            }
+            6 => {
+                let r = u8::from_str_radix(&hex[0..2], 16)
+                    .map_err(|_| SikulixError::ImageLoadError("Invalid hex color".to_string()))?;
+                let g = u8::from_str_radix(&hex[2..4], 16)
+                    .map_err(|_| SikulixError::ImageLoadError("Invalid hex color".to_string()))?;
+                let b = u8::from_str_radix(&hex[4..6], 16)
+                    .map_err(|_| SikulixError::ImageLoadError("Invalid hex color".to_string()))?;
+                Ok(Self::rgb(r, g, b))
+            }
+            8 => {
+                let r = u8::from_str_radix(&hex[0..2], 16)
+                    .map_err(|_| SikulixError::ImageLoadError("Invalid hex color".to_string()))?;
+                let g = u8::from_str_radix(&hex[2..4], 16)
+                    .map_err(|_| SikulixError::ImageLoadError("Invalid hex color".to_string()))?;
+                let b = u8::from_str_radix(&hex[4..6], 16)
+                    .map_err(|_| SikulixError::ImageLoadError("Invalid hex color".to_string()))?;
+                let a = u8::from_str_radix(&hex[6..8], 16)
+                    .map_err(|_| SikulixError::ImageLoadError("Invalid hex color".to_string()))?;
+                Ok(Self::new(r, g, b, a))
+            }
+            _ => Err(SikulixError::ImageLoadError("Invalid hex color format".to_string())),
+        }
+    }
+
+    /// Convert color to grayscale
+    /// 色をグレースケールに変換
+    pub fn to_grayscale(&self) -> u8 {
+        (0.299 * self.r as f64 + 0.587 * self.g as f64 + 0.114 * self.b as f64) as u8
+    }
+
+    /// Check if color is close to another color within tolerance
+    /// 色が許容範囲内で別の色に近いかチェック
+    pub fn is_similar(&self, other: &Color, tolerance: u8) -> bool {
+        let dr = (self.r as i16 - other.r as i16).abs();
+        let dg = (self.g as i16 - other.g as i16).abs();
+        let db = (self.b as i16 - other.b as i16).abs();
+        dr <= tolerance as i16 && dg <= tolerance as i16 && db <= tolerance as i16
+    }
+
+    /// Predefined color: Black / 黒
+    pub const BLACK: Color = Color { r: 0, g: 0, b: 0, a: 255 };
+    /// Predefined color: White / 白
+    pub const WHITE: Color = Color { r: 255, g: 255, b: 255, a: 255 };
+    /// Predefined color: Red / 赤
+    pub const RED: Color = Color { r: 255, g: 0, b: 0, a: 255 };
+    /// Predefined color: Green / 緑
+    pub const GREEN: Color = Color { r: 0, g: 255, b: 0, a: 255 };
+    /// Predefined color: Blue / 青
+    pub const BLUE: Color = Color { r: 0, g: 0, b: 255, a: 255 };
+    /// Predefined color: Yellow / 黄
+    pub const YELLOW: Color = Color { r: 255, g: 255, b: 0, a: 255 };
+    /// Predefined color: Cyan / シアン
+    pub const CYAN: Color = Color { r: 0, g: 255, b: 255, a: 255 };
+    /// Predefined color: Magenta / マゼンタ
+    pub const MAGENTA: Color = Color { r: 255, g: 0, b: 255, a: 255 };
+}

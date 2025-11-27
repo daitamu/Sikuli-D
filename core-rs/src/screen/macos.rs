@@ -239,6 +239,133 @@ pub fn mouse_position() -> Result<(i32, i32)> {
     Ok((location.x as i32, location.y as i32))
 }
 
+/// Press mouse button down (without releasing)
+#[cfg(target_os = "macos")]
+pub fn mouse_down() -> Result<()> {
+    let (x, y) = mouse_position()?;
+    let point = CGPoint::new(x as f64, y as f64);
+
+    let source = CGEventSource::new(CGEventSourceStateID::HIDSystemState)
+        .map_err(|_| SikulixError::MouseError("Failed to create event source".to_string()))?;
+
+    let event = CGEvent::new_mouse_event(
+        source,
+        CGEventType::LeftMouseDown,
+        point,
+        CGMouseButton::Left,
+    )
+    .map_err(|_| SikulixError::MouseError("Failed to create mouse down event".to_string()))?;
+    event.post(CGEventTapLocation::HID);
+
+    Ok(())
+}
+
+/// Release mouse button
+#[cfg(target_os = "macos")]
+pub fn mouse_up() -> Result<()> {
+    let (x, y) = mouse_position()?;
+    let point = CGPoint::new(x as f64, y as f64);
+
+    let source = CGEventSource::new(CGEventSourceStateID::HIDSystemState)
+        .map_err(|_| SikulixError::MouseError("Failed to create event source".to_string()))?;
+
+    let event =
+        CGEvent::new_mouse_event(source, CGEventType::LeftMouseUp, point, CGMouseButton::Left)
+            .map_err(|_| SikulixError::MouseError("Failed to create mouse up event".to_string()))?;
+    event.post(CGEventTapLocation::HID);
+
+    Ok(())
+}
+
+/// Middle-click mouse button
+#[cfg(target_os = "macos")]
+pub fn mouse_middle_click() -> Result<()> {
+    let (x, y) = mouse_position()?;
+    let point = CGPoint::new(x as f64, y as f64);
+
+    let source = CGEventSource::new(CGEventSourceStateID::HIDSystemState)
+        .map_err(|_| SikulixError::MouseError("Failed to create event source".to_string()))?;
+
+    // Mouse down (center button)
+    let down_event = CGEvent::new_mouse_event(
+        source.clone(),
+        CGEventType::OtherMouseDown,
+        point,
+        CGMouseButton::Center,
+    )
+    .map_err(|_| SikulixError::MouseError("Failed to create mouse down event".to_string()))?;
+    down_event.post(CGEventTapLocation::HID);
+
+    // Mouse up
+    let up_event = CGEvent::new_mouse_event(
+        source,
+        CGEventType::OtherMouseUp,
+        point,
+        CGMouseButton::Center,
+    )
+    .map_err(|_| SikulixError::MouseError("Failed to create mouse up event".to_string()))?;
+    up_event.post(CGEventTapLocation::HID);
+
+    Ok(())
+}
+
+/// Scroll mouse wheel vertically
+/// マウスホイールを垂直スクロール
+///
+/// # Arguments
+/// 引数
+///
+/// * `clicks` - Number of wheel clicks (positive = up, negative = down)
+///   ホイールクリック数（正 = 上、負 = 下）
+#[cfg(target_os = "macos")]
+pub fn mouse_scroll(clicks: i32) -> Result<()> {
+    let source = CGEventSource::new(CGEventSourceStateID::HIDSystemState)
+        .map_err(|_| SikulixError::MouseError("Failed to create event source".to_string()))?;
+
+    // Create scroll wheel event
+    // On macOS, positive values scroll up (wheel away from user)
+    let event = CGEvent::new_scroll_event(
+        source,
+        core_graphics::event::ScrollEventUnit::Line,
+        1,        // wheel_count
+        clicks,   // delta1 (vertical)
+        0,        // delta2 (horizontal)
+        0,        // delta3
+    )
+    .map_err(|_| SikulixError::MouseError("Failed to create scroll event".to_string()))?;
+
+    event.post(CGEventTapLocation::HID);
+    Ok(())
+}
+
+/// Scroll mouse wheel horizontally
+/// マウスホイールを水平スクロール
+///
+/// # Arguments
+/// 引数
+///
+/// * `clicks` - Number of wheel clicks (positive = right, negative = left)
+///   ホイールクリック数（正 = 右、負 = 左）
+#[cfg(target_os = "macos")]
+pub fn mouse_scroll_horizontal(clicks: i32) -> Result<()> {
+    let source = CGEventSource::new(CGEventSourceStateID::HIDSystemState)
+        .map_err(|_| SikulixError::MouseError("Failed to create event source".to_string()))?;
+
+    // Create scroll wheel event for horizontal scrolling
+    let event = CGEvent::new_scroll_event(
+        source,
+        core_graphics::event::ScrollEventUnit::Line,
+        2,        // wheel_count (2 for horizontal)
+        0,        // delta1 (vertical)
+        clicks,   // delta2 (horizontal)
+        0,        // delta3
+    )
+    .map_err(|_| SikulixError::MouseError("Failed to create scroll event".to_string()))?;
+
+    event.post(CGEventTapLocation::HID);
+    Ok(())
+}
+
 /// Type text using keyboard
 #[cfg(target_os = "macos")]
 pub fn keyboard_type(text: &str) -> Result<()> {
@@ -383,6 +510,72 @@ fn key_to_flags(key: Key) -> Option<CGEventFlags> {
     }
 }
 
+/// Paste text via clipboard (supports Japanese and other Unicode text)
+/// Uses NSPasteboard via objc runtime
+#[cfg(target_os = "macos")]
+pub fn clipboard_paste_text(text: &str) -> Result<()> {
+    use std::process::Command;
+
+    // Use pbcopy to set clipboard content (simplest cross-compatible approach)
+    let mut child = Command::new("pbcopy")
+        .stdin(std::process::Stdio::piped())
+        .spawn()
+        .map_err(|e| SikulixError::KeyboardError(format!("Failed to spawn pbcopy: {}", e)))?;
+
+    if let Some(stdin) = child.stdin.as_mut() {
+        use std::io::Write;
+        stdin.write_all(text.as_bytes()).map_err(|e| {
+            SikulixError::KeyboardError(format!("Failed to write to pbcopy: {}", e))
+        })?;
+    }
+
+    child
+        .wait()
+        .map_err(|e| SikulixError::KeyboardError(format!("Failed to wait for pbcopy: {}", e)))?;
+
+    // Small delay to ensure clipboard is ready
+    std::thread::sleep(std::time::Duration::from_millis(10));
+
+    // Send Cmd+V to paste (macOS uses Command key for paste)
+    keyboard_press(Key::Meta)?;
+    keyboard_press(Key::V)?;
+    std::thread::sleep(std::time::Duration::from_millis(50));
+    keyboard_release(Key::V)?;
+    keyboard_release(Key::Meta)?;
+
+    Ok(())
+}
+
+/// Type text with delay between characters
+#[cfg(target_os = "macos")]
+pub fn keyboard_type_slow(text: &str, delay_ms: u64) -> Result<()> {
+    let source = CGEventSource::new(CGEventSourceStateID::HIDSystemState)
+        .map_err(|_| SikulixError::KeyboardError("Failed to create event source".to_string()))?;
+
+    for ch in text.chars() {
+        // Create key down event with Unicode
+        let event = CGEvent::new_keyboard_event(source.clone(), 0, true)
+            .map_err(|_| SikulixError::KeyboardError("Failed to create key event".to_string()))?;
+
+        // Set Unicode string
+        let chars = [ch as u16];
+        event.set_string_from_utf16_unchecked(&chars);
+        event.post(CGEventTapLocation::HID);
+
+        // Key up
+        let up_event = CGEvent::new_keyboard_event(source.clone(), 0, false).map_err(|_| {
+            SikulixError::KeyboardError("Failed to create key up event".to_string())
+        })?;
+        up_event.post(CGEventTapLocation::HID);
+
+        if delay_ms > 0 {
+            std::thread::sleep(std::time::Duration::from_millis(delay_ms));
+        }
+    }
+
+    Ok(())
+}
+
 // Stub implementations for non-macOS builds
 #[cfg(not(target_os = "macos"))]
 pub fn get_screen_dimensions(_index: u32) -> Result<(u32, u32)> {
@@ -449,6 +642,55 @@ pub fn keyboard_press(_key: Key) -> Result<()> {
 
 #[cfg(not(target_os = "macos"))]
 pub fn keyboard_release(_key: Key) -> Result<()> {
+    Err(SikulixError::KeyboardError(
+        "macOS implementation pending".to_string(),
+    ))
+}
+
+#[cfg(not(target_os = "macos"))]
+pub fn mouse_down() -> Result<()> {
+    Err(SikulixError::MouseError(
+        "macOS implementation pending".to_string(),
+    ))
+}
+
+#[cfg(not(target_os = "macos"))]
+pub fn mouse_up() -> Result<()> {
+    Err(SikulixError::MouseError(
+        "macOS implementation pending".to_string(),
+    ))
+}
+
+#[cfg(not(target_os = "macos"))]
+pub fn mouse_middle_click() -> Result<()> {
+    Err(SikulixError::MouseError(
+        "macOS implementation pending".to_string(),
+    ))
+}
+
+#[cfg(not(target_os = "macos"))]
+pub fn mouse_scroll(_clicks: i32) -> Result<()> {
+    Err(SikulixError::MouseError(
+        "macOS implementation pending".to_string(),
+    ))
+}
+
+#[cfg(not(target_os = "macos"))]
+pub fn mouse_scroll_horizontal(_clicks: i32) -> Result<()> {
+    Err(SikulixError::MouseError(
+        "macOS implementation pending".to_string(),
+    ))
+}
+
+#[cfg(not(target_os = "macos"))]
+pub fn clipboard_paste_text(_text: &str) -> Result<()> {
+    Err(SikulixError::KeyboardError(
+        "macOS implementation pending".to_string(),
+    ))
+}
+
+#[cfg(not(target_os = "macos"))]
+pub fn keyboard_type_slow(_text: &str, _delay_ms: u64) -> Result<()> {
     Err(SikulixError::KeyboardError(
         "macOS implementation pending".to_string(),
     ))

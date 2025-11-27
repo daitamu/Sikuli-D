@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - SikuliX IDE</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-color, #1e1e1e);
+            color: var(--text-color, #d4d4d4);
+        }
+
+        .settings-container {
+            display: flex;
+            height: 100vh;
+        }
+
+        .settings-sidebar {
+            width: 200px;
+            background: var(--sidebar-bg, #252526);
+            border-right: 1px solid var(--border-color, #3c3c3c);
+            padding: 16px 0;
+        }
+
+        .settings-sidebar h2 {
+            font-size: 14px;
+            font-weight: 600;
+            padding: 0 16px;
+            margin: 0 0 16px 0;
+            color: var(--text-muted, #888);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .sidebar-item {
+            padding: 8px 16px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .sidebar-item:hover {
+            background: var(--hover-bg, #2a2d2e);
+        }
+
+        .sidebar-item.active {
+            background: var(--active-bg, #37373d);
+            border-left: 2px solid var(--accent-color, #007acc);
+        }
+
+        .settings-content {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        .settings-content h1 {
+            font-size: 24px;
+            margin: 0 0 24px 0;
+        }
+
+        .settings-section {
+            display: none;
+            max-width: 600px;
+        }
+
+        .settings-section.active {
+            display: block;
+        }
+
+        .setting-group {
+            margin-bottom: 24px;
+        }
+
+        .setting-group h3 {
+            font-size: 14px;
+            color: var(--text-muted, #888);
+            margin: 0 0 12px 0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-color, #3c3c3c);
+        }
+
+        .setting-label {
+            flex: 1;
+        }
+
+        .setting-label strong {
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .setting-label small {
+            color: var(--text-muted, #888);
+            font-size: 12px;
+        }
+
+        .setting-control {
+            flex-shrink: 0;
+            margin-left: 16px;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select {
+            padding: 6px 10px;
+            border: 1px solid var(--border-color, #3c3c3c);
+            border-radius: 4px;
+            background: var(--input-bg, #3c3c3c);
+            color: var(--text-color, #d4d4d4);
+            font-size: 14px;
+            min-width: 150px;
+        }
+
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .toggle {
+            position: relative;
+            width: 40px;
+            height: 20px;
+        }
+
+        .toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--border-color, #3c3c3c);
+            border-radius: 20px;
+            transition: background 0.3s;
+        }
+
+        .toggle-slider:before {
+            content: "";
+            position: absolute;
+            height: 16px;
+            width: 16px;
+            left: 2px;
+            bottom: 2px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s;
+        }
+
+        .toggle input:checked + .toggle-slider {
+            background: var(--accent-color, #007acc);
+        }
+
+        .toggle input:checked + .toggle-slider:before {
+            transform: translateX(20px);
+        }
+
+        .hotkey-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border-color, #3c3c3c);
+        }
+
+        .hotkey-key {
+            font-family: monospace;
+            background: var(--input-bg, #3c3c3c);
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            min-width: 100px;
+            text-align: center;
+        }
+
+        .hotkey-key.editing {
+            border: 1px solid var(--accent-color, #007acc);
+            outline: none;
+        }
+
+        .button-row {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border-color, #3c3c3c);
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--accent-color, #007acc);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #005a9e;
+        }
+
+        .btn-secondary {
+            background: var(--border-color, #3c3c3c);
+            color: var(--text-color, #d4d4d4);
+        }
+
+        .btn-secondary:hover {
+            background: #4a4a4a;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .profile-list {
+            margin-bottom: 16px;
+        }
+
+        .profile-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: var(--input-bg, #3c3c3c);
+            border-radius: 4px;
+            margin-bottom: 8px;
+        }
+
+        .profile-item.active {
+            border-left: 3px solid var(--accent-color, #007acc);
+        }
+    </style>
+</head>
+<body>
+    <div class="settings-container">
+        <nav class="settings-sidebar">
+            <h2>Settings</h2>
+            <div class="sidebar-item active" data-section="general">General</div>
+            <div class="sidebar-item" data-section="editor">Editor</div>
+            <div class="sidebar-item" data-section="execution">Execution</div>
+            <div class="sidebar-item" data-section="imageRecognition">Image Recognition</div>
+            <div class="sidebar-item" data-section="ocr">OCR</div>
+            <div class="sidebar-item" data-section="hotkeys">Hotkeys</div>
+            <div class="sidebar-item" data-section="profiles">Profiles</div>
+        </nav>
+
+        <main class="settings-content">
+            <!-- General Settings -->
+            <section id="general" class="settings-section active">
+                <h1>General Settings</h1>
+                <div class="setting-group">
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <strong>Language</strong>
+                            <small>UI display language</small>
+                        </div>
+                        <div class="setting-control">
+                            <select id="setting-language">
+                                <option value="en">English</option>
+                                <option value="ja">Japanese</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <strong>Theme</strong>
+                            <small>Application color theme</small>
+                        </div>
+                        <div class="setting-control">
+                            <select id="setting-theme">
+                                <option value="light">Light</option>
+                                <option value="dark">Dark</option>
+                                <option value="system">System</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <strong>Check for Updates</strong>
+                            <small>Check for updates on startup</small>
+                        </div>
+                        <div class="setting-control">
+                            <label class="toggle">
+                                <input type="checkbox" id="setting-checkUpdates">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <strong>Show Welcome</strong>
+                            <small>Show welcome screen on startup</small>
+                        </div>
+                        <div class="setting-control">
+                            <label class="toggle">
+                                <input type="checkbox" id="setting-showWelcome">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <strong>Recent Files Limit</strong>
+                            <small>Maximum number of recent files</small>
+                        </div>
+                        <div class="setting-control">
+                            <input type="number" id="setting-recentFilesLimit" min="1" max="50">
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Editor Settings -->
+            <section id="editor" class="settings-section">
+                <h1>Editor Settings</h1>
+                <div class="setting-group">
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <strong>Font Size</strong>
+                            <small>Editor font size in pixels</small>
+                        </div>
+                        <div class="setting-control">
+                            <input type="number" id="setting-fontSize" min="8" max="72">
+                        </div>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <strong>Font Family</strong>
+                            <small>Editor font family</small>
+                        </div>
+                        <div class="setting-control">
+                            <input type="text" id="setting-fontFamily">
+                        </div>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <strong>Tab Size</strong>
+                            <small>Number of spaces per tab</small>
+                        </div>
+                        <div class="setting-control">
+                            <input type="number" id="setting-tabSize" min="1" max="8">
+                        </div>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <strong>Use Spaces</strong>
+                            <small>Use spaces instead of tabs</small>
+                        </div>
+                        <div class="setting-control">
+                            <label class="toggle">
+                                <input type="checkbox" id="setting-useSpaces">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <strong>Word Wrap</strong>
+                            <small>Enable word wrap</small>
+                        </div>
+                        <div class="setting-control">
+                            <label class="toggle">
+                                <input type="checkbox" id="setting-wordWrap">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <strong>Line Numbers</strong>
+                            <small>Show line numbers</small>
+                        </div>
+                        <div class="setting-control">
+                            <label class="toggle">
+                                <input type="checkbox" id="setting-lineNumbers">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <strong>Highlight Current Line</strong>
+                            <small>Highlight the current line</small>
+                        </div>
+                        <div class="setting-control">
+                            <label class="toggle">
+                                <input type="checkbox" id="setting-highlightCurrentLine">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <strong>Auto Close Brackets</strong>
+                            <small>Automatically close brackets</small>
+                        </div>
+                        <div class="setting-control">
+                            <label class="toggle">
+                                <input type="checkbox" id="setting-autoCloseBrackets">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <strong>Code Completion</strong>
+                            <small>Enable code completion</small>
+                        </div>
+                        <div class="setting-control">
+                            <label class="toggle">
+                                <input type="checkbox" id="setting-codeCompletion">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <strong>Minimap</strong>
+                            <small>Show minimap</small>
+                        </div>
+                        <div class="setting-control">
+                            <label class="toggle">
+                                <input type="checkbox" id="setting-minimap">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Execution Settings -->
+            <section id="execution" class="settings-section">
+                <h1>Execution Settings</h1>
+                <div class="setting-group">
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <strong>Python Path</strong>
+                            <small>Custom Python interpreter path (empty = auto-detect)</small>
+                        </div>
+                        <div class="setting-control">
+                            <input type="text" id="setting-pythonPath" placeholder="Auto-detect">
+                        </div>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <strong>Default Timeout</strong>
+                            <small>Script execution timeout in seconds</small>
+                        </div>
+                        <div class="setting-control">
+                            <input type="number" id="setting-defaultTimeout" min="1" max="3600">
+                        </div>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <strong>Auto Save Before Run</strong>
+                            <small>Save files before running script</small>
+                        </div>
+                        <div class="setting-control">
+                            <label class="toggle">
+                                <input type="checkbox" id="setting-autoSaveBeforeRun">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <strong>Clear Output on Run</strong>
+                            <small>Clear output panel before running</small>
+                        </div>
+                        <div class="setting-control">
+                            <label class="toggle">
+                                <input type="checkbox" id="setting-clearOutputOnRun">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <strong>Show Execution Time</strong>
+                            <small>Display execution time after run</small>
+                        </div>
+                        <div class="setting-control">
+                            <label class="toggle">
+                                <input type="checkbox" id="setting-showExecutionTime">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Image Recognition Settings -->
+            <section id="imageRecognition" class="settings-section">
+                <h1>Image Recognition Settings</h1>
+                <div class="setting-group">
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <strong>Default Similarity</strong>
+                            <small>Default match similarity threshold (0.0 - 1.0)</small>
+                        </div>
+                        <div class="setting-control">
+                            <input type="number" id="setting-defaultSimilarity" min="0" max="1" step="0.01">
+                        </div>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <strong>Highlight Matches</strong>
+                            <small>Highlight found matches on screen</small>
+                        </div>
+                        <div class="setting-control">
+                            <label class="toggle">
+                                <input type="checkbox" id="setting-highlightMatches">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <strong>Highlight Duration</strong>
+                            <small>Match highlight duration in milliseconds</small>
+                        </div>
+                        <div class="setting-control">
+                            <input type="number" id="setting-highlightDurationMs" min="100" max="10000">
+                        </div>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <strong>Auto Wait Timeout</strong>
+                            <small>Default wait timeout for find operations (seconds)</small>
+                        </div>
+                        <div class="setting-control">
+                            <input type="number" id="setting-autoWaitTimeout" min="0" max="60" step="0.5">
+                        </div>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <strong>Cache Templates</strong>
+                            <small>Cache template images for faster matching</small>
+                        </div>
+                        <div class="setting-control">
+                            <label class="toggle">
+                                <input type="checkbox" id="setting-cacheTemplates">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- OCR Settings -->
+            <section id="ocr" class="settings-section">
+                <h1>OCR Settings</h1>
+                <div class="setting-group">
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <strong>OCR Language</strong>
+                            <small>Language code (e.g., eng, jpn, eng+jpn)</small>
+                        </div>
+                        <div class="setting-control">
+                            <input type="text" id="setting-ocrLanguage">
+                        </div>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <strong>Tessdata Path</strong>
+                            <small>Custom tessdata directory (empty = default)</small>
+                        </div>
+                        <div class="setting-control">
+                            <input type="text" id="setting-tessdataPath" placeholder="Default">
+                        </div>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <strong>Enable OCR Cache</strong>
+                            <small>Cache OCR results</small>
+                        </div>
+                        <div class="setting-control">
+                            <label class="toggle">
+                                <input type="checkbox" id="setting-ocrEnableCache">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Hotkeys Settings -->
+            <section id="hotkeys" class="settings-section">
+                <h1>Hotkey Settings</h1>
+                <div class="setting-group">
+                    <div id="hotkey-list">
+                        <!-- Hotkeys will be populated by JavaScript -->
+                    </div>
+                    <div class="button-row">
+                        <button class="btn btn-danger" onclick="resetHotkeys()">Reset to Defaults</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Profiles Settings -->
+            <section id="profiles" class="settings-section">
+                <h1>Profile Management</h1>
+                <div class="setting-group">
+                    <div class="profile-list" id="profile-list">
+                        <!-- Profiles will be populated by JavaScript -->
+                    </div>
+                    <div class="button-row">
+                        <input type="text" id="new-profile-name" placeholder="New profile name">
+                        <button class="btn btn-primary" onclick="createProfile()">Create Profile</button>
+                    </div>
+                </div>
+            </section>
+
+            <div class="button-row">
+                <button class="btn btn-primary" onclick="saveSettings()">Save Settings</button>
+                <button class="btn btn-secondary" onclick="resetCurrentSection()">Reset This Section</button>
+                <button class="btn btn-danger" onclick="resetAllSettings()">Reset All</button>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const { invoke } = window.__TAURI__.core;
+
+        let currentSettings = {};
+        let currentSection = 'general';
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadSettings();
+            setupNavigation();
+        });
+
+        async function loadSettings() {
+            try {
+                currentSettings = await invoke('get_settings');
+                applySettingsToUI(currentSettings);
+                await loadHotkeys();
+                await loadProfiles();
+            } catch (e) {
+                console.error('Failed to load settings:', e);
+            }
+        }
+
+        function applySettingsToUI(settings) {
+            // General
+            document.getElementById('setting-language').value = settings.general.language;
+            document.getElementById('setting-theme').value = settings.general.theme;
+            document.getElementById('setting-checkUpdates').checked = settings.general.check_updates;
+            document.getElementById('setting-showWelcome').checked = settings.general.show_welcome;
+            document.getElementById('setting-recentFilesLimit').value = settings.general.recent_files_limit;
+
+            // Editor
+            document.getElementById('setting-fontSize').value = settings.editor.font_size;
+            document.getElementById('setting-fontFamily').value = settings.editor.font_family;
+            document.getElementById('setting-tabSize').value = settings.editor.tab_size;
+            document.getElementById('setting-useSpaces').checked = settings.editor.use_spaces;
+            document.getElementById('setting-wordWrap').checked = settings.editor.word_wrap;
+            document.getElementById('setting-lineNumbers').checked = settings.editor.line_numbers;
+            document.getElementById('setting-highlightCurrentLine').checked = settings.editor.highlight_current_line;
+            document.getElementById('setting-autoCloseBrackets').checked = settings.editor.auto_close_brackets;
+            document.getElementById('setting-codeCompletion').checked = settings.editor.code_completion;
+            document.getElementById('setting-minimap').checked = settings.editor.minimap;
+
+            // Execution
+            document.getElementById('setting-pythonPath').value = settings.execution.python_path;
+            document.getElementById('setting-defaultTimeout').value = settings.execution.default_timeout;
+            document.getElementById('setting-autoSaveBeforeRun').checked = settings.execution.auto_save_before_run;
+            document.getElementById('setting-clearOutputOnRun').checked = settings.execution.clear_output_on_run;
+            document.getElementById('setting-showExecutionTime').checked = settings.execution.show_execution_time;
+
+            // Image Recognition
+            document.getElementById('setting-defaultSimilarity').value = settings.image_recognition.default_similarity;
+            document.getElementById('setting-highlightMatches').checked = settings.image_recognition.highlight_matches;
+            document.getElementById('setting-highlightDurationMs').value = settings.image_recognition.highlight_duration_ms;
+            document.getElementById('setting-autoWaitTimeout').value = settings.image_recognition.auto_wait_timeout;
+            document.getElementById('setting-cacheTemplates').checked = settings.image_recognition.cache_templates;
+
+            // OCR
+            document.getElementById('setting-ocrLanguage').value = settings.ocr.language;
+            document.getElementById('setting-tessdataPath').value = settings.ocr.tessdata_path;
+            document.getElementById('setting-ocrEnableCache').checked = settings.ocr.enable_cache;
+        }
+
+        function collectSettingsFromUI() {
+            return {
+                general: {
+                    language: document.getElementById('setting-language').value,
+                    theme: document.getElementById('setting-theme').value,
+                    check_updates: document.getElementById('setting-checkUpdates').checked,
+                    show_welcome: document.getElementById('setting-showWelcome').checked,
+                    recent_files_limit: parseInt(document.getElementById('setting-recentFilesLimit').value)
+                },
+                editor: {
+                    font_size: parseInt(document.getElementById('setting-fontSize').value),
+                    font_family: document.getElementById('setting-fontFamily').value,
+                    tab_size: parseInt(document.getElementById('setting-tabSize').value),
+                    use_spaces: document.getElementById('setting-useSpaces').checked,
+                    word_wrap: document.getElementById('setting-wordWrap').checked,
+                    line_numbers: document.getElementById('setting-lineNumbers').checked,
+                    highlight_current_line: document.getElementById('setting-highlightCurrentLine').checked,
+                    auto_close_brackets: document.getElementById('setting-autoCloseBrackets').checked,
+                    code_completion: document.getElementById('setting-codeCompletion').checked,
+                    minimap: document.getElementById('setting-minimap').checked
+                },
+                execution: {
+                    python_path: document.getElementById('setting-pythonPath').value,
+                    default_timeout: parseInt(document.getElementById('setting-defaultTimeout').value),
+                    auto_save_before_run: document.getElementById('setting-autoSaveBeforeRun').checked,
+                    clear_output_on_run: document.getElementById('setting-clearOutputOnRun').checked,
+                    show_execution_time: document.getElementById('setting-showExecutionTime').checked
+                },
+                image_recognition: {
+                    default_similarity: parseFloat(document.getElementById('setting-defaultSimilarity').value),
+                    highlight_matches: document.getElementById('setting-highlightMatches').checked,
+                    highlight_duration_ms: parseInt(document.getElementById('setting-highlightDurationMs').value),
+                    auto_wait_timeout: parseFloat(document.getElementById('setting-autoWaitTimeout').value),
+                    cache_templates: document.getElementById('setting-cacheTemplates').checked
+                },
+                ocr: {
+                    language: document.getElementById('setting-ocrLanguage').value,
+                    tessdata_path: document.getElementById('setting-tessdataPath').value,
+                    enable_cache: document.getElementById('setting-ocrEnableCache').checked
+                },
+                hotkeys: currentSettings.hotkeys
+            };
+        }
+
+        async function saveSettings() {
+            try {
+                const settings = collectSettingsFromUI();
+                const result = await invoke('save_settings', { frontend: settings });
+                if (result.success) {
+                    alert('Settings saved successfully!');
+                } else {
+                    alert('Failed to save settings: ' + result.message);
+                }
+            } catch (e) {
+                console.error('Failed to save settings:', e);
+                alert('Error saving settings: ' + e);
+            }
+        }
+
+        async function resetCurrentSection() {
+            const sectionMap = {
+                'general': 'general',
+                'editor': 'editor',
+                'execution': 'execution',
+                'imageRecognition': 'image_recognition',
+                'ocr': 'ocr',
+                'hotkeys': 'hotkeys'
+            };
+            const section = sectionMap[currentSection];
+            if (section) {
+                try {
+                    await invoke('reset_settings', { section });
+                    await loadSettings();
+                    alert(`${currentSection} settings reset to defaults`);
+                } catch (e) {
+                    console.error('Failed to reset section:', e);
+                }
+            }
+        }
+
+        async function resetAllSettings() {
+            if (confirm('Are you sure you want to reset all settings to defaults?')) {
+                try {
+                    await invoke('reset_settings', { section: null });
+                    await loadSettings();
+                    alert('All settings reset to defaults');
+                } catch (e) {
+                    console.error('Failed to reset all settings:', e);
+                }
+            }
+        }
+
+        // Hotkeys
+        async function loadHotkeys() {
+            try {
+                const hotkeys = await invoke('get_hotkeys');
+                const container = document.getElementById('hotkey-list');
+                container.innerHTML = hotkeys.map(h => `
+                    <div class="hotkey-item">
+                        <span>${formatAction(h.action)}</span>
+                        <div class="hotkey-key" data-action="${h.action}" onclick="editHotkey(this)">${h.key}</div>
+                        <label class="toggle">
+                            <input type="checkbox" ${h.enabled ? 'checked' : ''} onchange="toggleHotkey('${h.action}', this.checked)">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                `).join('');
+            } catch (e) {
+                console.error('Failed to load hotkeys:', e);
+            }
+        }
+
+        function formatAction(action) {
+            return action.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+        }
+
+        function editHotkey(el) {
+            el.classList.add('editing');
+            el.textContent = 'Press keys...';
+            el.focus();
+
+            const handler = (e) => {
+                e.preventDefault();
+                const parts = [];
+                if (e.ctrlKey) parts.push('Ctrl');
+                if (e.altKey) parts.push('Alt');
+                if (e.shiftKey) parts.push('Shift');
+                if (e.key && !['Control', 'Alt', 'Shift'].includes(e.key)) {
+                    parts.push(e.key.length === 1 ? e.key.toUpperCase() : e.key);
+                }
+                if (parts.length > 0) {
+                    const newKey = parts.join('+');
+                    updateHotkey(el.dataset.action, newKey, el);
+                }
+                el.classList.remove('editing');
+                document.removeEventListener('keydown', handler);
+            };
+            document.addEventListener('keydown', handler);
+        }
+
+        async function updateHotkey(action, newKey, el) {
+            try {
+                const result = await invoke('update_hotkey', { action, newKey });
+                if (result.success) {
+                    el.textContent = newKey;
+                } else {
+                    alert(result.message);
+                    await loadHotkeys();
+                }
+            } catch (e) {
+                console.error('Failed to update hotkey:', e);
+            }
+        }
+
+        async function toggleHotkey(action, enabled) {
+            try {
+                await invoke('toggle_hotkey', { action, enabled });
+            } catch (e) {
+                console.error('Failed to toggle hotkey:', e);
+            }
+        }
+
+        async function resetHotkeys() {
+            if (confirm('Reset all hotkeys to defaults?')) {
+                try {
+                    await invoke('reset_hotkeys');
+                    await loadHotkeys();
+                } catch (e) {
+                    console.error('Failed to reset hotkeys:', e);
+                }
+            }
+        }
+
+        // Profiles
+        async function loadProfiles() {
+            try {
+                const profiles = await invoke('get_profiles');
+                const container = document.getElementById('profile-list');
+                container.innerHTML = profiles.map(p => `
+                    <div class="profile-item ${p.is_active ? 'active' : ''}">
+                        <span>${p.name} ${p.is_default ? '(Default)' : ''} ${p.is_active ? '(Active)' : ''}</span>
+                        <div>
+                            ${!p.is_active ? `<button class="btn btn-secondary" onclick="switchProfile('${p.name}')">Switch</button>` : ''}
+                            ${!p.is_default ? `<button class="btn btn-danger" onclick="deleteProfile('${p.name}')">Delete</button>` : ''}
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                console.error('Failed to load profiles:', e);
+            }
+        }
+
+        async function switchProfile(name) {
+            try {
+                const result = await invoke('switch_profile', { name });
+                if (result.success) {
+                    await loadSettings();
+                    await loadProfiles();
+                } else {
+                    alert(result.message);
+                }
+            } catch (e) {
+                console.error('Failed to switch profile:', e);
+            }
+        }
+
+        async function createProfile() {
+            const name = document.getElementById('new-profile-name').value.trim();
+            if (!name) {
+                alert('Please enter a profile name');
+                return;
+            }
+            try {
+                const result = await invoke('create_profile', { name });
+                if (result.success) {
+                    document.getElementById('new-profile-name').value = '';
+                    await loadProfiles();
+                } else {
+                    alert(result.message);
+                }
+            } catch (e) {
+                console.error('Failed to create profile:', e);
+            }
+        }
+
+        async function deleteProfile(name) {
+            if (confirm(`Delete profile "${name}"?`)) {
+                try {
+                    const result = await invoke('delete_profile', { name });
+                    if (result.success) {
+                        await loadProfiles();
+                    } else {
+                        alert(result.message);
+                    }
+                } catch (e) {
+                    console.error('Failed to delete profile:', e);
+                }
+            }
+        }
+
+        // Navigation
+        function setupNavigation() {
+            document.querySelectorAll('.sidebar-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    currentSection = item.dataset.section;
+
+                    document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+                    item.classList.add('active');
+
+                    document.querySelectorAll('.settings-section').forEach(s => s.classList.remove('active'));
+                    document.getElementById(currentSection).classList.add('active');
+                });
+            });
+        }
+    </script>
+</body>
+</html>

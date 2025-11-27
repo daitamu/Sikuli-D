@@ -195,6 +195,14 @@ public class SikulixIDE extends JFrame {
     Commons.startLog(1, "IDESupport ready --- GUI start (%4.1f)", Commons.getSinceStart());
 
     sikulixIDE.startGUI();
+
+    // Show IDE window after GUI initialization (independent of Jython init)
+    (new Thread() {
+      @Override
+      public void run() {
+        showAfterStart();
+      }
+    }).start();
   }
 
   boolean ideIsQuitting = false;
