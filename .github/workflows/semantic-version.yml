@@ -1,0 +1,149 @@
+# Semantic Versioning Workflow
+# セマンティックバージョニングワークフロー
+#
+# Automatically calculates and creates version tags based on Conventional Commits
+# Conventional Commitsに基づいてバージョンタグを自動計算・作成
+#
+# Commit message format / コミットメッセージ形式:
+# - feat: new feature (MINOR bump) / 新機能（MINOR上昇）
+# - fix: bug fix (PATCH bump) / バグ修正（PATCH上昇）
+# - feat!: or BREAKING CHANGE: (MAJOR bump) / 破壊的変更（MAJOR上昇）
+# - docs:, chore:, style:, refactor:, test: (no version bump) / バージョン変更なし
+
+name: Semantic Version
+
+on:
+  push:
+    branches:
+      - master
+      - main
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run (do not create tag)'
+        required: false
+        default: 'false'
+        type: boolean
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  version:
+    name: Calculate and Tag Version
+    runs-on: ubuntu-latest
+    outputs:
+      new_version: ${{ steps.version.outputs.version }}
+      new_tag: ${{ steps.version.outputs.version_tag }}
+      changed: ${{ steps.version.outputs.changed }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for version calculation
+
+      - name: Calculate semantic version
+        id: version
+        uses: paulhatch/semantic-version@v5.4.0
+        with:
+          # Tag prefix
+          tag_prefix: "v"
+          # Branch to track for version bumps
+          branch: ${{ github.ref_name }}
+          # Major version bump pattern (BREAKING CHANGE or feat!)
+          major_pattern: "(BREAKING CHANGE:|feat!:)"
+          major_regexp_flags: ""
+          # Minor version bump pattern (feat:)
+          minor_pattern: "feat:"
+          minor_regexp_flags: ""
+          # Version format
+          version_format: "${major}.${minor}.${patch}"
+          # Bump each commit (false = bump once per push)
+          bump_each_commit: false
+          # Search only commits since last tag
+          search_commit_body: true
+          # User format for matching
+          user_format_type: "csv"
+
+      - name: Show version information
+        run: |
+          echo "## Version Information" >> $GITHUB_STEP_SUMMARY
+          echo "| Property | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Previous version | ${{ steps.version.outputs.previous_version }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| New version | ${{ steps.version.outputs.version }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| New tag | ${{ steps.version.outputs.version_tag }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Changed | ${{ steps.version.outputs.changed }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Is tagged | ${{ steps.version.outputs.is_tagged }} |" >> $GITHUB_STEP_SUMMARY
+
+      - name: Update VERSION file
+        if: steps.version.outputs.changed == 'true' && github.event.inputs.dry_run != 'true'
+        run: |
+          echo "${{ steps.version.outputs.version }}" > VERSION
+
+      - name: Update Cargo.toml versions
+        if: steps.version.outputs.changed == 'true' && github.event.inputs.dry_run != 'true'
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+
+          # Update core-rs/Cargo.toml
+          if [ -f "core-rs/Cargo.toml" ]; then
+            sed -i "s/^version = \".*\"/version = \"$VERSION\"/" core-rs/Cargo.toml
+            echo "Updated core-rs/Cargo.toml to $VERSION"
+          fi
+
+          # Update ide-rs-tauri/Cargo.toml
+          if [ -f "ide-rs-tauri/Cargo.toml" ]; then
+            sed -i "s/^version = \".*\"/version = \"$VERSION\"/" ide-rs-tauri/Cargo.toml
+            echo "Updated ide-rs-tauri/Cargo.toml to $VERSION"
+          fi
+
+          # Update ide-rs-tauri/src-tauri/Cargo.toml (if exists)
+          if [ -f "ide-rs-tauri/src-tauri/Cargo.toml" ]; then
+            sed -i "s/^version = \".*\"/version = \"$VERSION\"/" ide-rs-tauri/src-tauri/Cargo.toml
+            echo "Updated ide-rs-tauri/src-tauri/Cargo.toml to $VERSION"
+          fi
+
+          # Update tauri.conf.json
+          if [ -f "ide-rs-tauri/tauri.conf.json" ]; then
+            sed -i "s/\"version\": \".*\"/\"version\": \"$VERSION\"/" ide-rs-tauri/tauri.conf.json
+            echo "Updated ide-rs-tauri/tauri.conf.json to $VERSION"
+          fi
+
+          # Update ide-rs-tauri/src-tauri/tauri.conf.json (if exists)
+          if [ -f "ide-rs-tauri/src-tauri/tauri.conf.json" ]; then
+            sed -i "s/\"version\": \".*\"/\"version\": \"$VERSION\"/" ide-rs-tauri/src-tauri/tauri.conf.json
+            echo "Updated ide-rs-tauri/src-tauri/tauri.conf.json to $VERSION"
+          fi
+
+      - name: Commit version updates
+        if: steps.version.outputs.changed == 'true' && github.event.inputs.dry_run != 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Check if there are changes to commit
+          if git diff --quiet; then
+            echo "No version file changes to commit"
+          else
+            git add VERSION core-rs/Cargo.toml ide-rs-tauri/Cargo.toml ide-rs-tauri/tauri.conf.json ide-rs-tauri/src-tauri/Cargo.toml ide-rs-tauri/src-tauri/tauri.conf.json 2>/dev/null || true
+            git commit -m "chore: bump version to ${{ steps.version.outputs.version }}
+
+            🤖 Generated by GitHub Actions"
+            git push
+          fi
+
+      - name: Create and push tag
+        if: steps.version.outputs.changed == 'true' && github.event.inputs.dry_run != 'true'
+        run: |
+          git tag ${{ steps.version.outputs.version_tag }}
+          git push origin ${{ steps.version.outputs.version_tag }}
+          echo "Created and pushed tag: ${{ steps.version.outputs.version_tag }}"
+
+      - name: Dry run summary
+        if: github.event.inputs.dry_run == 'true'
+        run: |
+          echo "## Dry Run Results" >> $GITHUB_STEP_SUMMARY
+          echo "Would create version: ${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "Would create tag: ${{ steps.version.outputs.version_tag }}" >> $GITHUB_STEP_SUMMARY

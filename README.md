@@ -11,18 +11,16 @@
 ### English
 
 - **Python 2/3 Dual Support** - Run legacy SikuliX scripts without modification
-- **Built-in Python Runtime** - No separate Python installation required
 - **Japanese Language Support** - Full Unicode support in logs, output, and scripts
-- **Built with Rust** - Parallel image processing for better performance
+- **Built with Rust** - No more Java runtime version conflicts
 - **Cross-platform** - Windows, macOS, Linux support
 - **SikuliX Compatible** - We will continue to maintain the SikuliX API
 
 ### 日本語
 
 - **Python 2/3 両対応** - レガシーな SikuliX スクリプトをそのまま実行可能
-- **Python ランタイム内蔵** - 別途 Python のインストール不要
 - **日本語完全対応** - ログ出力やスクリプトで日本語を使用してもエラーになりません
-- **Rust 言語で開発** - 並列画像処理による高いパフォーマンス
+- **開発言語を Rust に変更** - Java ランタイムのバージョン不整合に悩まされません
 - **クロスプラットフォーム** - Windows、macOS、Linux 対応
 - **SikuliX 互換** - SikuliX の API は今後も維持し続けます
 
@@ -46,7 +44,14 @@ A modern desktop application for creating and running automation scripts.
 - Plugin system for extensibility
 - Japanese/English UI
 
+  - シンタックスハイライト対応の Monaco ベースエディタ
+  - 領域選択による視覚的なスクリーンキャプチャ
+  - プロジェクト管理（.sikuli 形式）
+  - 拡張用プラグインシステム
+  - 日本語/英語 UI
+
 See [ide-rs-tauri/README.md](ide-rs-tauri/README.md) for details.
+詳細は [ide-rs-tauri/README.md](ide-rs-tauri/README.md) を参照。
 
 ### Sikuli-D Runtime
 
@@ -59,7 +64,13 @@ A standalone Python runtime for executing automation scripts.
 - REPL mode for interactive development
 - Headless execution support
 
+  - Python 2/3 の自動検出と変換
+  - Python インタプリタ内蔵（インストール不要）
+  - 対話的開発用の REPL モード
+  - ヘッドレス実行対応
+
 See [runtime-rs/README.md](runtime-rs/README.md) for details.
+詳細は [runtime-rs/README.md](runtime-rs/README.md) を参照。
 
 ---
 

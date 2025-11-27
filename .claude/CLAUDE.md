@@ -2,8 +2,8 @@
 
 ## プロジェクト概要
 
-SikuliX 2.0.5 をベースに日本語対応や独自機能を追加したバージョン。
-画面上の画像認識による GUI 自動化ツール。
+画像認識による GUI 自動化ツール。Rust で構築。
+SikuliX API 互換で、Python 2/3 スクリプトをそのまま実行可能。
 
 ---
 
@@ -41,17 +41,18 @@ SikuliX 2.0.5 をベースに日本語対応や独自機能を追加したバー
 
 ```
 Sikuli-D/
-├── API/                # SikuliX API（コアライブラリ）
-│   ├── src/main/java/  # Javaソースコード
-│   └── pom.xml         # API用Maven設定
-├── IDE/                # SikuliX IDE（GUI環境）
-│   ├── src/main/java/  # IDEソースコード
-│   └── pom.xml         # IDE用Maven設定
-├── Support/            # サポートファイル・ツール
-│   ├── commands/       # コマンドスクリプト
-│   └── experiments/    # 実験的機能
+├── core-rs/            # Sikuli-D Core（共有コアライブラリ）
+│   ├── src/            # Rustソースコード
+│   └── Cargo.toml      # Rust依存関係
+├── ide-rs-tauri/       # Sikuli-D IDE（Tauriデスクトップアプリ）
+│   ├── src/            # Rustバックエンド
+│   ├── dist/           # Webフロントエンド
+│   └── tauri.conf.json # Tauri設定
+├── runtime-rs/         # Sikuli-D Runtime（Python実行環境）
+│   ├── src/            # Rustソースコード
+│   └── sikulid_api/    # Pythonラッパーモジュール
 ├── pages/              # ドキュメントページ
-├── pom.xml             # 親Maven設定（マルチモジュール）
+├── VERSION             # バージョンファイル（自動更新）
 ├── LICENSE             # MITライセンス
 └── README.md           # プロジェクト説明
 ```
@@ -60,44 +61,51 @@ Sikuli-D/
 
 ## 技術スタック
 
-- **言語**: Java 17+ (LTS)
-- **ビルドツール**: Maven
-- **画像認識**: OpenCV
+- **言語**: Rust 1.70+
+- **GUI フレームワーク**: Tauri 2.x
+- **Python バインディング**: PyO3
+- **画像認識**: OpenCV (image crate)
 - **OCR**: Tesseract 5
-- **スクリプト**: Python (Jython), JavaScript, Ruby
+- **スクリプト**: Python 2/3（自動変換対応）
 
 ---
 
 ## ビルドコマンド
 
-### 全体ビルド
+### Core ライブラリビルド
 
 ```bash
-mvn clean install
+cd core-rs
+cargo build --release
 ```
 
-### API のみビルド
+### IDE ビルド（Tauri）
 
 ```bash
-mvn clean install -pl API
+cd ide-rs-tauri
+cargo tauri build
 ```
 
-### IDE のみビルド
+### Runtime ビルド（Python バインディング）
 
 ```bash
-mvn clean install -pl IDE
+cd runtime-rs
+pip install maturin
+maturin build --release
 ```
 
 ### テスト実行
 
 ```bash
-mvn test
+cargo test                    # 全テスト
+cargo test -p sikulid-core    # core-rsのみ
 ```
 
-### テストスキップビルド
+### フォーマット・静的解析
 
 ```bash
-mvn clean install -DskipTests
+cargo fmt --check
+cargo clippy
 ```
 
 ---
@@ -115,12 +123,12 @@ mvn clean install -DskipTests
 
 #### 2. ビルド検証
 
-- `mvn clean install` が成功する
+- `cargo build --release` が成功する
 - ビルドエラー・警告の解消
 
 #### 3. テスト検証
 
-- `mvn test` が成功する
+- `cargo test` が成功する
 - 新機能には対応するテストを追加
 
 ### フェーズ完了の定義
@@ -138,18 +146,38 @@ mvn clean install -DskipTests
 
 ## コミットルール / Commit Rules
 
+### Conventional Commits 形式
+
+バージョンは GitHub Actions で自動管理されます。
+コミットメッセージは **Conventional Commits** 形式で記述してください：
+
+Version is automatically managed by GitHub Actions.
+Use **Conventional Commits** format for commit messages:
+
+### コミットタイプ / Commit Types
+
+| タイプ             | 説明                       | バージョン変更 |
+| ------------------ | -------------------------- | -------------- |
+| `feat:`            | 新機能追加                 | MINOR +1       |
+| `fix:`             | バグ修正                   | PATCH +1       |
+| `feat!:` or `fix!:`| 破壊的変更                 | MAJOR +1       |
+| `BREAKING CHANGE:` | 破壊的変更（本文に記載）   | MAJOR +1       |
+| `docs:`            | ドキュメントのみ           | 変更なし       |
+| `style:`           | フォーマット変更           | 変更なし       |
+| `refactor:`        | リファクタリング           | 変更なし       |
+| `test:`            | テスト追加・修正           | 変更なし       |
+| `chore:`           | ビルド・ツール変更         | 変更なし       |
+
 ### メッセージ形式 / Message Format
 
-コミットメッセージは **日本語/英語の併記** で記述する：
-Commit messages should be written in **bilingual (Japanese/English)** format:
-
 ```
-English summary line
-日本語の要約行
+<type>: <English summary>
+<type>: <日本語の要約>
 
 - English detail point
-  日本語の詳細ポイント
 - Another English point
+
+  日本語の詳細ポイント
   別の日本語ポイント
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
@@ -157,17 +185,26 @@ English summary line
 Co-Authored-By: Claude <noreply@anthropic.com>
 ```
 
-### 例 / Example
+### 例 / Examples
 
 ```
-Update README with bilingual documentation
-README を日英併記のドキュメントに更新
+feat: Add Observer API for screen monitoring
+feat: スクリーン監視用のObserver APIを追加
 
-- Add Japanese/English descriptions
-- Update requirements section
+- Implement onAppear, onVanish, onChange handlers
+- Add observe() method with timeout
 
-- 日本語/英語の説明を追加
-- 要件セクションを更新
+  onAppear, onVanish, onChangeハンドラを実装
+  タイムアウト付きのobserve()メソッドを追加
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
+
+```
+fix: Resolve Japanese text encoding in logs
+fix: ログでの日本語テキストエンコーディングを修正
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 
@@ -178,69 +215,45 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 
 ## バージョン管理 / Version Management
 
-### バージョン形式: x.y.z
+### 自動バージョニング / Automatic Versioning
 
-| 区分      | 変更タイミング              | 担当     |
-| --------- | --------------------------- | -------- |
-| x (MAJOR) | ユーザーが指示した時のみ    | ユーザー |
-| y (MINOR) | 機能追加時（Claude が判断） | Claude   |
-| z (PATCH) | ビルド時                    | 自動     |
+バージョンは **GitHub Actions** で **Conventional Commits** に基づいて自動管理されます。
 
-### ファイル構成
+Version is automatically managed by **GitHub Actions** based on **Conventional Commits**.
 
-```
-Sikuli-D/
-├── VERSION                              # MAJOR.MINOR（共通マスター）
-├── core-rs/
-│   ├── Cargo.toml                       # version = "x.y.z"
-│   └── version.txt                      # PATCH（自動）
-└── ide-rs-tauri/
-    ├── Cargo.toml                       # version = "x.y.z"
-    ├── tauri.conf.json                  # version: "x.y.z"
-    └── version.txt                      # PATCH（自動）
-```
+### バージョン形式: x.y.z (Semantic Versioning)
 
-### MINOR バージョンの運用（Claude 向け）
+| 区分      | 変更トリガー                    | 自動判定基準              |
+| --------- | ------------------------------- | ------------------------- |
+| x (MAJOR) | 破壊的変更                      | `feat!:` or `BREAKING CHANGE:` |
+| y (MINOR) | 新機能追加                      | `feat:` コミット          |
+| z (PATCH) | バグ修正                        | `fix:` コミット           |
 
-**以下の場合に MINOR を+1 する：**
+### 動作の仕組み
 
-- 新機能を追加した時
-- GitHub で機能追加コミットをした時
-- core-rs / ide-rs-tauri それぞれ、コードに変更があった方の MINOR を上げる
+1. `master` ブランチへのプッシュ時に `.github/workflows/semantic-version.yml` が実行
+2. コミットメッセージを解析してバージョンを自動計算
+3. 以下のファイルを自動更新：
+   - `VERSION`
+   - `core-rs/Cargo.toml`
+   - `ide-rs-tauri/Cargo.toml`
+   - `ide-rs-tauri/tauri.conf.json`
+4. 新しいバージョンタグ（例: `v1.2.3`）を自動作成
+5. タグ作成により `release.yml` が起動し、リリースを自動公開
 
-**MINOR を上げる時は PATCH を 0 にリセット**
+### 手動でのバージョン変更
 
-### PATCH 自動インクリメント
+通常は不要です。バージョンはコミットメッセージから自動決定されます。
 
-**Rust (cargo tauri build 時):**
+**例外的に手動変更が必要な場合：**
 
-- `scripts/increment_patch.sh` を使用
-- version.txt に保存
-- Cargo.toml と tauri.conf.json を自動更新
-
-### ビルドスクリプト使用方法
+- 初期バージョンの設定
+- バージョン番号の強制リセット
 
 ```bash
-# 通常ビルド（PATCH自動+1）
-./scripts/build.sh
-
-# リリースビルド
-./scripts/build.sh --release
+# Dry runで確認
+gh workflow run semantic-version.yml -f dry_run=true
 ```
-
-### 重要：MAJOR は勝手に上げない
-
-MAJOR はユーザーからの明示的な指示があった場合のみ変更する。
-Claude が自己判断で MAJOR を上げることは禁止。
-
-### バージョン同期チェック
-
-コミット前に以下のファイルのバージョンが一致していることを確認：
-
-- `VERSION`
-- `core-rs/Cargo.toml`
-- `ide-rs-tauri/Cargo.toml`
-- `ide-rs-tauri/tauri.conf.json`
 
 ---
 
