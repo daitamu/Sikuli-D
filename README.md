@@ -1,85 +1,113 @@
 # Sikuli-D (シクリッド / pronounced "sik-lid")
 
-**Based on SikuliX 2.0.5, this version includes Japanese support and custom features.**
+**A next-generation GUI automation tool with image recognition, built in Rust.**
 
-**SikuliX 2.0.5をベースに日本語対応や独自機能を追加したバージョンです。**
-
----
-
-## Acknowledgments / 謝辞
-
-This project is based on [SikuliX](https://github.com/RaiMan/SikuliX1), an amazing open-source GUI automation tool created by [RaiMan](https://github.com/RaiMan) and contributors.
-
-We deeply appreciate the years of dedication and hard work that went into building SikuliX. Without their foundation, this project would not exist.
+**画像認識によるGUI自動化ツールの次世代版。Rustで構築。**
 
 ---
 
-このプロジェクトは [RaiMan](https://github.com/RaiMan) 氏と多くの貢献者によって作られた素晴らしいオープンソースGUI自動化ツール [SikuliX](https://github.com/RaiMan/SikuliX1) をベースにしています。
-
-SikuliXの構築に費やされた長年の献身と努力に深く感謝いたします。この基盤がなければ、本プロジェクトは存在しませんでした。
-
----
-
-## What is Sikuli-D? / Sikuli-Dとは？
+## Key Features / 主な特徴
 
 ### English
 
-Sikuli-D is a fork of SikuliX that automates anything you see on your desktop screen. It uses **image recognition** powered by OpenCV to identify GUI components and can interact with them using mouse and keyboard actions.
-
-**Key Features:**
-- High-performance Rust core with parallel image processing
-- Native Python 3 scripting via PyO3 bindings
-- Cross-platform support (Windows, macOS, Linux)
-- OCR support via Tesseract 5
-- Observer API for screen monitoring (appear, vanish, change detection)
-- Mouse control (click, drag, scroll, mouseDown/Up)
-- Keyboard control with Japanese/Unicode support
-- SikuliX-compatible API design
+- **Python 2/3 Dual Support** - Run legacy SikuliX scripts without modification
+- **Built-in Python Runtime** - No separate Python installation required
+- **Japanese Language Support** - Full Unicode support in logs, output, and scripts
+- **High Performance** - Rust core with parallel image processing
+- **Cross-platform** - Windows, macOS, Linux support
+- **SikuliX Compatible** - Familiar API for existing SikuliX users
 
 ### 日本語
 
-Sikuli-Dは、デスクトップ画面上のあらゆる操作を自動化できるSikuliXのフォークです。Rustで書かれた高性能コアによる**画像認識**を使用してGUIコンポーネントを識別し、マウスやキーボード操作で制御できます。
+- **Python 2/3 両対応** - レガシーなSikuliXスクリプトをそのまま実行可能
+- **Pythonランタイム内蔵** - 別途Pythonのインストール不要
+- **日本語完全対応** - ログ出力やスクリプトで日本語を使用してもエラーになりません
+- **高性能** - 並列画像処理によるRustコア
+- **クロスプラットフォーム** - Windows、macOS、Linux対応
+- **SikuliX互換** - 既存のSikuliXユーザーに馴染みのあるAPI
 
-**主な特徴：**
-- 並列画像処理による高性能Rustコア
-- PyO3バインディングによるネイティブPython 3スクリプティング
-- クロスプラットフォーム対応（Windows、macOS、Linux）
-- Tesseract 5によるOCRサポート
-- 画面監視用Observer API（出現・消失・変化検出）
-- マウス制御（クリック、ドラッグ、スクロール、mouseDown/Up）
-- 日本語/Unicode対応キーボード制御
-- SikuliX互換API設計
+---
+
+## Components / コンポーネント
+
+Sikuli-D consists of two main modules:
+
+Sikuli-Dは2つの主要モジュールで構成されます：
+
+### Sikuli-D IDE
+
+A modern desktop application for creating and running automation scripts.
+
+自動化スクリプトを作成・実行するためのモダンなデスクトップアプリケーション。
+
+- Monaco-based script editor with syntax highlighting
+- Visual screen capture with region selection
+- Project management (.sikuli format)
+- Plugin system for extensibility
+- Japanese/English UI
+
+See [ide-rs-tauri/README.md](ide-rs-tauri/README.md) for details.
+
+### Sikuli-D Runtime
+
+A standalone Python runtime for executing automation scripts.
+
+自動化スクリプトを実行するためのスタンドアロンPythonランタイム。
+
+- Python 2/3 automatic detection and conversion
+- Built-in Python interpreter (no installation required)
+- REPL mode for interactive development
+- Headless execution support
+
+See [runtime-rs/README.md](runtime-rs/README.md) for details.
+
+---
+
+## Quick Start / クイックスタート
+
+### Using the IDE / IDEを使用する場合
+
+```bash
+# Download and run the installer
+# インストーラーをダウンロードして実行
+
+# Or build from source:
+cd ide-rs-tauri
+cargo tauri build
+```
+
+### Using the Runtime / ランタイムを使用する場合
+
+```python
+from sikulid_api import *
+
+# Find and click an image on screen
+click("button.png")
+
+# Type text with Japanese support
+type("こんにちは")
+
+# Wait for an element to appear
+wait("dialog.png", 10)
+```
 
 ---
 
 ## Requirements / 動作要件
 
+### For Users / 利用者向け
+
+| Component | Requirement |
+|-----------|-------------|
+| OS | Windows 10+, macOS 10.15+, Linux (X11) |
+| Tesseract | 5.x (optional, for OCR) |
+
+### For Developers / 開発者向け
+
 | Component | Version |
 |-----------|---------|
 | Rust | 1.70+ |
-| Python | 3.8+ |
-| Tesseract | 5.x (for OCR) |
-
----
-
-## Build / ビルド方法
-
-```bash
-# Clone the repository / リポジトリをクローン
-git clone https://github.com/daitamu/Sikuli-D.git
-cd Sikuli-D
-
-# Build core library / コアライブラリをビルド
-cd core-rs
-cargo build --release
-
-# Build Python bindings / Pythonバインディングをビルド
-pip install maturin
-maturin build --release
-
-# Run tests / テスト実行
-cargo test
-```
+| Node.js | 18+ (for IDE) |
 
 ---
 
@@ -87,29 +115,27 @@ cargo test
 
 ```
 Sikuli-D/
-├── core-rs/       # Rust Core library / Rustコアライブラリ
-├── ide-rs-tauri/  # Rust/Tauri IDE / Rust/Tauri開発環境
-├── runtime-rs/    # Python runtime / Pythonランタイム
-└── pages/         # Documentation / ドキュメント
+├── ide-rs-tauri/  # Sikuli-D IDE (Tauri application)
+├── runtime-rs/    # Sikuli-D Runtime (Python execution)
+├── core-rs/       # Shared core library (internal)
+└── pages/         # Documentation website
 ```
 
-See [core-rs/README.md](core-rs/README.md) for detailed documentation.
-詳細なドキュメントは [core-rs/README.md](core-rs/README.md) を参照。
+---
+
+## Acknowledgments / 謝辞
+
+This project is based on [SikuliX](https://github.com/RaiMan/SikuliX1), created by [RaiMan](https://github.com/RaiMan) and contributors. We deeply appreciate their work.
+
+このプロジェクトは [RaiMan](https://github.com/RaiMan) 氏と貢献者によって作られた [SikuliX](https://github.com/RaiMan/SikuliX1) をベースにしています。
 
 ---
 
 ## License / ライセンス
 
-This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+MIT License - see [LICENSE](LICENSE) for details.
 
-このプロジェクトは **MITライセンス** の下で公開されています。詳細は [LICENSE](LICENSE) ファイルをご覧ください。
-
----
-
-## Original Project / 元プロジェクト
-
-- **SikuliX**: https://github.com/RaiMan/SikuliX1
-- **Documentation**: https://sikulix.github.io/
+MITライセンス - 詳細は [LICENSE](LICENSE) を参照。
 
 ---
 
