@@ -27,6 +27,7 @@ try:
         Location,
         Pattern,
         Settings as NativeSettings,
+        Observer,
         find,
         find_all,
         wait,
@@ -39,6 +40,20 @@ try:
         hover,
         paste,
         hotkey,
+        # Scroll functions / スクロール関数
+        scroll,
+        scroll_up,
+        scroll_down,
+        scroll_horizontal,
+        scroll_left,
+        scroll_right,
+        # Mouse button functions / マウスボタン関数
+        mouseDown,
+        mouseUp,
+        # Drag functions / ドラッグ関数
+        drag,
+        dragTo,
+        dragDrop,
     )
     _NATIVE_AVAILABLE = True
     # Use native Settings singleton / ネイティブのSettings シングルトンを使用
@@ -53,6 +68,21 @@ except ImportError:
     from .pattern import Pattern
     from .finder import find, find_all, wait
     from .input import click, double_click, right_click, type_text, mouseMove, hover, paste, hotkey
+    # Placeholder for Observer when native unavailable
+    Observer = None
+    # Placeholder functions for scroll/drag/mouseDown when native unavailable
+    # ネイティブが利用不可の場合のプレースホルダー関数
+    def scroll(clicks): pass
+    def scroll_up(clicks=3): pass
+    def scroll_down(clicks=3): pass
+    def scroll_horizontal(clicks): pass
+    def scroll_left(clicks=3): pass
+    def scroll_right(clicks=3): pass
+    def mouseDown(): pass
+    def mouseUp(): pass
+    def drag(from_x, from_y, to_x, to_y): pass
+    def dragTo(x, y): pass
+    def dragDrop(start_x, start_y, end_x, end_y): pass
     Settings = None  # Will be defined below
 
 # Aliases for compatibility
@@ -209,6 +239,7 @@ __all__ = [
     "Screen",
     "Location",
     "Pattern",
+    "Observer",
     "Key",
     "Settings",
     "find",
@@ -226,6 +257,20 @@ __all__ = [
     "type_text",
     "paste",
     "hotkey",
+    # Scroll functions / スクロール関数
+    "scroll",
+    "scroll_up",
+    "scroll_down",
+    "scroll_horizontal",
+    "scroll_left",
+    "scroll_right",
+    # Mouse button functions / マウスボタン関数
+    "mouseDown",
+    "mouseUp",
+    # Drag functions / ドラッグ関数
+    "drag",
+    "dragTo",
+    "dragDrop",
     "highlight",
     "popup",
     "input",

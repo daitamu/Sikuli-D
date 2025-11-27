@@ -11,7 +11,7 @@ use pyo3::exceptions::{PyRuntimeError, PyValueError, PyIOError};
 
 use crate::{
     Region, Match, Pattern, Screen, Mouse, Keyboard, Key, ImageMatcher,
-    Result, SikulixError,
+    Result, SikulixError, Observer,
 };
 
 // ============================================================================
@@ -863,6 +863,354 @@ fn hotkey(keys: Vec<String>) -> PyResult<()> {
     Keyboard::hotkey(&key_enum).map_err(to_pyerr)
 }
 
+// ============================================================================
+// Scroll Functions / スクロール関数
+// ============================================================================
+
+/// Scroll vertically (positive = up, negative = down)
+/// 垂直スクロール（正 = 上、負 = 下）
+#[cfg(feature = "python")]
+#[pyfunction]
+fn scroll(clicks: i32) -> PyResult<()> {
+    Mouse::scroll(clicks).map_err(to_pyerr)
+}
+
+/// Scroll up by specified number of clicks
+/// 指定クリック数だけ上にスクロール
+#[cfg(feature = "python")]
+#[pyfunction]
+fn scroll_up(clicks: Option<u32>) -> PyResult<()> {
+    Mouse::scroll_up(clicks.unwrap_or(3)).map_err(to_pyerr)
+}
+
+/// Scroll down by specified number of clicks
+/// 指定クリック数だけ下にスクロール
+#[cfg(feature = "python")]
+#[pyfunction]
+fn scroll_down(clicks: Option<u32>) -> PyResult<()> {
+    Mouse::scroll_down(clicks.unwrap_or(3)).map_err(to_pyerr)
+}
+
+/// Scroll horizontally (positive = right, negative = left)
+/// 水平スクロール（正 = 右、負 = 左）
+#[cfg(feature = "python")]
+#[pyfunction]
+fn scroll_horizontal(clicks: i32) -> PyResult<()> {
+    Mouse::scroll_horizontal(clicks).map_err(to_pyerr)
+}
+
+/// Scroll left by specified number of clicks
+/// 指定クリック数だけ左にスクロール
+#[cfg(feature = "python")]
+#[pyfunction]
+fn scroll_left(clicks: Option<u32>) -> PyResult<()> {
+    Mouse::scroll_left(clicks.unwrap_or(3)).map_err(to_pyerr)
+}
+
+/// Scroll right by specified number of clicks
+/// 指定クリック数だけ右にスクロール
+#[cfg(feature = "python")]
+#[pyfunction]
+fn scroll_right(clicks: Option<u32>) -> PyResult<()> {
+    Mouse::scroll_right(clicks.unwrap_or(3)).map_err(to_pyerr)
+}
+
+// ============================================================================
+// Mouse Button Functions / マウスボタン関数
+// ============================================================================
+
+/// Press and hold the left mouse button
+/// 左マウスボタンを押し続ける
+#[cfg(feature = "python")]
+#[pyfunction]
+#[pyo3(name = "mouseDown")]
+fn mouse_down() -> PyResult<()> {
+    Mouse::mouse_down().map_err(to_pyerr)
+}
+
+/// Release the left mouse button
+/// 左マウスボタンを離す
+#[cfg(feature = "python")]
+#[pyfunction]
+#[pyo3(name = "mouseUp")]
+fn mouse_up() -> PyResult<()> {
+    Mouse::mouse_up().map_err(to_pyerr)
+}
+
+// ============================================================================
+// Drag Functions / ドラッグ関数
+// ============================================================================
+
+/// Drag from current position to target
+/// 現在位置からターゲットへドラッグ
+#[cfg(feature = "python")]
+#[pyfunction]
+#[pyo3(name = "dragTo")]
+fn drag_to(x: i32, y: i32) -> PyResult<()> {
+    apply_move_delay();
+    Mouse::drag_to(x, y).map_err(to_pyerr)
+}
+
+/// Drag from one position to another
+/// ある位置から別の位置へドラッグ
+#[cfg(feature = "python")]
+#[pyfunction]
+fn drag(from_x: i32, from_y: i32, to_x: i32, to_y: i32) -> PyResult<()> {
+    apply_move_delay();
+    Mouse::drag(from_x, from_y, to_x, to_y).map_err(to_pyerr)
+}
+
+/// Drag and drop - move to start, drag to end
+/// ドラッグ＆ドロップ - 開始位置に移動し、終了位置へドラッグ
+#[cfg(feature = "python")]
+#[pyfunction]
+#[pyo3(name = "dragDrop")]
+fn drag_drop(start_x: i32, start_y: i32, end_x: i32, end_y: i32) -> PyResult<()> {
+    apply_move_delay();
+    Mouse::move_to(start_x, start_y).map_err(to_pyerr)?;
+    Mouse::drag_to(end_x, end_y).map_err(to_pyerr)
+}
+
+// ============================================================================
+// PyObserver - Screen Region Observer / 画面領域オブザーバー
+// ============================================================================
+
+/// Python Observer for screen region monitoring
+/// 画面領域監視用Pythonオブザーバー
+///
+/// Provides event-driven monitoring for pattern appearance, vanishing, and changes.
+/// パターンの出現、消失、変化のイベント駆動型監視を提供します。
+#[cfg(feature = "python")]
+#[pyclass(name = "Observer")]
+struct PyObserver {
+    /// Region to observe / 監視対象領域
+    region: Region,
+    /// Running state / 実行状態
+    running: std::sync::Arc<std::sync::atomic::AtomicBool>,
+    /// Observation interval in milliseconds / 監視間隔（ミリ秒）
+    interval_ms: u64,
+    /// Appear handlers (pattern_path, similarity, callback) / 出現ハンドラー
+    appear_handlers: Vec<(String, f64, Py<PyAny>)>,
+    /// Vanish handlers (pattern_path, similarity, callback) / 消失ハンドラー
+    vanish_handlers: Vec<(String, f64, Py<PyAny>)>,
+    /// Change handlers (threshold, callback) / 変化ハンドラー
+    change_handlers: Vec<(f64, Py<PyAny>)>,
+}
+
+#[cfg(feature = "python")]
+#[pymethods]
+impl PyObserver {
+    /// Create a new Observer for a Region
+    /// Regionに対する新しいObserverを作成
+    #[new]
+    fn new(region: &PyRegion) -> Self {
+        Self {
+            region: region.inner,
+            running: std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)),
+            interval_ms: 500,
+            appear_handlers: Vec::new(),
+            vanish_handlers: Vec::new(),
+            change_handlers: Vec::new(),
+        }
+    }
+
+    /// Set observation interval in milliseconds
+    /// 監視間隔をミリ秒で設定
+    #[pyo3(name = "setInterval")]
+    fn set_interval(&mut self, interval_ms: u64) {
+        self.interval_ms = interval_ms.max(10);
+    }
+
+    /// Register a callback for when a pattern appears
+    /// パターンが出現した時のコールバックを登録
+    ///
+    /// Args:
+    ///     pattern: Image path / 画像パス
+    ///     callback: Function called with Match object / Matchオブジェクトと呼ばれる関数
+    ///     similarity: Optional similarity threshold (default 0.7) / 類似度閾値
+    #[pyo3(name = "onAppear")]
+    fn on_appear(&mut self, pattern: &str, callback: Py<PyAny>, similarity: Option<f64>) {
+        self.appear_handlers.push((
+            pattern.to_string(),
+            similarity.unwrap_or(0.7),
+            callback,
+        ));
+    }
+
+    /// Register a callback for when a pattern vanishes
+    /// パターンが消失した時のコールバックを登録
+    ///
+    /// Args:
+    ///     pattern: Image path / 画像パス
+    ///     callback: Function called when pattern vanishes / パターン消失時に呼ばれる関数
+    ///     similarity: Optional similarity threshold (default 0.7) / 類似度閾値
+    #[pyo3(name = "onVanish")]
+    fn on_vanish(&mut self, pattern: &str, callback: Py<PyAny>, similarity: Option<f64>) {
+        self.vanish_handlers.push((
+            pattern.to_string(),
+            similarity.unwrap_or(0.7),
+            callback,
+        ));
+    }
+
+    /// Register a callback for visual changes in the region
+    /// 領域の視覚的変化のコールバックを登録
+    ///
+    /// Args:
+    ///     threshold: Change threshold (0.0 - 1.0) / 変化閾値
+    ///     callback: Function called with change amount / 変化量と呼ばれる関数
+    #[pyo3(name = "onChange")]
+    fn on_change(&mut self, threshold: f64, callback: Py<PyAny>) {
+        self.change_handlers.push((threshold.clamp(0.0, 1.0), callback));
+    }
+
+    /// Start observing with timeout (blocking)
+    /// タイムアウト付きで監視開始（ブロッキング）
+    ///
+    /// Args:
+    ///     timeout: Maximum observation time in seconds (0 = infinite) / 最大監視時間（秒）
+    fn observe(&self, py: Python, timeout: Option<f64>) -> PyResult<()> {
+        use std::sync::atomic::Ordering;
+        use std::time::{Duration, Instant};
+
+        self.running.store(true, Ordering::SeqCst);
+        let start = Instant::now();
+        let timeout_duration = timeout.map(|t| Duration::from_secs_f64(t));
+        let interval = Duration::from_millis(self.interval_ms);
+
+        // Track pattern visibility for vanish detection
+        // 消失検出用のパターン可視性を追跡
+        let mut pattern_visible: Vec<bool> = vec![false; self.vanish_handlers.len()];
+        let mut last_capture: Option<image::DynamicImage> = None;
+
+        let screen = Screen::primary();
+        let matcher = ImageMatcher::new();
+
+        while self.running.load(Ordering::SeqCst) {
+            // Check timeout
+            if let Some(td) = timeout_duration {
+                if start.elapsed() >= td {
+                    break;
+                }
+            }
+
+            // Allow Python threads during capture
+            let screenshot = py.allow_threads(|| {
+                screen.capture_region(&self.region)
+            }).map_err(to_pyerr)?;
+
+            // Process appear handlers
+            for (pattern_path, similarity, callback) in &self.appear_handlers {
+                if let Ok(pat) = Pattern::from_file(pattern_path) {
+                    let pat = pat.similar(*similarity);
+                    if let Ok(Some(m)) = matcher.find(&screenshot, &pat) {
+                        let py_match = PyMatch { inner: m };
+                        let _ = callback.call1(py, (py_match,));
+                    }
+                }
+            }
+
+            // Process vanish handlers
+            for (i, (pattern_path, similarity, callback)) in self.vanish_handlers.iter().enumerate() {
+                if let Ok(pat) = Pattern::from_file(pattern_path) {
+                    let pat = pat.similar(*similarity);
+                    match matcher.find(&screenshot, &pat) {
+                        Ok(Some(_)) => {
+                            pattern_visible[i] = true;
+                        }
+                        Ok(None) => {
+                            if pattern_visible[i] {
+                                // Pattern vanished
+                                let _ = callback.call0(py);
+                                pattern_visible[i] = false;
+                            }
+                        }
+                        Err(_) => {}
+                    }
+                }
+            }
+
+            // Process change handlers
+            if !self.change_handlers.is_empty() {
+                if let Some(ref last) = last_capture {
+                    let change = calculate_change(last, &screenshot);
+                    for (threshold, callback) in &self.change_handlers {
+                        if change >= *threshold {
+                            let _ = callback.call1(py, (change,));
+                        }
+                    }
+                }
+                last_capture = Some(screenshot);
+            }
+
+            // Sleep between observations
+            py.allow_threads(|| {
+                std::thread::sleep(interval);
+            });
+        }
+
+        self.running.store(false, Ordering::SeqCst);
+        Ok(())
+    }
+
+    /// Stop observation
+    /// 監視を停止
+    fn stop(&self) {
+        use std::sync::atomic::Ordering;
+        self.running.store(false, Ordering::SeqCst);
+    }
+
+    /// Check if observer is running
+    /// オブザーバーが実行中か確認
+    #[pyo3(name = "isRunning")]
+    fn is_running(&self) -> bool {
+        use std::sync::atomic::Ordering;
+        self.running.load(Ordering::SeqCst)
+    }
+
+    fn __repr__(&self) -> String {
+        format!(
+            "Observer(region=({}, {}, {}, {}), interval={}ms, appear={}, vanish={}, change={})",
+            self.region.x, self.region.y, self.region.width, self.region.height,
+            self.interval_ms,
+            self.appear_handlers.len(),
+            self.vanish_handlers.len(),
+            self.change_handlers.len()
+        )
+    }
+}
+
+/// Calculate change between two images (helper)
+/// 2つの画像間の変化を計算（ヘルパー）
+#[cfg(feature = "python")]
+fn calculate_change(img1: &image::DynamicImage, img2: &image::DynamicImage) -> f64 {
+    let gray1 = img1.to_luma8();
+    let gray2 = img2.to_luma8();
+
+    if gray1.dimensions() != gray2.dimensions() {
+        return 1.0;
+    }
+
+    let (width, height) = gray1.dimensions();
+    let total_pixels = (width * height) as f64;
+
+    let sum_squared_diff: f64 = gray1
+        .pixels()
+        .zip(gray2.pixels())
+        .map(|(p1, p2)| {
+            let diff = p1[0] as f64 - p2[0] as f64;
+            diff * diff
+        })
+        .sum();
+
+    let mse = sum_squared_diff / total_pixels;
+    (mse / (255.0 * 255.0)).min(1.0)
+}
+
+// ============================================================================
+// Key Parsing / キー解析
+// ============================================================================
+
 /// Parse key string to Key enum
 /// キー文字列をKey列挙型に変換
 #[cfg(feature = "python")]
@@ -944,6 +1292,7 @@ fn sikulid(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<PyPattern>()?;
     m.add_class::<PyLocation>()?;
     m.add_class::<PySettings>()?;
+    m.add_class::<PyObserver>()?;
 
     // Add image finding functions
     m.add_function(wrap_pyfunction!(find, m)?)?;
@@ -960,6 +1309,23 @@ fn sikulid(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(type_text, m)?)?;
     m.add_function(wrap_pyfunction!(paste, m)?)?;
     m.add_function(wrap_pyfunction!(hotkey, m)?)?;
+
+    // Add scroll functions
+    m.add_function(wrap_pyfunction!(scroll, m)?)?;
+    m.add_function(wrap_pyfunction!(scroll_up, m)?)?;
+    m.add_function(wrap_pyfunction!(scroll_down, m)?)?;
+    m.add_function(wrap_pyfunction!(scroll_horizontal, m)?)?;
+    m.add_function(wrap_pyfunction!(scroll_left, m)?)?;
+    m.add_function(wrap_pyfunction!(scroll_right, m)?)?;
+
+    // Add mouse button functions
+    m.add_function(wrap_pyfunction!(mouse_down, m)?)?;
+    m.add_function(wrap_pyfunction!(mouse_up, m)?)?;
+
+    // Add drag functions
+    m.add_function(wrap_pyfunction!(drag, m)?)?;
+    m.add_function(wrap_pyfunction!(drag_to, m)?)?;
+    m.add_function(wrap_pyfunction!(drag_drop, m)?)?;
 
     Ok(())
 }
