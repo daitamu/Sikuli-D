@@ -127,6 +127,14 @@ class Screen(Region):
         """
         return self.h
 
+    def dimensions(self):
+        """Get screen dimensions as (width, height) / 画面サイズを (幅, 高さ) で取得
+
+        Returns:
+            Tuple of (width, height) / (幅, 高さ) のタプル
+        """
+        return (self.w, self.h)
+
     def getBounds(self):
         """Get screen bounds as (x, y, w, h) / 画面境界を (x, y, w, h) で取得
 
@@ -134,6 +142,14 @@ class Screen(Region):
             Tuple of (x, y, width, height) / (x, y, 幅, 高さ) のタプル
         """
         return (self.x, self.y, self.w, self.h)
+
+    def get_region(self):
+        """Get screen as a Region / 画面をRegionとして取得
+
+        Returns:
+            Region covering the entire screen / 画面全体をカバーするRegion
+        """
+        return Region(self.x, self.y, self.w, self.h)
 
     def __repr__(self):
         return f"Screen({self.index})"

@@ -451,19 +451,225 @@ impl PyLocation {
 }
 
 // ============================================================================
+// PySettings - Global Settings / グローバル設定
+// ============================================================================
+
+#[cfg(feature = "python")]
+use std::sync::RwLock;
+
+/// Global settings storage / グローバル設定ストレージ
+#[cfg(feature = "python")]
+static SETTINGS: RwLock<GlobalSettings> = RwLock::new(GlobalSettings::new());
+
+/// Internal settings structure / 内部設定構造体
+#[cfg(feature = "python")]
+struct GlobalSettings {
+    /// Minimum similarity threshold (0.0-1.0) / 最小類似度閾値
+    min_similarity: f64,
+    /// Auto wait timeout in seconds / 自動待機タイムアウト（秒）
+    auto_wait_timeout: f64,
+    /// Delay before mouse move in seconds / マウス移動前の遅延（秒）
+    move_mouse_delay: f64,
+    /// Delay after click in seconds / クリック後の遅延（秒）
+    click_delay: f64,
+    /// Delay between typed characters in seconds / 文字入力間の遅延（秒）
+    type_delay: f64,
+    /// Observe scan rate (scans per second) / 監視スキャンレート
+    observe_scan_rate: f64,
+    /// Wait scan rate (scans per second) / 待機スキャンレート
+    wait_scan_rate: f64,
+    /// Enable highlight / ハイライト有効化
+    highlight: bool,
+    /// Default highlight duration in seconds / デフォルトハイライト時間（秒）
+    default_highlight_time: f64,
+}
+
+#[cfg(feature = "python")]
+impl GlobalSettings {
+    const fn new() -> Self {
+        Self {
+            min_similarity: 0.7,
+            auto_wait_timeout: 3.0,
+            move_mouse_delay: 0.3,
+            click_delay: 0.0,
+            type_delay: 0.0,
+            observe_scan_rate: 3.0,
+            wait_scan_rate: 3.0,
+            highlight: false,
+            default_highlight_time: 2.0,
+        }
+    }
+}
+
+/// Python Settings class / Python設定クラス
+#[cfg(feature = "python")]
+#[pyclass(name = "Settings")]
+struct PySettings;
+
+#[cfg(feature = "python")]
+#[pymethods]
+impl PySettings {
+    #[new]
+    fn new() -> Self {
+        Self
+    }
+
+    // ---- MinSimilarity ----
+    #[getter(MinSimilarity)]
+    fn get_min_similarity(&self) -> f64 {
+        SETTINGS.read().unwrap().min_similarity
+    }
+
+    #[setter(MinSimilarity)]
+    fn set_min_similarity(&self, value: f64) {
+        SETTINGS.write().unwrap().min_similarity = value.clamp(0.0, 1.0);
+    }
+
+    // ---- AutoWaitTimeout ----
+    #[getter(AutoWaitTimeout)]
+    fn get_auto_wait_timeout(&self) -> f64 {
+        SETTINGS.read().unwrap().auto_wait_timeout
+    }
+
+    #[setter(AutoWaitTimeout)]
+    fn set_auto_wait_timeout(&self, value: f64) {
+        SETTINGS.write().unwrap().auto_wait_timeout = value.max(0.0);
+    }
+
+    // ---- MoveMouseDelay ----
+    #[getter(MoveMouseDelay)]
+    fn get_move_mouse_delay(&self) -> f64 {
+        SETTINGS.read().unwrap().move_mouse_delay
+    }
+
+    #[setter(MoveMouseDelay)]
+    fn set_move_mouse_delay(&self, value: f64) {
+        SETTINGS.write().unwrap().move_mouse_delay = value.max(0.0);
+    }
+
+    // ---- ClickDelay ----
+    #[getter(ClickDelay)]
+    fn get_click_delay(&self) -> f64 {
+        SETTINGS.read().unwrap().click_delay
+    }
+
+    #[setter(ClickDelay)]
+    fn set_click_delay(&self, value: f64) {
+        SETTINGS.write().unwrap().click_delay = value.max(0.0);
+    }
+
+    // ---- TypeDelay ----
+    #[getter(TypeDelay)]
+    fn get_type_delay(&self) -> f64 {
+        SETTINGS.read().unwrap().type_delay
+    }
+
+    #[setter(TypeDelay)]
+    fn set_type_delay(&self, value: f64) {
+        SETTINGS.write().unwrap().type_delay = value.max(0.0);
+    }
+
+    // ---- ObserveScanRate ----
+    #[getter(ObserveScanRate)]
+    fn get_observe_scan_rate(&self) -> f64 {
+        SETTINGS.read().unwrap().observe_scan_rate
+    }
+
+    #[setter(ObserveScanRate)]
+    fn set_observe_scan_rate(&self, value: f64) {
+        SETTINGS.write().unwrap().observe_scan_rate = value.max(0.1);
+    }
+
+    // ---- WaitScanRate ----
+    #[getter(WaitScanRate)]
+    fn get_wait_scan_rate(&self) -> f64 {
+        SETTINGS.read().unwrap().wait_scan_rate
+    }
+
+    #[setter(WaitScanRate)]
+    fn set_wait_scan_rate(&self, value: f64) {
+        SETTINGS.write().unwrap().wait_scan_rate = value.max(0.1);
+    }
+
+    // ---- Highlight ----
+    #[getter(Highlight)]
+    fn get_highlight(&self) -> bool {
+        SETTINGS.read().unwrap().highlight
+    }
+
+    #[setter(Highlight)]
+    fn set_highlight(&self, value: bool) {
+        SETTINGS.write().unwrap().highlight = value;
+    }
+
+    // ---- DefaultHighlightTime ----
+    #[getter(DefaultHighlightTime)]
+    fn get_default_highlight_time(&self) -> f64 {
+        SETTINGS.read().unwrap().default_highlight_time
+    }
+
+    #[setter(DefaultHighlightTime)]
+    fn set_default_highlight_time(&self, value: f64) {
+        SETTINGS.write().unwrap().default_highlight_time = value.max(0.0);
+    }
+
+    fn __repr__(&self) -> String {
+        let s = SETTINGS.read().unwrap();
+        format!(
+            "Settings(MinSimilarity={:.2}, AutoWaitTimeout={:.1}, MoveMouseDelay={:.2}, ClickDelay={:.2}, TypeDelay={:.3})",
+            s.min_similarity, s.auto_wait_timeout, s.move_mouse_delay, s.click_delay, s.type_delay
+        )
+    }
+}
+
+/// Helper to apply move mouse delay / マウス移動遅延を適用するヘルパー
+#[cfg(feature = "python")]
+fn apply_move_delay() {
+    let delay = SETTINGS.read().unwrap().move_mouse_delay;
+    if delay > 0.0 {
+        std::thread::sleep(std::time::Duration::from_secs_f64(delay));
+    }
+}
+
+/// Helper to apply click delay / クリック遅延を適用するヘルパー
+#[cfg(feature = "python")]
+fn apply_click_delay() {
+    let delay = SETTINGS.read().unwrap().click_delay;
+    if delay > 0.0 {
+        std::thread::sleep(std::time::Duration::from_secs_f64(delay));
+    }
+}
+
+/// Helper to apply type delay / 入力遅延を適用するヘルパー
+#[cfg(feature = "python")]
+fn apply_type_delay() {
+    let delay = SETTINGS.read().unwrap().type_delay;
+    if delay > 0.0 {
+        std::thread::sleep(std::time::Duration::from_secs_f64(delay));
+    }
+}
+
+// ============================================================================
 // Module-Level Functions / モジュールレベル関数
 // ============================================================================
 
 /// Find pattern on screen (best match)
 /// 画面上でパターンを検索 (最良マッチ)
+/// Returns None if image file doesn't exist (SikuliX compatible)
+/// 画像ファイルが存在しない場合はNoneを返す（SikuliX互換）
 #[cfg(feature = "python")]
 #[pyfunction]
 fn find(py: Python, pattern: &str, similarity: Option<f64>) -> PyResult<Option<PyMatch>> {
     py.allow_threads(|| {
         let screen = Screen::primary();
-        let pat = Pattern::from_file(pattern)
-            .map_err(to_pyerr)?
-            .similar(similarity.unwrap_or(0.7));
+
+        // Return None if pattern file doesn't exist (SikuliX compatible)
+        // パターンファイルが存在しない場合はNoneを返す（SikuliX互換）
+        let pat = match Pattern::from_file(pattern) {
+            Ok(p) => p.similar(similarity.unwrap_or(0.7)),
+            Err(SikulixError::IoError(_)) => return Ok(None),
+            Err(e) => return Err(to_pyerr(e)),
+        };
 
         let screen_img = screen.capture().map_err(to_pyerr)?;
         let matcher = ImageMatcher::new();
@@ -537,6 +743,7 @@ fn exists(py: Python, pattern: &str, timeout: Option<f64>) -> PyResult<Option<Py
 #[pyo3(name = "mouseMove")]
 fn mouse_move(target: &PyAny) -> PyResult<()> {
     let (x, y) = resolve_target(target)?;
+    apply_move_delay();
     Mouse::move_to(x, y).map_err(to_pyerr)
 }
 
@@ -581,9 +788,12 @@ fn resolve_target(target: &PyAny) -> PyResult<(i32, i32)> {
 #[pyfunction]
 fn click(x: Option<i32>, y: Option<i32>) -> PyResult<()> {
     if let (Some(x), Some(y)) = (x, y) {
+        apply_move_delay();
         Mouse::move_to(x, y).map_err(to_pyerr)?;
     }
-    Mouse::click().map_err(to_pyerr)
+    Mouse::click().map_err(to_pyerr)?;
+    apply_click_delay();
+    Ok(())
 }
 
 /// Double click at coordinates or current position
@@ -592,9 +802,12 @@ fn click(x: Option<i32>, y: Option<i32>) -> PyResult<()> {
 #[pyfunction]
 fn double_click(x: Option<i32>, y: Option<i32>) -> PyResult<()> {
     if let (Some(x), Some(y)) = (x, y) {
+        apply_move_delay();
         Mouse::move_to(x, y).map_err(to_pyerr)?;
     }
-    Mouse::double_click().map_err(to_pyerr)
+    Mouse::double_click().map_err(to_pyerr)?;
+    apply_click_delay();
+    Ok(())
 }
 
 /// Right click at coordinates or current position
@@ -603,17 +816,30 @@ fn double_click(x: Option<i32>, y: Option<i32>) -> PyResult<()> {
 #[pyfunction]
 fn right_click(x: Option<i32>, y: Option<i32>) -> PyResult<()> {
     if let (Some(x), Some(y)) = (x, y) {
+        apply_move_delay();
         Mouse::move_to(x, y).map_err(to_pyerr)?;
     }
-    Mouse::right_click().map_err(to_pyerr)
+    Mouse::right_click().map_err(to_pyerr)?;
+    apply_click_delay();
+    Ok(())
 }
 
-/// Type text
-/// テキストを入力
+/// Type text with optional character delay
+/// オプションの文字遅延でテキストを入力
 #[cfg(feature = "python")]
 #[pyfunction]
 fn type_text(text: &str) -> PyResult<()> {
-    Keyboard::type_text(text).map_err(to_pyerr)
+    let delay = SETTINGS.read().unwrap().type_delay;
+    if delay > 0.0 {
+        // Type each character with delay / 遅延を入れて1文字ずつ入力
+        for c in text.chars() {
+            Keyboard::type_text(&c.to_string()).map_err(to_pyerr)?;
+            std::thread::sleep(std::time::Duration::from_secs_f64(delay));
+        }
+        Ok(())
+    } else {
+        Keyboard::type_text(text).map_err(to_pyerr)
+    }
 }
 
 /// Paste text via clipboard
@@ -717,6 +943,7 @@ fn sikulid(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<PyMatch>()?;
     m.add_class::<PyPattern>()?;
     m.add_class::<PyLocation>()?;
+    m.add_class::<PySettings>()?;
 
     // Add image finding functions
     m.add_function(wrap_pyfunction!(find, m)?)?;

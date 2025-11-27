@@ -26,6 +26,7 @@ try:
         Screen,
         Location,
         Pattern,
+        Settings as NativeSettings,
         find,
         find_all,
         wait,
@@ -36,8 +37,12 @@ try:
         type_text,
         mouseMove,
         hover,
+        paste,
+        hotkey,
     )
     _NATIVE_AVAILABLE = True
+    # Use native Settings singleton / ネイティブのSettings シングルトンを使用
+    Settings = NativeSettings()
 except ImportError:
     _NATIVE_AVAILABLE = False
     # Fallback to pure Python implementation
@@ -47,7 +52,8 @@ except ImportError:
     from .location import Location
     from .pattern import Pattern
     from .finder import find, find_all, wait
-    from .input import click, double_click, right_click, type_text, mouseMove, hover
+    from .input import click, double_click, right_click, type_text, mouseMove, hover, paste, hotkey
+    Settings = None  # Will be defined below
 
 # Aliases for compatibility
 doubleClick = double_click
@@ -99,20 +105,22 @@ class Key:
     SPACE = " "
 
 
-# Settings
-class Settings:
-    """Global settings / グローバル設定"""
-    MinSimilarity = 0.7
-    AutoWaitTimeout = 3.0
-    MoveMouseDelay = 0.3
-    ClickDelay = 0.0
-    TypeDelay = 0.0
-    ObserveScanRate = 3.0
-    WaitScanRate = 3.0
+# Settings - fallback to pure Python class if native module not available
+# ネイティブモジュールが利用不可の場合はPythonクラスにフォールバック
+if Settings is None:
+    class Settings:
+        """Global settings / グローバル設定"""
+        MinSimilarity = 0.7
+        AutoWaitTimeout = 3.0
+        MoveMouseDelay = 0.3
+        ClickDelay = 0.0
+        TypeDelay = 0.0
+        ObserveScanRate = 3.0
+        WaitScanRate = 3.0
 
-    # Highlight settings
-    Highlight = False
-    DefaultHighlightTime = 2.0
+        # Highlight settings
+        Highlight = False
+        DefaultHighlightTime = 2.0
 
 
 # Convenience functions
@@ -216,6 +224,8 @@ __all__ = [
     "mouseMove",
     "hover",
     "type_text",
+    "paste",
+    "hotkey",
     "highlight",
     "popup",
     "input",

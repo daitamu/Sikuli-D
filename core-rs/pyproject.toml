@@ -1,0 +1,36 @@
+[build-system]
+requires = ["maturin>=1.0,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "sikulid"
+version = "0.3.0"
+description = "Next-generation Sikuli-D core library - Python bindings"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.8"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Rust",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Software Development :: Testing",
+    "Topic :: Desktop Environment",
+]
+keywords = ["sikuli", "automation", "gui", "testing", "image-recognition"]
+
+[project.urls]
+Repository = "https://github.com/daitamu/Sikuli-D"
+
+[tool.maturin]
+features = ["python"]
+python-source = "python"
+module-name = "sikulid"

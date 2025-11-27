@@ -105,6 +105,14 @@ class Region:
         """
         return Region(self.x + dx, self.y + dy, self.w, self.h)
 
+    def area(self):
+        """Calculate area of this region / この領域の面積を計算
+
+        Returns:
+            Area in pixels squared / ピクセル二乗の面積
+        """
+        return self.w * self.h
+
     def grow(self, amount):
         """Create new region grown by amount / 指定量だけ拡大した新しい領域を作成
 
@@ -121,6 +129,17 @@ class Region:
             self.w + amount * 2,
             self.h + amount * 2
         )
+
+    def expand(self, amount):
+        """Alias for grow() - expand region by amount on all sides / grow()のエイリアス
+
+        Args:
+            amount: Pixels to expand by / 拡大するピクセル数
+
+        Returns:
+            New expanded Region / 拡大された新しい Region
+        """
+        return self.grow(amount)
 
     def find(self, target):
         """Find target in this region / この領域内でターゲットを検索
