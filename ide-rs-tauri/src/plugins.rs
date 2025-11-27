@@ -5,7 +5,7 @@
 
 use log::{debug, info, warn};
 use serde::Serialize;
-use sikulid_core::plugin::PluginManager;
+use sikulid::plugin::PluginManager;
 use std::path::PathBuf;
 use std::sync::Mutex;
 use tauri::State;
@@ -464,7 +464,7 @@ pub fn get_plugin_permissions(
 ) -> PluginPermissionsResult {
     debug!("Getting permissions for plugin: {}", id);
 
-    use sikulid_core::plugin::Permission;
+    use sikulid::plugin::Permission;
 
     let available: Vec<PermissionInfo> = Permission::all()
         .into_iter()

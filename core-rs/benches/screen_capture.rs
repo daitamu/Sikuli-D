@@ -2,7 +2,7 @@
 //! 画面キャプチャのパフォーマンスベンチマーク
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
-use sikulix_core::{Region, Screen};
+use sikulid::{Region, Screen};
 
 fn benchmark_screen_capture_full(c: &mut Criterion) {
     let mut group = c.benchmark_group("screen_capture_full");

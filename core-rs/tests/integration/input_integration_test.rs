@@ -4,7 +4,7 @@
 //! Tests mouse and keyboard input operations in a mock environment.
 //! モック環境でマウスとキーボード入力操作をテストします。
 
-use sikulix_core::{Keyboard, Key, Mouse, Region};
+use sikulid::{Keyboard, Key, Mouse, Region};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
@@ -332,7 +332,7 @@ fn test_concurrent_event_recording() {
 
 #[test]
 #[ignore = "Requires actual input devices - run with: cargo test -- --ignored"]
-fn test_real_mouse_operations() -> sikulix_core::Result<()> {
+fn test_real_mouse_operations() -> sikulid::Result<()> {
     // Test actual mouse operations (requires GUI environment)
     // 実際のマウス操作をテスト（GUI環境が必要）
 
@@ -351,7 +351,7 @@ fn test_real_mouse_operations() -> sikulix_core::Result<()> {
 
 #[test]
 #[ignore = "Requires actual input devices - run with: cargo test -- --ignored"]
-fn test_real_keyboard_operations() -> sikulix_core::Result<()> {
+fn test_real_keyboard_operations() -> sikulid::Result<()> {
     // Test actual keyboard operations (requires GUI environment)
     // 実際のキーボード操作をテスト（GUI環境が必要）
 

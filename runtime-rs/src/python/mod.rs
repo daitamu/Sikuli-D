@@ -5,9 +5,11 @@
 //! lib2to3を使用した自動Python 2→Python 3変換に対応。
 
 use std::path::Path;
+use std::time::Duration;
 use anyhow::{Result, Context, bail};
 use std::process::{Command, Stdio};
 use std::io::{BufRead, BufReader};
+use wait_timeout::ChildExt;
 
 /// Execute a Python script with Sikuli-D API
 /// Sikuli-D API付きでPythonスクリプトを実行
@@ -303,8 +305,17 @@ fn execute_python_script(
 
     // Wait for completion (with optional timeout)
     let status = if timeout_secs > 0 {
-        // TODO: Implement timeout
-        child.wait().context("Failed to wait for process")?
+        let timeout_duration = Duration::from_secs(timeout_secs);
+        match child.wait_timeout(timeout_duration).context("Failed to wait for process")? {
+            Some(status) => status,
+            None => {
+                // Timeout occurred - kill the process
+                log::warn!("Script execution timed out after {}s, killing process...", timeout_secs);
+                let _ = child.kill();
+                let _ = child.wait(); // Reap the zombie process
+                bail!("Script execution timed out after {}s / スクリプト実行がタイムアウトしました ({}秒)", timeout_secs, timeout_secs);
+            }
+        }
     } else {
         child.wait().context("Failed to wait for process")?
     };

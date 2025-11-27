@@ -4,7 +4,6 @@
 #[cfg(test)]
 mod tests {
     use super::super::*;
-    use std::path::PathBuf;
 
     #[test]
     fn test_repl_config_default() {
@@ -27,7 +26,8 @@ mod tests {
         assert!(repl.has_unclosed_brackets("print('hello'"));
         assert!(repl.has_unclosed_brackets("func(a, b"));
         assert!(repl.has_unclosed_brackets("x = [1, 2"));
-        assert!(repl.has_unclosed_brackets("def foo():"));
+        // Note: "def foo():" has balanced brackets, colon handling is in is_incomplete()
+        assert!(!repl.has_unclosed_brackets("def foo():"));
 
         // String handling
         assert!(!repl.has_unclosed_brackets(r#"print("()")"#));

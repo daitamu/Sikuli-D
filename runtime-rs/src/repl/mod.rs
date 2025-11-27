@@ -3,7 +3,8 @@
 
 use anyhow::{Context, Result};
 use rustyline::error::ReadlineError;
-use rustyline::DefaultEditor;
+use rustyline::history::DefaultHistory;
+use rustyline::Editor;
 use std::io::{BufRead, Write};
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
@@ -16,6 +17,7 @@ mod special_commands;
 mod tests;
 
 
+pub use completer::SikulixCompleter;
 use special_commands::SpecialCommand;
 
 /// REPL configuration
@@ -47,8 +49,9 @@ impl Default for ReplConfig {
 /// Interactive REPL session
 /// インタラクティブREPLセッション
 pub struct Repl {
-    /// Readline editor
-    editor: DefaultEditor,
+    /// Readline editor with tab completion
+    /// タブ補完付きReadlineエディタ
+    editor: Editor<SikulixCompleter, DefaultHistory>,
 
     /// Command history file path
     history_file: PathBuf,
@@ -64,8 +67,10 @@ impl Repl {
     /// Create a new REPL instance
     /// 新しいREPLインスタンスを作成
     pub fn new(config: ReplConfig) -> Result<Self> {
-        let mut editor = DefaultEditor::new()
+        let completer = SikulixCompleter::new();
+        let mut editor = Editor::new()
             .context("Failed to create readline editor")?;
+        editor.set_helper(Some(completer));
 
         // Set up history
         let history_file = Self::get_history_file();

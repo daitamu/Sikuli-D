@@ -158,7 +158,8 @@ mod tests {
         fs::write(bundle.join("main.py"), "print('hello')").unwrap();
 
         let result = find_main_script(&bundle).unwrap();
-        assert!(result.ends_with(".py"));
+        // PathBuf::ends_with checks path components, not string suffix
+        assert_eq!(result.extension().and_then(|e| e.to_str()), Some("py"));
     }
 
     #[test]

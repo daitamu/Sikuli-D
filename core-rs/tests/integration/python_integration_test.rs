@@ -4,7 +4,7 @@
 //! Tests Python version detection, syntax analysis, and script execution.
 //! Pythonバージョン検出、構文解析、スクリプト実行をテストします。
 
-use sikulix_core::python::{PythonVersion, SyntaxAnalyzer, PythonEnvironment, ScriptExecutor};
+use sikulid::python::{PythonVersion, SyntaxAnalyzer, PythonEnvironment, ScriptExecutor};
 use std::path::Path;
 
 #[test]
@@ -186,7 +186,7 @@ fn test_script_executor_creation() {
 
 #[test]
 #[ignore = "Requires Python runtime"]
-fn test_python_script_execution_simple() -> sikulix_core::Result<()> {
+fn test_python_script_execution_simple() -> sikulid::Result<()> {
     // Test execution of a simple Python script
     // シンプルなPythonスクリプトの実行をテスト
     let script = r#"
@@ -207,7 +207,7 @@ print(f"Result: {result}")
 
 #[test]
 #[ignore = "Requires Python runtime"]
-fn test_python_script_execution_with_error() -> sikulix_core::Result<()> {
+fn test_python_script_execution_with_error() -> sikulid::Result<()> {
     // Test execution of a script with errors
     // エラーを含むスクリプトの実行をテスト
     let script = r#"
@@ -226,7 +226,7 @@ print("This won't execute")
 
 #[test]
 #[ignore = "Requires Python runtime"]
-fn test_python_script_execution_with_imports() -> sikulix_core::Result<()> {
+fn test_python_script_execution_with_imports() -> sikulid::Result<()> {
     // Test execution with standard library imports
     // 標準ライブラリインポートを使った実行をテスト
     let script = r#"
@@ -248,7 +248,7 @@ print(f"Platform: {sys.platform}")
 
 #[test]
 #[ignore = "Requires Python runtime and test fixture"]
-fn test_python_script_from_file() -> sikulix_core::Result<()> {
+fn test_python_script_from_file() -> sikulid::Result<()> {
     // Test execution from a file
     // ファイルからの実行をテスト
     let script_path = "tests/fixtures/scripts/test_simple.py";
@@ -271,7 +271,7 @@ fn test_python_script_from_file() -> sikulix_core::Result<()> {
 
 #[test]
 #[ignore = "Requires Python runtime"]
-fn test_python_script_with_timeout() -> sikulix_core::Result<()> {
+fn test_python_script_with_timeout() -> sikulid::Result<()> {
     // Test script execution with timeout
     // タイムアウト付きスクリプト実行をテスト
     let script = r#"
@@ -305,7 +305,7 @@ print("Finished")
 
 #[test]
 #[ignore = "Requires Python runtime"]
-fn test_python_script_cancellation() -> sikulix_core::Result<()> {
+fn test_python_script_cancellation() -> sikulid::Result<()> {
     // Test script cancellation
     // スクリプトキャンセルをテスト
     use std::sync::Arc;
@@ -374,7 +374,7 @@ fn test_python_script_validation() {
 
 #[test]
 #[ignore = "Requires Python runtime"]
-fn test_python_variable_inspection() -> sikulix_core::Result<()> {
+fn test_python_variable_inspection() -> sikulid::Result<()> {
     // Test inspecting variables after script execution
     // スクリプト実行後の変数インスペクションをテスト
     let script = r#"

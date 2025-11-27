@@ -82,8 +82,8 @@ impl From<Color> for HighlightConfig {
 /// # Example / 使用例
 ///
 /// ```no_run
-/// use sikulix_core::{Region, Color};
-/// use sikulix_core::debug::highlight_linux::highlight;
+/// use sikulid::{Region, Color};
+/// use sikulid::debug::highlight_linux::highlight;
 ///
 /// let region = Region::new(100, 100, 200, 150);
 /// let color = Color::rgb(255, 0, 0);

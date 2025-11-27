@@ -6,7 +6,7 @@
 use image::ImageFormat;
 use log::{debug, error, info};
 use serde::{Deserialize, Serialize};
-use sikulid_core::{Region, Screen};
+use sikulid::{Region, Screen};
 use std::path::PathBuf;
 use std::sync::Mutex;
 use tauri::{AppHandle, Manager, State, WebviewUrl, WebviewWindowBuilder};

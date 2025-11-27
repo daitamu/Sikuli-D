@@ -7,7 +7,7 @@
 //! Run with: cargo run --example highlight_demo
 //! 実行方法: cargo run --example highlight_demo
 
-use sikulix_core::{Color, Region};
+use sikulid::{Color, Region};
 
 fn main() {
     // Initialize logging
@@ -25,7 +25,7 @@ fn main() {
     let region1 = Region::new(100, 100, 300, 200);
     let color = Color::rgb(255, 0, 0); // Red
 
-    match sikulix_core::debug::highlight(&region1, 2000, color) {
+    match sikulid::debug::highlight(&region1, 2000, color) {
         Ok(()) => println!("✓ Highlight shown successfully"),
         Err(e) => println!("✗ Failed to show highlight: {}", e),
     }
@@ -39,7 +39,7 @@ fn main() {
     let region2 = Region::new(500, 300, 250, 150);
     let green = Color::rgb(0, 255, 0);
 
-    match sikulix_core::debug::highlight(&region2, 1500, green) {
+    match sikulid::debug::highlight(&region2, 1500, green) {
         Ok(()) => println!("✓ Green highlight shown"),
         Err(e) => println!("✗ Failed: {}", e),
     }
@@ -51,12 +51,12 @@ fn main() {
     println!("\nExample 3: Custom configuration (blue, thick border)");
     println!("例3: カスタム設定（青、太い境界線）");
     let region3 = Region::new(200, 400, 400, 100);
-    let config = sikulix_core::debug::HighlightConfig::new()
+    let config = sikulid::debug::HighlightConfig::new()
         .with_color(0, 0, 255) // Blue
         .with_border_width(5)
         .with_duration_ms(3000);
 
-    match sikulix_core::debug::show_highlight_with_config(&region3, &config) {
+    match sikulid::debug::show_highlight_with_config(&region3, &config) {
         Ok(()) => println!("✓ Custom highlight shown"),
         Err(e) => println!("✗ Failed: {}", e),
     }
@@ -75,7 +75,7 @@ fn main() {
     ];
 
     for (region, color) in regions {
-        let _ = sikulix_core::debug::highlight(&region, 2000, color);
+        let _ = sikulid::debug::highlight(&region, 2000, color);
         std::thread::sleep(std::time::Duration::from_millis(200)); // Small delay
     }
 
@@ -87,9 +87,9 @@ fn main() {
     println!("\nExample 5: Highlighting a match result");
     println!("例5: マッチ結果のハイライト");
     let match_region = Region::new(300, 300, 200, 150);
-    let match_result = sikulix_core::Match::new(match_region, 0.95);
+    let match_result = sikulid::Match::new(match_region, 0.95);
 
-    match sikulix_core::debug::highlight_match(&match_result, 2000) {
+    match sikulid::debug::highlight_match(&match_result, 2000) {
         Ok(()) => println!("✓ Match highlight shown (score: {})", match_result.score_percent()),
         Err(e) => println!("✗ Failed: {}", e),
     }

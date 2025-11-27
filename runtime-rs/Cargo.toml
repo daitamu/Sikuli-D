@@ -40,6 +40,12 @@ walkdir = "2.4"
 rustyline = "14.0"
 dirs = "5.0"
 
+# Process management
+wait-timeout = "0.2"
+
+[dev-dependencies]
+tempfile = "3"
+
 [features]
 default = []
 

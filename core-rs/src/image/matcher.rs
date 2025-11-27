@@ -65,7 +65,7 @@ impl TemplateStats {
 /// 使用例
 ///
 /// ```ignore
-/// use sikulix_core::{ImageMatcher, Pattern, Screen};
+/// use sikulid::{ImageMatcher, Pattern, Screen};
 ///
 /// let matcher = ImageMatcher::new().with_min_similarity(0.9);
 /// let screen = Screen::primary();
@@ -712,7 +712,7 @@ impl ImageMatcher {
     /// 使用例
     ///
     /// ```ignore
-    /// use sikulix_core::{ImageMatcher, Region, Screen};
+    /// use sikulid::{ImageMatcher, Region, Screen};
     ///
     /// let matcher = ImageMatcher::new();
     /// let screen = Screen::primary();

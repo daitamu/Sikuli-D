@@ -4,7 +4,7 @@
 //! These tests verify the Observer functionality with real screen captures.
 //! これらのテストは実際の画面キャプチャでObserver機能を検証します。
 
-use sikulix_core::{Observer, Pattern, Region};
+use sikulid::{Observer, Pattern, Region};
 use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::thread;

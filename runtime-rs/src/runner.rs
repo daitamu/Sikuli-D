@@ -3,7 +3,7 @@
 
 use std::path::Path;
 use anyhow::{Result, Context, bail};
-use sikulid_core::{Region, Screen};
+use sikulid::{Region, Screen};
 
 /// Run a Sikuli-D script
 /// Sikuli-Dスクリプトを実行
@@ -56,12 +56,12 @@ pub fn find_image(image_path: &Path, similarity: f64, find_all_matches: bool) ->
         .map_err(|e| anyhow::anyhow!("Failed to capture screen: {}", e))?;
 
     // Load template as Pattern
-    let pattern = sikulid_core::Pattern::from_file(image_path.to_str().unwrap_or(""))
+    let pattern = sikulid::Pattern::from_file(image_path.to_str().unwrap_or(""))
         .map_err(|e| anyhow::anyhow!("Failed to read template image: {}", e))?
         .similar(similarity);
 
     // Create matcher
-    let matcher = sikulid_core::ImageMatcher::new().with_min_similarity(similarity);
+    let matcher = sikulid::ImageMatcher::new().with_min_similarity(similarity);
 
     if find_all_matches {
         match matcher.find_all(&screen_capture, &pattern) {
@@ -135,14 +135,6 @@ pub fn capture_screen(output: Option<&Path>, region_str: Option<&str>) -> Result
     Ok(())
 }
 
-/// Start interactive REPL (deprecated, use repl module directly)
-/// インタラクティブREPLを開始 (非推奨、replモジュールを直接使用)
-#[deprecated(note = "Use repl::start_repl() instead")]
-pub fn start_repl() -> Result<()> {
-    let config = crate::repl::ReplConfig::default();
-    crate::repl::start_repl(config)
-}
-
 /// Show system information
 /// システム情報を表示
 pub fn show_info() -> Result<()> {
@@ -168,7 +160,7 @@ pub fn show_info() -> Result<()> {
 
     // Python info
     println!("=== Python Info ===");
-    match sikulid_core::python::detect_system_python() {
+    match sikulid::python::detect_system_python() {
         Ok(python) => {
             println!(
                 "Python: {}.{}.{} ({})",

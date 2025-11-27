@@ -25,7 +25,7 @@ use std::path::Path;
 ///
 /// # Example / 使用例
 /// ```no_run
-/// use sikulix_core::get_color;
+/// use sikulid::get_color;
 ///
 /// let color = get_color(100, 200).unwrap();
 /// println!("Color at (100, 200): {}", color.to_hex());
@@ -71,7 +71,7 @@ pub fn get_color(x: i32, y: i32) -> Result<Color> {
 ///
 /// # Example / 使用例
 /// ```no_run
-/// use sikulix_core::save_screen_capture;
+/// use sikulid::save_screen_capture;
 ///
 /// // Save as PNG
 /// let path = save_screen_capture("full_screen.png").unwrap();
@@ -137,7 +137,7 @@ pub fn save_screen_capture(path: &str) -> Result<String> {
 ///
 /// # Example / 使用例
 /// ```no_run
-/// use sikulix_core::{save_region_capture, Region};
+/// use sikulid::{save_region_capture, Region};
 ///
 /// // Capture top-left 200x200 pixels
 /// let region = Region::new(0, 0, 200, 200);

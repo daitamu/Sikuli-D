@@ -10,7 +10,7 @@
 //! cargo run --example observer_demo
 //! ```
 
-use sikulix_core::{Observer, Pattern, Region};
+use sikulid::{Observer, Pattern, Region};
 use std::cell::Cell;
 use std::thread;
 use std::time::Duration;

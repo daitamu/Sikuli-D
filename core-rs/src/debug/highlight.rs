@@ -312,8 +312,8 @@ mod linux_impl {
 /// # Example / 使用例
 ///
 /// ```no_run
-/// use sikulix_core::{Region, Color};
-/// use sikulix_core::debug::highlight::highlight;
+/// use sikulid::{Region, Color};
+/// use sikulid::debug::highlight::highlight;
 ///
 /// let region = Region::new(100, 100, 200, 150);
 /// let color = Color::rgb(255, 0, 0); // Red
@@ -340,8 +340,8 @@ pub fn highlight(region: &Region, duration_ms: u64, color: Color) -> Result<()> 
 /// # Example / 使用例
 ///
 /// ```no_run
-/// use sikulix_core::Region;
-/// use sikulix_core::debug::highlight::{show_highlight_with_config, HighlightConfig};
+/// use sikulid::Region;
+/// use sikulid::debug::highlight::{show_highlight_with_config, HighlightConfig};
 ///
 /// let region = Region::new(100, 100, 200, 150);
 /// let config = HighlightConfig::new()
@@ -383,8 +383,8 @@ pub fn show_highlight_with_config(region: &Region, config: &HighlightConfig) -> 
 /// # Example / 使用例
 ///
 /// ```no_run
-/// use sikulix_core::{Region, Match, Color};
-/// use sikulix_core::debug::highlight::highlight_match;
+/// use sikulid::{Region, Match, Color};
+/// use sikulid::debug::highlight::highlight_match;
 ///
 /// let region = Region::new(100, 100, 200, 150);
 /// let match_result = Match::new(region, 0.95);

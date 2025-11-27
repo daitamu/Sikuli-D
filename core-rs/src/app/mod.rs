@@ -7,7 +7,7 @@
 //! # Example / 使用例
 //!
 //! ```no_run
-//! use sikulix_core::App;
+//! use sikulid::App;
 //!
 //! // Open an application / アプリケーションを起動
 //! let app = App::open("notepad.exe").unwrap();
@@ -79,7 +79,7 @@ impl App {
     /// # Example / 使用例
     ///
     /// ```no_run
-    /// use sikulix_core::App;
+    /// use sikulid::App;
     ///
     /// let notepad = App::new("Notepad");
     /// ```
@@ -112,7 +112,7 @@ impl App {
     /// # Example / 使用例
     ///
     /// ```no_run
-    /// use sikulix_core::App;
+    /// use sikulid::App;
     ///
     /// // Open by name / 名前で起動
     /// let app = App::open("notepad.exe").unwrap();
@@ -154,7 +154,7 @@ impl App {
     /// # Example / 使用例
     ///
     /// ```no_run
-    /// use sikulix_core::App;
+    /// use sikulid::App;
     ///
     /// let mut app = App::new("Notepad");
     /// app.focus().unwrap();
@@ -196,7 +196,7 @@ impl App {
     /// # Example / 使用例
     ///
     /// ```no_run
-    /// use sikulix_core::App;
+    /// use sikulid::App;
     ///
     /// let mut app = App::new("Notepad");
     /// app.close().unwrap();
@@ -235,7 +235,7 @@ impl App {
     /// # Example / 使用例
     ///
     /// ```no_run
-    /// use sikulix_core::App;
+    /// use sikulid::App;
     ///
     /// let app = App::new("Notepad");
     /// if app.is_running() {
@@ -277,7 +277,7 @@ impl App {
     /// # Example / 使用例
     ///
     /// ```no_run
-    /// use sikulix_core::App;
+    /// use sikulid::App;
     ///
     /// let mut app = App::new("Notepad");
     /// let window = app.get_window().unwrap();

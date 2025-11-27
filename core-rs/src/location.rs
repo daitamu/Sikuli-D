@@ -12,7 +12,7 @@ use crate::Result;
 /// # Example / 使用例
 ///
 /// ```
-/// use sikulix_core::Location;
+/// use sikulid::Location;
 ///
 /// let loc = Location::new(100, 200);
 /// let above = loc.above(50);
@@ -43,7 +43,7 @@ impl Location {
     /// # Example / 使用例
     ///
     /// ```
-    /// use sikulix_core::Location;
+    /// use sikulid::Location;
     ///
     /// let loc = Location::new(100, 200);
     /// assert_eq!(loc.x, 100);
@@ -88,7 +88,7 @@ impl Location {
     /// # Example / 使用例
     ///
     /// ```
-    /// use sikulix_core::Location;
+    /// use sikulid::Location;
     ///
     /// let loc = Location::new(100, 100);
     /// let offset = loc.offset(10, -20);
@@ -112,7 +112,7 @@ impl Location {
     /// # Example / 使用例
     ///
     /// ```
-    /// use sikulix_core::Location;
+    /// use sikulid::Location;
     ///
     /// let loc = Location::new(100, 100);
     /// let left = loc.left(50);
@@ -136,7 +136,7 @@ impl Location {
     /// # Example / 使用例
     ///
     /// ```
-    /// use sikulix_core::Location;
+    /// use sikulid::Location;
     ///
     /// let loc = Location::new(100, 100);
     /// let right = loc.right(50);
@@ -160,7 +160,7 @@ impl Location {
     /// # Example / 使用例
     ///
     /// ```
-    /// use sikulix_core::Location;
+    /// use sikulid::Location;
     ///
     /// let loc = Location::new(100, 100);
     /// let above = loc.above(50);
@@ -184,7 +184,7 @@ impl Location {
     /// # Example / 使用例
     ///
     /// ```
-    /// use sikulix_core::Location;
+    /// use sikulid::Location;
     ///
     /// let loc = Location::new(100, 100);
     /// let below = loc.below(50);
@@ -204,7 +204,7 @@ impl Location {
     /// # Example / 使用例
     ///
     /// ```no_run
-    /// use sikulix_core::Location;
+    /// use sikulid::Location;
     ///
     /// let loc = Location::new(100, 100);
     /// loc.click().unwrap();
@@ -219,7 +219,7 @@ impl Location {
     /// # Example / 使用例
     ///
     /// ```no_run
-    /// use sikulix_core::Location;
+    /// use sikulid::Location;
     ///
     /// let loc = Location::new(100, 100);
     /// loc.double_click().unwrap();
@@ -234,7 +234,7 @@ impl Location {
     /// # Example / 使用例
     ///
     /// ```no_run
-    /// use sikulix_core::Location;
+    /// use sikulid::Location;
     ///
     /// let loc = Location::new(100, 100);
     /// loc.right_click().unwrap();
@@ -249,7 +249,7 @@ impl Location {
     /// # Example / 使用例
     ///
     /// ```no_run
-    /// use sikulix_core::Location;
+    /// use sikulid::Location;
     ///
     /// let loc = Location::new(100, 100);
     /// loc.hover().unwrap();
@@ -266,7 +266,7 @@ impl From<(i32, i32)> for Location {
     /// # Example / 使用例
     ///
     /// ```
-    /// use sikulix_core::Location;
+    /// use sikulid::Location;
     ///
     /// let loc: Location = (100, 200).into();
     /// assert_eq!(loc.x, 100);
@@ -287,7 +287,7 @@ impl From<Location> for (i32, i32) {
     /// # Example / 使用例
     ///
     /// ```
-    /// use sikulix_core::Location;
+    /// use sikulid::Location;
     ///
     /// let loc = Location::new(100, 200);
     /// let coords: (i32, i32) = loc.into();

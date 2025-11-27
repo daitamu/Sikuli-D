@@ -9,7 +9,7 @@
 //! # Example / 使用例
 //!
 //! ```no_run
-//! use sikulix_core::screen::{Screen, Mouse, Keyboard, Key};
+//! use sikulid::screen::{Screen, Mouse, Keyboard, Key};
 //!
 //! // Capture screen / スクリーンキャプチャ
 //! let mut screen = Screen::primary();
@@ -48,7 +48,7 @@ mod linux;
 /// # Example / 使用例
 ///
 /// ```no_run
-/// use sikulix_core::Screen;
+/// use sikulid::Screen;
 ///
 /// let mut screen = Screen::primary();
 /// let (width, height) = screen.dimensions().unwrap();
@@ -87,7 +87,7 @@ impl Screen {
     /// # Example / 使用例
     ///
     /// ```no_run
-    /// use sikulix_core::Screen;
+    /// use sikulid::Screen;
     ///
     /// let num_screens = Screen::get_number_screens();
     /// println!("Number of monitors: {}", num_screens);
@@ -103,12 +103,12 @@ impl Screen {
 
     #[cfg(target_os = "macos")]
     fn get_number_screens_impl() -> u32 {
-        1 // TODO: Implement for macOS
+        macos::get_number_screens()
     }
 
     #[cfg(target_os = "linux")]
     fn get_number_screens_impl() -> u32 {
-        1 // TODO: Implement for Linux
+        linux::get_number_screens()
     }
 
     #[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux")))]
@@ -158,7 +158,7 @@ impl Screen {
     /// # Example / 使用例
     ///
     /// ```no_run
-    /// use sikulix_core::{Screen, Pattern};
+    /// use sikulid::{Screen, Pattern};
     ///
     /// let screen = Screen::primary();
     /// let pattern = Pattern::from_file("button.png").unwrap();
@@ -271,7 +271,7 @@ impl Screen {
 /// # Example / 使用例
 ///
 /// ```no_run
-/// use sikulix_core::Mouse;
+/// use sikulid::Mouse;
 ///
 /// // Move and click / 移動してクリック
 /// Mouse::move_to(500, 300).unwrap();
@@ -786,7 +786,7 @@ impl Mouse {
 /// # Example / 使用例
 ///
 /// ```no_run
-/// use sikulix_core::screen::{Keyboard, Key};
+/// use sikulid::screen::{Keyboard, Key};
 ///
 /// // Type text / テキスト入力
 /// Keyboard::type_text("Hello, World!").unwrap();

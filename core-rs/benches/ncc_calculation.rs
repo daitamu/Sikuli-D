@@ -3,7 +3,7 @@
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use image::{DynamicImage, ImageEncoder, Rgba, RgbaImage};
-use sikulix_core::{ImageMatcher, Pattern};
+use sikulid::{ImageMatcher, Pattern};
 
 /// Create a test screen image with random noise
 /// ランダムノイズを含むテストスクリーン画像を作成

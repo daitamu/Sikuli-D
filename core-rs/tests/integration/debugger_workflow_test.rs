@@ -4,7 +4,7 @@
 //! Tests the debugger functionality including breakpoints, stepping, and variable inspection.
 //! ブレークポイント、ステップ実行、変数インスペクションなどのデバッガ機能をテストします。
 
-use sikulix_core::debug::{
+use sikulid::debug::{
     Debugger, DebugState, DebugEvent, CallFrame, VariableInfo, VariableValue,
 };
 use std::sync::{Arc, Mutex};
@@ -405,7 +405,7 @@ fn test_debugger_error_handling() {
 
 #[test]
 #[ignore = "Requires actual Python script execution"]
-fn test_real_debugging_session() -> sikulix_core::Result<()> {
+fn test_real_debugging_session() -> sikulid::Result<()> {
     // Test real debugging session with Python script
     // Pythonスクリプトで実際のデバッグセッションをテスト
     let mut debugger = Debugger::new();

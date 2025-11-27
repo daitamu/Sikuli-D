@@ -13,7 +13,7 @@ mod plugins;
 mod settings;
 use log::{debug, error, info, warn};
 use serde::{Deserialize, Serialize};
-use sikulid_core::{PythonVersion, SyntaxAnalyzer};
+use sikulid::{PythonVersion, SyntaxAnalyzer};
 use std::fs;
 use std::path::PathBuf;
 use std::sync::Mutex;
@@ -149,7 +149,7 @@ fn main() {
         .init();
 
     info!("Starting SikuliX IDE v{}", env!("CARGO_PKG_VERSION"));
-    info!("Core library version: {}", sikulid_core::VERSION);
+    info!("Core library version: {}", sikulid::VERSION);
 
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
@@ -394,8 +394,8 @@ fn analyze_script_content(content: &str) -> String {
 /// コアライブラリのバージョンを取得
 #[tauri::command]
 fn get_core_version() -> String {
-    debug!("Core version requested: {}", sikulid_core::VERSION);
-    sikulid_core::VERSION.to_string()
+    debug!("Core version requested: {}", sikulid::VERSION);
+    sikulid::VERSION.to_string()
 }
 
 // ============================================================================

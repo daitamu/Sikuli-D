@@ -4,7 +4,7 @@
 //! Tests the integration between Screen capture and ImageMatcher for finding patterns.
 //! 画面キャプチャと画像マッチャーの統合をテストし、パターン検索を検証します。
 
-use sikulix_core::{ImageMatcher, Pattern, Region, Screen};
+use sikulid::{ImageMatcher, Pattern, Region, Screen};
 use image::{DynamicImage, RgbaImage};
 
 /// Helper to create a simple test pattern image
@@ -58,7 +58,7 @@ fn create_screen_with_pattern(
 }
 
 #[test]
-fn test_find_pattern_in_mock_screen() -> sikulix_core::Result<()> {
+fn test_find_pattern_in_mock_screen() -> sikulid::Result<()> {
     // Create a test pattern
     // テストパターンを作成
     let pattern_img = create_test_pattern(50, 50, 200);
@@ -101,7 +101,7 @@ fn test_find_pattern_in_mock_screen() -> sikulix_core::Result<()> {
 }
 
 #[test]
-fn test_find_all_patterns() -> sikulix_core::Result<()> {
+fn test_find_all_patterns() -> sikulid::Result<()> {
     // Create a test pattern
     // テストパターンを作成
     let pattern_img = create_test_pattern(30, 30, 180);
@@ -160,7 +160,7 @@ fn test_find_all_patterns() -> sikulix_core::Result<()> {
 }
 
 #[test]
-fn test_pattern_not_found() -> sikulix_core::Result<()> {
+fn test_pattern_not_found() -> sikulid::Result<()> {
     // Create a pattern that won't be in the screen
     // 画面に存在しないパターンを作成
     let pattern_img = create_test_pattern(50, 50, 255);
@@ -188,7 +188,7 @@ fn test_pattern_not_found() -> sikulix_core::Result<()> {
 }
 
 #[test]
-fn test_similarity_threshold() -> sikulix_core::Result<()> {
+fn test_similarity_threshold() -> sikulid::Result<()> {
     // Create a pattern
     // パターンを作成
     let pattern_img = create_test_pattern(40, 40, 180);
@@ -223,7 +223,7 @@ fn test_similarity_threshold() -> sikulix_core::Result<()> {
 
 #[test]
 #[ignore = "Requires actual screen capture - run with: cargo test -- --ignored"]
-fn test_real_screen_capture_and_find() -> sikulix_core::Result<()> {
+fn test_real_screen_capture_and_find() -> sikulid::Result<()> {
     // This test uses real screen capture
     // このテストは実際の画面キャプチャを使用
     let mut screen = Screen::primary();
@@ -267,8 +267,8 @@ fn test_real_screen_capture_and_find() -> sikulix_core::Result<()> {
 
 #[test]
 #[ignore = "Requires actual screen and timeout - run with: cargo test -- --ignored"]
-fn test_wait_for_pattern_timeout() -> sikulix_core::Result<()> {
-    use sikulix_core::SikulixError;
+fn test_wait_for_pattern_timeout() -> sikulid::Result<()> {
+    use sikulid::SikulixError;
 
     // Create a pattern that won't appear
     // 出現しないパターンを作成
@@ -322,7 +322,7 @@ fn test_matcher_configuration() {
 }
 
 #[test]
-fn test_region_extraction() -> sikulix_core::Result<()> {
+fn test_region_extraction() -> sikulid::Result<()> {
     // Test extracting a specific region from screen
     // 画面から特定領域を抽出するテスト
     let screen_img = create_test_pattern(800, 600, 150);

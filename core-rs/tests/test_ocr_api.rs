@@ -4,7 +4,7 @@
 //! This test file verifies the OCR text reading API.
 //! このテストファイルはOCRテキスト読み取りAPIを検証します。
 
-use sikulix_core::{Region, OcrConfig, OcrLanguage};
+use sikulid::{Region, OcrConfig, OcrLanguage};
 
 // Note: text_from_image and text_from_region functions are not yet exported.
 // These tests are placeholders for future implementation.

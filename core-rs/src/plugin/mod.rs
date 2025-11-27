@@ -16,7 +16,7 @@
 //! # Example / 使用例
 //!
 //! ```ignore
-//! use sikulix_core::plugin::{PluginManager, PluginContext};
+//! use sikulid::plugin::{PluginManager, PluginContext};
 //!
 //! let mut manager = PluginManager::new(plugins_dir);
 //! manager.discover_plugins()?;

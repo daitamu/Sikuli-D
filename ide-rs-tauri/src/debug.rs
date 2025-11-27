@@ -6,7 +6,7 @@
 
 use log::{debug, error, info};
 use serde::{Deserialize, Serialize};
-use sikulid_core::debug::{CallFrame, DebugEvent, DebugState as CoreDebugState, Debugger, Scope, VariableInfo};
+use sikulid::debug::{CallFrame, DebugEvent, DebugState as CoreDebugState, Debugger, Scope, VariableInfo};
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use tauri::{Emitter, State, Window};

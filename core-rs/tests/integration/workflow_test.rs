@@ -4,7 +4,7 @@
 //! Tests complete workflows that combine multiple components.
 //! 複数のコンポーネントを組み合わせた完全なワークフローをテストします。
 
-use sikulix_core::{ImageMatcher, Pattern, Region, Screen, Observer};
+use sikulid::{ImageMatcher, Pattern, Region, Screen, Observer};
 use image::{DynamicImage, RgbaImage};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
@@ -23,7 +23,7 @@ fn create_test_image(width: u32, height: u32, color: (u8, u8, u8)) -> DynamicIma
 }
 
 #[test]
-fn test_find_and_inspect_workflow() -> sikulix_core::Result<()> {
+fn test_find_and_inspect_workflow() -> sikulid::Result<()> {
     // Test workflow: create pattern -> find in screen -> inspect match
     // ワークフロー: パターン作成 -> 画面検索 -> マッチ検査
 
@@ -80,7 +80,7 @@ fn test_find_and_inspect_workflow() -> sikulix_core::Result<()> {
 }
 
 #[test]
-fn test_multi_pattern_workflow() -> sikulix_core::Result<()> {
+fn test_multi_pattern_workflow() -> sikulid::Result<()> {
     // Test workflow: find multiple patterns in sequence
     // ワークフロー: 複数パターンを順番に検索
 
@@ -261,7 +261,7 @@ fn test_pattern_configuration_workflow() {
 
 #[test]
 #[ignore = "Requires actual screen - run with: cargo test -- --ignored"]
-fn test_complete_automation_workflow() -> sikulix_core::Result<()> {
+fn test_complete_automation_workflow() -> sikulid::Result<()> {
     // Test complete automation workflow
     // 完全な自動化ワークフローをテスト
 

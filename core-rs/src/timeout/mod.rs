@@ -139,7 +139,7 @@ impl DefaultTimeouts {
 /// # Example / 例
 ///
 /// ```
-/// use sikulix_core::timeout::CancellationToken;
+/// use sikulid::timeout::CancellationToken;
 /// use std::thread;
 /// use std::time::Duration;
 ///
@@ -223,7 +223,7 @@ impl Default for CancellationToken {
 /// # Example / 例
 ///
 /// ```
-/// use sikulix_core::timeout::with_timeout;
+/// use sikulid::timeout::with_timeout;
 /// use std::time::Duration;
 /// use std::thread;
 ///
@@ -437,7 +437,7 @@ where
 /// # Example / 例
 ///
 /// ```
-/// use sikulix_core::timeout::TimeoutGuard;
+/// use sikulid::timeout::TimeoutGuard;
 /// use std::time::Duration;
 ///
 /// let guard = TimeoutGuard::new(Duration::from_secs(5));
@@ -519,7 +519,7 @@ pub mod r#async {
     /// # Example / 例
     ///
     /// ```ignore
-    /// use sikulix_core::timeout::async::with_timeout_async;
+    /// use sikulid::timeout::async::with_timeout_async;
     /// use std::time::Duration;
     ///
     /// async fn example() {

@@ -47,6 +47,16 @@ pub fn get_screen_dimensions(index: u32) -> Result<(u32, u32)> {
     }
 }
 
+/// Get the number of connected screens/monitors
+/// 接続されている画面/モニターの数を取得
+#[cfg(target_os = "macos")]
+pub fn get_number_screens() -> u32 {
+    match CGDisplay::active_displays() {
+        Ok(displays) => displays.len() as u32,
+        Err(_) => 1, // Fallback to 1 on error
+    }
+}
+
 /// Capture the entire screen
 #[cfg(target_os = "macos")]
 pub fn capture_screen(index: u32) -> Result<DynamicImage> {

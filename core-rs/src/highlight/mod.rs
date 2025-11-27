@@ -45,7 +45,7 @@ pub use linux_overlay::{highlight, highlight_match, Color, HighlightConfig};
 /// # Example / 使用例
 ///
 /// ```rust
-/// use sikulix_core::{Highlight, Region};
+/// use sikulid::{Highlight, Region};
 ///
 /// let region = Region::new(100, 100, 200, 150);
 /// let highlight = Highlight::new(region);
@@ -68,7 +68,7 @@ impl Highlight {
     /// # Example / 使用例
     ///
     /// ```rust
-    /// use sikulix_core::{Highlight, Region};
+    /// use sikulid::{Highlight, Region};
     ///
     /// let region = Region::new(100, 100, 200, 150);
     /// let highlight = Highlight::new(region);
@@ -97,7 +97,7 @@ impl Highlight {
     /// # Example / 使用例
     ///
     /// ```rust
-    /// use sikulix_core::{Highlight, Region};
+    /// use sikulid::{Highlight, Region};
     ///
     /// let highlight = Highlight::new(Region::new(100, 100, 200, 150));
     /// highlight.show_for(2.5);

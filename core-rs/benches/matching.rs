@@ -4,7 +4,7 @@
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, SamplingMode};
 use std::time::Duration;
 use image::{DynamicImage, ImageEncoder, Rgba, RgbaImage};
-use sikulix_core::{ImageMatcher, Pattern};
+use sikulid::{ImageMatcher, Pattern};
 
 /// Create a test image with a known pattern
 /// 既知のパターンを持つテスト画像を作成

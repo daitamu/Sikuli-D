@@ -2,7 +2,10 @@
 //! SikuliX REPL用のタブ補完
 
 use rustyline::completion::{Completer, Pair};
-use rustyline::Context;
+use rustyline::highlight::Highlighter;
+use rustyline::hint::Hinter;
+use rustyline::validate::Validator;
+use rustyline::{Context, Helper};
 
 /// SikuliX API completer
 /// SikuliX API補完器
@@ -167,6 +170,24 @@ impl Completer for SikulixCompleter {
         Ok((start, pairs))
     }
 }
+
+// Implement Helper trait for use with Editor
+// Editor用のHelperトレイトを実装
+impl Helper for SikulixCompleter {}
+
+// Implement Hinter (no hints for now)
+// Hinterを実装（今のところヒントなし）
+impl Hinter for SikulixCompleter {
+    type Hint = String;
+}
+
+// Implement Highlighter (no highlighting for now)
+// Highlighterを実装（今のところハイライトなし）
+impl Highlighter for SikulixCompleter {}
+
+// Implement Validator (always valid)
+// Validatorを実装（常に有効）
+impl Validator for SikulixCompleter {}
 
 #[cfg(test)]
 mod tests {

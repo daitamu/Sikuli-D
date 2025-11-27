@@ -10,7 +10,7 @@
 //! # Example / 使用例
 //!
 //! ```ignore
-//! use sikulix_core::{Observer, Pattern, Region};
+//! use sikulid::{Observer, Pattern, Region};
 //!
 //! let region = Region::new(0, 0, 800, 600);
 //! let mut observer = Observer::new(region);
@@ -122,7 +122,7 @@ impl Observer {
     /// # Example / 使用例
     ///
     /// ```
-    /// use sikulix_core::{Observer, Region};
+    /// use sikulid::{Observer, Region};
     ///
     /// let region = Region::new(0, 0, 800, 600);
     /// let observer = Observer::new(region);
@@ -155,7 +155,7 @@ impl Observer {
     /// # Example / 使用例
     ///
     /// ```
-    /// use sikulix_core::{Observer, Region};
+    /// use sikulid::{Observer, Region};
     ///
     /// let mut observer = Observer::new(Region::new(0, 0, 100, 100));
     /// observer.set_interval(200); // Check every 200ms
@@ -191,7 +191,7 @@ impl Observer {
     /// # Example / 使用例
     ///
     /// ```ignore
-    /// use sikulix_core::{Observer, Pattern, Region};
+    /// use sikulid::{Observer, Pattern, Region};
     ///
     /// let mut observer = Observer::new(Region::new(0, 0, 800, 600));
     /// let pattern = Pattern::from_file("button.png")?;
@@ -225,7 +225,7 @@ impl Observer {
     /// # Example / 使用例
     ///
     /// ```ignore
-    /// use sikulix_core::{Observer, Pattern, Region};
+    /// use sikulid::{Observer, Pattern, Region};
     ///
     /// let mut observer = Observer::new(Region::new(0, 0, 800, 600));
     /// let pattern = Pattern::from_file("popup.png")?;
@@ -259,7 +259,7 @@ impl Observer {
     /// # Example / 使用例
     ///
     /// ```ignore
-    /// use sikulix_core::{Observer, Region};
+    /// use sikulid::{Observer, Region};
     ///
     /// let mut observer = Observer::new(Region::new(0, 0, 800, 600));
     ///
@@ -297,7 +297,7 @@ impl Observer {
     /// # Example / 使用例
     ///
     /// ```ignore
-    /// use sikulix_core::{Observer, Pattern, Region};
+    /// use sikulid::{Observer, Pattern, Region};
     ///
     /// let mut observer = Observer::new(Region::new(0, 0, 800, 600));
     /// let pattern = Pattern::from_file("button.png")?;
@@ -369,7 +369,7 @@ impl Observer {
     /// # Example / 使用例
     ///
     /// ```ignore
-    /// use sikulix_core::{Observer, Pattern, Region};
+    /// use sikulid::{Observer, Pattern, Region};
     ///
     /// let mut observer = Observer::new(Region::new(0, 0, 800, 600));
     /// let pattern = Pattern::from_file("button.png")?;
@@ -501,7 +501,7 @@ impl Observer {
     /// # Example / 使用例
     ///
     /// ```ignore
-    /// use sikulix_core::{Observer, Region};
+    /// use sikulid::{Observer, Region};
     ///
     /// let observer = Observer::new(Region::new(0, 0, 100, 100));
     /// let handle = observer.observe_in_background();
@@ -526,7 +526,7 @@ impl Observer {
     /// # Example / 使用例
     ///
     /// ```
-    /// use sikulix_core::{Observer, Region};
+    /// use sikulid::{Observer, Region};
     ///
     /// let observer = Observer::new(Region::new(0, 0, 100, 100));
     /// assert!(!observer.is_running());
