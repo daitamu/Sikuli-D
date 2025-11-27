@@ -116,9 +116,19 @@ except ImportError:
 
     Settings = None  # Will be defined below
 
-# Aliases for compatibility
+# Aliases for compatibility / 互換性のためのエイリアス
 doubleClick = double_click
 rightClick = right_click
+findAll = find_all
+
+# Global Screen instance / グローバルScreenインスタンス
+SCREEN = None  # Initialized after Screen class is available
+
+# FindFailed exception for SikuliX compatibility
+# SikuliX互換性のためのFindFailed例外
+class FindFailed(Exception):
+    """Exception raised when target image is not found / ターゲット画像が見つからない時に発生する例外"""
+    pass
 
 # Key constants
 class Key:
@@ -272,9 +282,241 @@ def input(message="", default="", title="Sikuli-D"):
     return __builtins__["input"](f"[{title}] {message} [{default}]: ") or default
 
 
+# Import sleep from time module for SikuliX compatibility
+# SikuliX互換性のためtimeモジュールからsleepをインポート
+from time import sleep
+
+# Initialize global SCREEN instance
+# グローバルSCREENインスタンスを初期化
+SCREEN = Screen(0)
+
+# Image path management / 画像パス管理
+_bundle_path = None
+_image_paths = []
+
+
+def getBundlePath():
+    """Get the current bundle path / 現在のバンドルパスを取得
+
+    Returns:
+        Current bundle path or None / 現在のバンドルパスまたはNone
+    """
+    return _bundle_path
+
+
+def setBundlePath(path):
+    """Set the bundle path for image searching / 画像検索用のバンドルパスを設定
+
+    Args:
+        path: Path to the image bundle / 画像バンドルへのパス
+    """
+    global _bundle_path
+    _bundle_path = path
+
+
+def getImagePath():
+    """Get all image search paths / 全画像検索パスを取得
+
+    Returns:
+        List of image paths / 画像パスのリスト
+    """
+    paths = list(_image_paths)
+    if _bundle_path:
+        paths.insert(0, _bundle_path)
+    return paths
+
+
+def addImagePath(path):
+    """Add a path to the image search paths / 画像検索パスにパスを追加
+
+    Args:
+        path: Path to add / 追加するパス
+    """
+    if path not in _image_paths:
+        _image_paths.append(path)
+
+
+def removeImagePath(path):
+    """Remove a path from the image search paths / 画像検索パスからパスを削除
+
+    Args:
+        path: Path to remove / 削除するパス
+    """
+    if path in _image_paths:
+        _image_paths.remove(path)
+
+
+def resetImagePath():
+    """Reset image search paths to empty / 画像検索パスを空にリセット"""
+    global _image_paths, _bundle_path
+    _image_paths = []
+    _bundle_path = None
+
+
+# Application management (basic implementations)
+# アプリケーション管理（基本実装）
+def run(command):
+    """Run an external command / 外部コマンドを実行
+
+    Args:
+        command: Command to run / 実行するコマンド
+
+    Returns:
+        Process return code / プロセスの戻りコード
+    """
+    import subprocess
+    return subprocess.call(command, shell=True)
+
+
+def openApp(app_name):
+    """Open an application / アプリケーションを開く
+
+    Args:
+        app_name: Application name or path / アプリケーション名またはパス
+
+    Returns:
+        True if successful / 成功した場合True
+    """
+    import subprocess
+    import sys
+
+    try:
+        if sys.platform == "win32":
+            subprocess.Popen(["start", "", app_name], shell=True)
+        elif sys.platform == "darwin":
+            subprocess.Popen(["open", app_name])
+        else:
+            subprocess.Popen([app_name])
+        return True
+    except Exception:
+        return False
+
+
+def switchApp(app_name):
+    """Switch to an application / アプリケーションに切り替え
+
+    Note: Full implementation requires native module.
+    注意: 完全な実装にはネイティブモジュールが必要です。
+
+    Args:
+        app_name: Application name / アプリケーション名
+
+    Returns:
+        True if successful / 成功した場合True
+    """
+    # Basic implementation - just try to open the app
+    return openApp(app_name)
+
+
+def closeApp(app_name):
+    """Close an application / アプリケーションを閉じる
+
+    Note: Full implementation requires native module.
+    注意: 完全な実装にはネイティブモジュールが必要です。
+
+    Args:
+        app_name: Application name / アプリケーション名
+
+    Returns:
+        True if successful / 成功した場合True
+    """
+    import subprocess
+    import sys
+
+    try:
+        if sys.platform == "win32":
+            subprocess.call(["taskkill", "/IM", app_name, "/F"], shell=True)
+        else:
+            subprocess.call(["pkill", "-f", app_name])
+        return True
+    except Exception:
+        return False
+
+
+def focusApp(app_name):
+    """Focus an application window / アプリケーションウィンドウにフォーカス
+
+    Alias for switchApp / switchAppのエイリアス
+    """
+    return switchApp(app_name)
+
+
+# Keyboard modifier functions / キーボード修飾子関数
+def keyDown(key):
+    """Press and hold a key / キーを押し続ける
+
+    Note: Full implementation requires native module.
+    注意: 完全な実装にはネイティブモジュールが必要です。
+
+    Args:
+        key: Key to press / 押すキー
+    """
+    if not _NATIVE_AVAILABLE:
+        raise RuntimeError(
+            "keyDown requires native sikulid module. "
+            "Install with: pip install sikulid\n"
+            "keyDownにはネイティブsikulidモジュールが必要です。"
+        )
+
+
+def keyUp(key):
+    """Release a key / キーを離す
+
+    Note: Full implementation requires native module.
+    注意: 完全な実装にはネイティブモジュールが必要です。
+
+    Args:
+        key: Key to release / 離すキー
+    """
+    if not _NATIVE_AVAILABLE:
+        raise RuntimeError(
+            "keyUp requires native sikulid module. "
+            "Install with: pip install sikulid\n"
+            "keyUpにはネイティブsikulidモジュールが必要です。"
+        )
+
+
+# Screen capture function / 画面キャプチャ関数
+def capture(*args):
+    """Capture screen or region / 画面または領域をキャプチャ
+
+    Note: Full implementation requires native module.
+    注意: 完全な実装にはネイティブモジュールが必要です。
+
+    Args:
+        *args: Optional region parameters / オプションの領域パラメータ
+
+    Returns:
+        Path to captured image / キャプチャした画像へのパス
+    """
+    if not _NATIVE_AVAILABLE:
+        raise RuntimeError(
+            "capture requires native sikulid module. "
+            "Install with: pip install sikulid\n"
+            "captureにはネイティブsikulidモジュールが必要です。"
+        )
+
+
+def captureScreen(*args):
+    """Alias for capture() / capture()のエイリアス"""
+    return capture(*args)
+
+
+# Debug/logging functions / デバッグ/ロギング関数
+def Debug(level):
+    """Set debug level (no-op in pure Python mode) / デバッグレベルを設定（純Pythonモードではno-op）
+
+    Args:
+        level: Debug level / デバッグレベル
+    """
+    pass
+
+
 # Version info
 __version__ = "0.1.0"
 __all__ = [
+    # Core classes / コアクラス
+    "sleep",
     "Region",
     "Match",
     "Screen",
@@ -283,21 +525,30 @@ __all__ = [
     "Observer",
     "Key",
     "Settings",
+    "FindFailed",
+    "SCREEN",
+    # Find functions / 検索関数
     "find",
     "find_all",
+    "findAll",
     "wait",
     "waitVanish",
     "exists",
+    # Click functions / クリック関数
     "click",
     "double_click",
     "doubleClick",
     "right_click",
     "rightClick",
+    # Mouse functions / マウス関数
     "mouseMove",
     "hover",
+    # Keyboard functions / キーボード関数
     "type_text",
     "paste",
     "hotkey",
+    "keyDown",
+    "keyUp",
     # Scroll functions / スクロール関数
     "scroll",
     "scroll_up",
@@ -312,7 +563,26 @@ __all__ = [
     "drag",
     "dragTo",
     "dragDrop",
+    # UI functions / UI関数
     "highlight",
     "popup",
     "input",
+    # Image path management / 画像パス管理
+    "getBundlePath",
+    "setBundlePath",
+    "getImagePath",
+    "addImagePath",
+    "removeImagePath",
+    "resetImagePath",
+    # Application management / アプリケーション管理
+    "run",
+    "openApp",
+    "switchApp",
+    "closeApp",
+    "focusApp",
+    # Screen capture / 画面キャプチャ
+    "capture",
+    "captureScreen",
+    # Debug / デバッグ
+    "Debug",
 ]

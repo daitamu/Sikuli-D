@@ -376,8 +376,13 @@ pub fn find_python() -> Result<PythonCommand> {
     bail!("Python not found. Please install Python 3.")
 }
 
-/// Get path to sikulid_api Python package
-/// sikulid_api Pythonパッケージのパスを取得
+/// Get path to directory containing sikulid_api Python package
+/// sikulid_api Pythonパッケージを含むディレクトリのパスを取得
+///
+/// Returns the parent directory of sikulid_api so that both `sikulid_api`
+/// and `sikuli` (compatibility module) can be imported.
+/// sikulid_apiの親ディレクトリを返し、`sikulid_api`と`sikuli`（互換モジュール）
+/// の両方をインポートできるようにします。
 pub fn get_sikulid_api_path() -> Result<String> {
     // First check if we're in development
     let exe_path = std::env::current_exe()?;
@@ -385,14 +390,18 @@ pub fn get_sikulid_api_path() -> Result<String> {
         // Check for sikulid_api next to executable
         let api_path = parent.join("sikulid_api");
         if api_path.exists() {
-            return Ok(api_path.to_string_lossy().to_string());
+            // Return parent directory, not the sikulid_api directory itself
+            // sikulid_apiディレクトリ自体ではなく、親ディレクトリを返す
+            return Ok(parent.to_string_lossy().to_string());
         }
 
         // Check in parent directories (development)
         for ancestor in parent.ancestors().take(5) {
             let api_path = ancestor.join("runtime-rs").join("sikulid_api");
             if api_path.exists() {
-                return Ok(api_path.to_string_lossy().to_string());
+                // Return runtime-rs directory as parent
+                // 親としてruntime-rsディレクトリを返す
+                return Ok(ancestor.join("runtime-rs").to_string_lossy().to_string());
             }
         }
     }
@@ -401,7 +410,9 @@ pub fn get_sikulid_api_path() -> Result<String> {
     let current = std::env::current_dir()?;
     let api_path = current.join("sikulid_api");
     if api_path.exists() {
-        return Ok(api_path.to_string_lossy().to_string());
+        // Return current directory
+        // 現在のディレクトリを返す
+        return Ok(current.to_string_lossy().to_string());
     }
 
     bail!("sikulid_api not found")
