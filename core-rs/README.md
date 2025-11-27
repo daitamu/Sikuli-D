@@ -28,12 +28,13 @@
 ## Features / 機能
 
 - **High Performance** - Parallel image processing with Rayon
-  - **高性能** - Rayonによる並列画像処理
 - **Cross-platform** - Windows, macOS, Linux support
-  - **クロスプラットフォーム** - Windows、macOS、Linux対応
 - **Python Bindings** - Native Python 3 API via PyO3
-  - **Pythonバインディング** - PyO3によるネイティブPython 3 API
 - **Observer API** - Screen monitoring (appear, vanish, change)
+
+  - **高性能** - Rayonによる並列画像処理
+  - **クロスプラットフォーム** - Windows、macOS、Linux対応
+  - **Pythonバインディング** - PyO3によるネイティブPython 3 API
   - **Observer API** - 画面監視（出現・消失・変化検出）
 
 ---

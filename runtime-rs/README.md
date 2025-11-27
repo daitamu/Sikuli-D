@@ -9,14 +9,15 @@
 ## Features / 機能
 
 - **Python 2/3 Dual Support** - Automatic detection and conversion of legacy scripts
-  - **Python 2/3 両対応** - レガシースクリプトの自動検出と変換
 - **Built-in Python** - No external Python installation required
-  - **Python内蔵** - 外部Pythonのインストール不要
 - **Japanese Support** - Full Unicode support in logs and output
-  - **日本語対応** - ログ出力で日本語を使用してもエラーになりません
 - **REPL Mode** - Interactive development and testing
-  - **REPLモード** - 対話的な開発とテスト
 - **Headless Execution** - Run scripts without GUI
+
+  - **Python 2/3 両対応** - レガシースクリプトの自動検出と変換
+  - **Python内蔵** - 外部Pythonのインストール不要
+  - **日本語対応** - ログ出力で日本語を使用してもエラーになりません
+  - **REPLモード** - 対話的な開発とテスト
   - **ヘッドレス実行** - GUIなしでスクリプト実行
 
 ---

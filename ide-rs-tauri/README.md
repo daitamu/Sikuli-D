@@ -9,16 +9,17 @@
 ## Features / 機能
 
 - **Script Editor** - Monaco-based editor with Python syntax highlighting
-  - **スクリプトエディタ** - Pythonシンタックスハイライト対応のMonacoベースエディタ
 - **Screen Capture** - Visual region selection with overlay UI
-  - **スクリーンキャプチャ** - オーバーレイUIによる視覚的な領域選択
 - **Project Management** - .sikuli project structure support
-  - **プロジェクト管理** - .sikuliプロジェクト形式対応
 - **Built-in Runtime** - Execute scripts without external Python
-  - **ランタイム内蔵** - 外部Pythonなしでスクリプト実行可能
 - **Plugin System** - Extensible plugin architecture
-  - **プラグインシステム** - 拡張可能なプラグインアーキテクチャ
 - **Multi-language UI** - Japanese/English interface
+
+  - **スクリプトエディタ** - Pythonシンタックスハイライト対応のMonacoベースエディタ
+  - **スクリーンキャプチャ** - オーバーレイUIによる視覚的な領域選択
+  - **プロジェクト管理** - .sikuliプロジェクト形式対応
+  - **ランタイム内蔵** - 外部Pythonなしでスクリプト実行可能
+  - **プラグインシステム** - 拡張可能なプラグインアーキテクチャ
   - **多言語UI** - 日本語/英語インターフェース
 
 ---
