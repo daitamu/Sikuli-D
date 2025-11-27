@@ -15,6 +15,7 @@ use anyhow::{Result, bail, Context};
 /// - Pythonスクリプト (ディレクトリと同名または *.py)
 /// - スクリプトが使用する画像ファイル
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct Bundle {
     /// Bundle directory path / バンドルディレクトリパス
     pub path: PathBuf,
@@ -24,6 +25,7 @@ pub struct Bundle {
     pub images: Vec<PathBuf>,
 }
 
+#[allow(dead_code)]
 impl Bundle {
     /// Load a bundle from directory
     /// ディレクトリからバンドルを読み込む
@@ -79,6 +81,7 @@ pub fn find_main_script(bundle_path: &Path) -> Result<PathBuf> {
 
 /// Find all image files in a bundle
 /// バンドル内の全画像ファイルを検索
+#[allow(dead_code)]
 pub fn find_images(bundle_path: &Path) -> Result<Vec<PathBuf>> {
     let mut images = Vec::new();
     let image_extensions = ["png", "jpg", "jpeg", "gif", "bmp"];
@@ -102,6 +105,7 @@ pub fn find_images(bundle_path: &Path) -> Result<Vec<PathBuf>> {
 
 /// Resolve image path relative to bundle or script
 /// バンドルまたはスクリプトからの相対パスで画像を解決
+#[allow(dead_code)]
 pub fn resolve_image_path(image_name: &str, script_path: &Path) -> Option<PathBuf> {
     // Try relative to script directory
     // スクリプトディレクトリからの相対パスを試行

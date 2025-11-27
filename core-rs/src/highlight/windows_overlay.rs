@@ -1,13 +1,10 @@
-//! Windows Highlight Overlay Implementation (Stub)
-//! Windows ハイライトオーバーレイ実装（スタブ）
+//! Windows Highlight Overlay Implementation
+//! Windows ハイライトオーバーレイ実装
 //!
-//! Stub implementation for Windows highlight overlay.
-//! Future implementation will use layered windows with GDI+.
-//! Windowsハイライトオーバーレイのスタブ実装。
-//! 将来の実装ではGDI+付きレイヤードウィンドウを使用します。
+//! Delegates to the debug::highlight module which has the full Windows GDI implementation.
+//! debug::highlightモジュールに委譲し、完全なWindows GDI実装を使用します。
 
 use crate::{Region, Result};
-use log::warn;
 
 /// Color configuration for highlight overlay
 /// ハイライトオーバーレイの色設定
@@ -54,18 +51,17 @@ impl Default for HighlightConfig {
     }
 }
 
-/// Display a highlight overlay (stub implementation)
-/// ハイライトオーバーレイを表示（スタブ実装）
-pub fn highlight(region: &Region, duration_ms: u64, _color: Color) -> Result<()> {
-    warn!(
-        "Windows highlight overlay not yet implemented. Would highlight region at ({}, {}) size {}x{} for {}ms",
-        region.x, region.y, region.width, region.height, duration_ms
-    );
-    Ok(())
+/// Display a highlight overlay using Windows GDI
+/// Windows GDIを使用してハイライトオーバーレイを表示
+pub fn highlight(region: &Region, duration_ms: u64, color: Color) -> Result<()> {
+    // Delegate to debug::highlight which has the full Windows implementation
+    // 完全なWindows実装を持つdebug::highlightに委譲
+    let core_color = crate::Color::new(color.r, color.g, color.b, color.a);
+    crate::debug::highlight::highlight(region, duration_ms, core_color)
 }
 
-/// Highlight a match result (stub implementation)
-/// マッチ結果をハイライト（スタブ実装）
+/// Highlight a match result
+/// マッチ結果をハイライト
 pub fn highlight_match(match_region: &Region, duration_ms: u64) -> Result<()> {
     highlight(match_region, duration_ms, Color::red())
 }

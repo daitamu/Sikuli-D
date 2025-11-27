@@ -54,6 +54,7 @@ impl SpecialCommand {
 
     /// Get command description
     /// コマンドの説明を取得
+    #[allow(dead_code)]
     pub fn description(&self) -> &str {
         match self {
             Self::Help => "Show help message / ヘルプメッセージを表示",

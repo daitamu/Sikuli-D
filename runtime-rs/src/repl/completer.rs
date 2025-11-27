@@ -109,6 +109,7 @@ impl SikulixCompleter {
 
     /// Add custom completion items
     /// カスタム補完項目を追加
+    #[allow(dead_code)]
     pub fn add_item(&mut self, item: String) {
         if !self.api_items.contains(&item) {
             self.api_items.push(item);

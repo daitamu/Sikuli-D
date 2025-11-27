@@ -19,6 +19,7 @@ pub use color::{get_color, save_region_capture, save_screen_capture};
 pub use highlight::Highlight;
 pub use image::ImageMatcher;
 pub use image::{OcrConfig, OcrEngine, OcrLanguage, OcrResult};
+pub use image::ocr::{read_text, read_text_japanese, read_text_region};
 pub use location::Location;
 pub use observer::Observer;
 pub use python::{PythonVersion, SyntaxAnalyzer};

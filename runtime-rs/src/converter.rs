@@ -66,6 +66,7 @@ pub fn convert_python2_to_3(source: &str) -> Result<String> {
 
 /// Convert a Python 2 file to Python 3
 /// Python 2ファイルをPython 3に変換
+#[allow(dead_code)]
 pub fn convert_python2_file(input_path: &Path, output_path: Option<&Path>) -> Result<String> {
     log::info!("Converting Python 2 file: {}", input_path.display());
 

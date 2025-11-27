@@ -40,4 +40,9 @@ opt-level = 0
 lto = true
 codegen-units = 1
 strip = true
-opt-level = "s"
+opt-level = 3
+
+[profile.bench]
+inherits = "release"
+debug = true
+strip = false

@@ -94,13 +94,5 @@ harness = false
 name = "ncc_calculation"
 harness = false
 
-[profile.release]
-lto = true
-codegen-units = 1
-strip = true
-opt-level = 3
-
-[profile.bench]
-inherits = "release"
-debug = true
-strip = false
+# Note: Profile settings are defined in workspace root Cargo.toml
+# 注: プロファイル設定はワークスペースルートのCargo.tomlで定義
