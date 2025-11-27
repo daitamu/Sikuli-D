@@ -4,7 +4,7 @@ version = "0.8.0"
 edition = "2021"
 authors = ["Sikuli-D Team"]
 description = "Next-generation Sikuli-D core library in Rust"
-license = "MIT"
+license = "Apache-2.0"
 repository = "https://github.com/daitamu/Sikuli-D"
 
 [lib]

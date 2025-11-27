@@ -53,7 +53,7 @@ Sikuli-D/
 │   └── sikulid_api/    # Pythonラッパーモジュール
 ├── pages/              # ドキュメントページ
 ├── VERSION             # バージョンファイル（自動更新）
-├── LICENSE             # MITライセンス
+├── LICENSE             # Apache License 2.0
 └── README.md           # プロジェクト説明
 ```
 
@@ -447,4 +447,4 @@ GitHub Actions で以下を自動実行：
 
 - 元リポジトリ: https://github.com/RaiMan/SikuliX1
 - SikuliX 公式ドキュメント: https://sikulix.github.io/
-- ライセンス: MIT License
+- ライセンス: Apache License 2.0

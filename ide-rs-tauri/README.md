@@ -90,6 +90,6 @@ ide-rs-tauri/
 
 ## License / ライセンス
 
-MIT License - see [LICENSE](../LICENSE) for details.
+Apache License 2.0 - see [LICENSE](../LICENSE) for details.
 
-MITライセンス - 詳細は [LICENSE](../LICENSE) を参照。
+Apache License 2.0 - 詳細は [LICENSE](../LICENSE) を参照。

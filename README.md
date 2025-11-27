@@ -144,9 +144,9 @@ This project is based on [SikuliX](https://github.com/RaiMan/SikuliX1), created 
 
 ## License / ライセンス
 
-MIT License - see [LICENSE](LICENSE) for details.
+Apache License 2.0 - see [LICENSE](LICENSE) for details.
 
-MIT ライセンス - 詳細は [LICENSE](LICENSE) を参照。
+Apache License 2.0 - 詳細は [LICENSE](LICENSE) を参照。
 
 ---
 
