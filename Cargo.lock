@@ -4927,7 +4927,7 @@ dependencies = [
 
 [[package]]
 name = "sikulid-core"
-version = "0.3.0"
+version = "0.8.0"
 dependencies = [
  "anyhow",
  "cocoa",
@@ -4955,7 +4955,7 @@ dependencies = [
 
 [[package]]
 name = "sikulid-ide-tauri"
-version = "0.3.0"
+version = "0.8.0"
 dependencies = [
  "base64 0.22.1",
  "chrono",

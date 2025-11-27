@@ -74,8 +74,43 @@ class Screen(Region):
         Returns:
             Number of screens / 画面の数
         """
-        # TODO: Implement multi-monitor detection
-        return 1
+        try:
+            import subprocess
+            import sys
+
+            if sys.platform == "win32":
+                # Windows - use PowerShell to get monitor count
+                result = subprocess.run(
+                    ["powershell", "-Command",
+                     "[System.Windows.Forms.Screen]::AllScreens.Count"],
+                    capture_output=True, text=True
+                )
+                if result.returncode == 0:
+                    return int(result.stdout.strip())
+            elif sys.platform == "darwin":
+                # macOS - use system_profiler
+                result = subprocess.run(
+                    ["system_profiler", "SPDisplaysDataType"],
+                    capture_output=True, text=True
+                )
+                # Count "Resolution:" lines
+                return max(1, result.stdout.count("Resolution:"))
+            else:
+                # Linux - use xrandr
+                result = subprocess.run(
+                    ["xrandr", "--query"],
+                    capture_output=True, text=True
+                )
+                # Count connected displays
+                return max(1, result.stdout.count(" connected"))
+        except Exception:
+            pass
+        return 1  # Default to 1 screen
+
+    @staticmethod
+    def getNumberScreens():
+        """Alias for get_number_screens() / get_number_screens() のエイリアス"""
+        return Screen.get_number_screens()
 
     @staticmethod
     def get_primary():
@@ -89,27 +124,45 @@ class Screen(Region):
     def capture(self, region=None):
         """Capture screen or region / 画面または領域をキャプチャ
 
+        Note: This method requires the native sikulid module.
+        注意: このメソッドはネイティブsikulidモジュールが必要です。
+
         Args:
             region: Optional region to capture (defaults to full screen) /
                     キャプチャするオプションの領域（デフォルトは全画面）
 
         Returns:
             Image data / 画像データ
+
+        Raises:
+            RuntimeError: Native module required / ネイティブモジュールが必要
         """
-        # TODO: Implement capture
-        raise NotImplementedError("Screen capture not available in pure Python mode")
+        raise RuntimeError(
+            "Screen capture requires native sikulid module. "
+            "Install with: pip install sikulid\n"
+            "画面キャプチャにはネイティブsikulidモジュールが必要です。"
+        )
 
     def userCapture(self, message="Select a region"):
         """Interactive screen capture / インタラクティブ画面キャプチャ
+
+        Note: This method requires the native sikulid module.
+        注意: このメソッドはネイティブsikulidモジュールが必要です。
 
         Args:
             message: Message to display / 表示するメッセージ
 
         Returns:
             Captured region / キャプチャした領域
+
+        Raises:
+            RuntimeError: Native module required / ネイティブモジュールが必要
         """
-        # TODO: Implement interactive capture
-        raise NotImplementedError("Interactive capture not available in pure Python mode")
+        raise RuntimeError(
+            "Interactive capture requires native sikulid module. "
+            "Install with: pip install sikulid\n"
+            "インタラクティブキャプチャにはネイティブsikulidモジュールが必要です。"
+        )
 
     def getW(self):
         """Get screen width / 画面幅を取得

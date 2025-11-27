@@ -81,6 +81,41 @@ impl Screen {
         Self::new(0)
     }
 
+    /// Get the number of connected screens/monitors
+    /// 接続されている画面/モニターの数を取得
+    ///
+    /// # Example / 使用例
+    ///
+    /// ```no_run
+    /// use sikulix_core::Screen;
+    ///
+    /// let num_screens = Screen::get_number_screens();
+    /// println!("Number of monitors: {}", num_screens);
+    /// ```
+    pub fn get_number_screens() -> u32 {
+        Self::get_number_screens_impl()
+    }
+
+    #[cfg(target_os = "windows")]
+    fn get_number_screens_impl() -> u32 {
+        windows::get_number_screens()
+    }
+
+    #[cfg(target_os = "macos")]
+    fn get_number_screens_impl() -> u32 {
+        1 // TODO: Implement for macOS
+    }
+
+    #[cfg(target_os = "linux")]
+    fn get_number_screens_impl() -> u32 {
+        1 // TODO: Implement for Linux
+    }
+
+    #[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux")))]
+    fn get_number_screens_impl() -> u32 {
+        1
+    }
+
     /// Get screen dimensions (width, height)
     pub fn dimensions(&mut self) -> Result<(u32, u32)> {
         if let Some(dims) = self.dimensions {

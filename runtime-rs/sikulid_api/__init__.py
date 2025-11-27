@@ -70,19 +70,50 @@ except ImportError:
     from .input import click, double_click, right_click, type_text, mouseMove, hover, paste, hotkey
     # Placeholder for Observer when native unavailable
     Observer = None
+
+    # Error message for native-only functions
+    # ネイティブ専用関数のエラーメッセージ
+    _NATIVE_REQUIRED_MSG = (
+        "This function requires native sikulid module. "
+        "Install with: pip install sikulid\n"
+        "この関数にはネイティブsikulidモジュールが必要です。"
+    )
+
     # Placeholder functions for scroll/drag/mouseDown when native unavailable
     # ネイティブが利用不可の場合のプレースホルダー関数
-    def scroll(clicks): pass
-    def scroll_up(clicks=3): pass
-    def scroll_down(clicks=3): pass
-    def scroll_horizontal(clicks): pass
-    def scroll_left(clicks=3): pass
-    def scroll_right(clicks=3): pass
-    def mouseDown(): pass
-    def mouseUp(): pass
-    def drag(from_x, from_y, to_x, to_y): pass
-    def dragTo(x, y): pass
-    def dragDrop(start_x, start_y, end_x, end_y): pass
+    def scroll(clicks):
+        raise RuntimeError(_NATIVE_REQUIRED_MSG)
+
+    def scroll_up(clicks=3):
+        raise RuntimeError(_NATIVE_REQUIRED_MSG)
+
+    def scroll_down(clicks=3):
+        raise RuntimeError(_NATIVE_REQUIRED_MSG)
+
+    def scroll_horizontal(clicks):
+        raise RuntimeError(_NATIVE_REQUIRED_MSG)
+
+    def scroll_left(clicks=3):
+        raise RuntimeError(_NATIVE_REQUIRED_MSG)
+
+    def scroll_right(clicks=3):
+        raise RuntimeError(_NATIVE_REQUIRED_MSG)
+
+    def mouseDown():
+        raise RuntimeError(_NATIVE_REQUIRED_MSG)
+
+    def mouseUp():
+        raise RuntimeError(_NATIVE_REQUIRED_MSG)
+
+    def drag(from_x, from_y, to_x, to_y):
+        raise RuntimeError(_NATIVE_REQUIRED_MSG)
+
+    def dragTo(x, y):
+        raise RuntimeError(_NATIVE_REQUIRED_MSG)
+
+    def dragDrop(start_x, start_y, end_x, end_y):
+        raise RuntimeError(_NATIVE_REQUIRED_MSG)
+
     Settings = None  # Will be defined below
 
 # Aliases for compatibility
@@ -196,15 +227,25 @@ def waitVanish(target, timeout=None):
 def highlight(target, seconds=None):
     """Highlight a region on screen / 画面上の領域をハイライト
 
+    Note: Full highlight functionality requires the native sikulid module.
+    注意: 完全なハイライト機能にはネイティブsikulidモジュールが必要です。
+
     Args:
         target: Region, Match, or image path / Region、Match、または画像パス
         seconds: Duration in seconds / 継続時間（秒）
     """
     if seconds is None:
-        seconds = Settings.DefaultHighlightTime
+        seconds = Settings.DefaultHighlightTime if Settings else 2.0
 
-    # TODO: Implement highlight
-    pass
+    # In pure Python mode, just log the highlight request
+    # 純Pythonモードでは、ハイライトリクエストをログに記録するのみ
+    if hasattr(target, 'region'):
+        r = target.region
+        print(f"[highlight] Region({r.x}, {r.y}, {r.width}, {r.height}) for {seconds}s")
+    elif hasattr(target, 'x') and hasattr(target, 'y'):
+        print(f"[highlight] Region({target.x}, {target.y}, {target.w}, {target.h}) for {seconds}s")
+    else:
+        print(f"[highlight] {target} for {seconds}s")
 
 
 def popup(message, title="Sikuli-D"):

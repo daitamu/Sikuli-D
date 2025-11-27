@@ -5,25 +5,145 @@ use crate::{Region, Result, SikulixError};
 use image::{DynamicImage, RgbaImage};
 
 #[cfg(target_os = "windows")]
+use std::sync::Mutex;
+
+#[cfg(target_os = "windows")]
 use windows::{
     Win32::Foundation::*, Win32::Graphics::Gdi::*, Win32::UI::Input::KeyboardAndMouse::*,
     Win32::UI::WindowsAndMessaging::*,
 };
 
+// ============================================================================
+// Multi-monitor support (マルチモニターサポート)
+// ============================================================================
+
+/// Get the number of connected screens/monitors
+/// 接続されている画面/モニターの数を取得
+#[cfg(target_os = "windows")]
+pub fn get_number_screens() -> u32 {
+    unsafe { GetSystemMetrics(SM_CMONITORS) as u32 }
+}
+
+/// Monitor information structure
+/// モニター情報構造体
+#[cfg(target_os = "windows")]
+#[derive(Debug, Clone)]
+pub struct MonitorInfo {
+    /// Monitor index (0 = primary) / モニターインデックス（0 = プライマリ）
+    pub index: u32,
+    /// X position / X座標
+    pub x: i32,
+    /// Y position / Y座標
+    pub y: i32,
+    /// Width in pixels / 幅（ピクセル）
+    pub width: u32,
+    /// Height in pixels / 高さ（ピクセル）
+    pub height: u32,
+    /// Is primary monitor / プライマリモニターかどうか
+    pub is_primary: bool,
+}
+
+#[cfg(target_os = "windows")]
+static MONITOR_LIST: Mutex<Vec<MonitorInfo>> = Mutex::new(Vec::new());
+
+/// Callback for EnumDisplayMonitors
+#[cfg(target_os = "windows")]
+unsafe extern "system" fn monitor_enum_callback(
+    hmonitor: HMONITOR,
+    _hdc: HDC,
+    _lprect: *mut RECT,
+    _lparam: LPARAM,
+) -> BOOL {
+    let mut mi = MONITORINFO {
+        cbSize: std::mem::size_of::<MONITORINFO>() as u32,
+        rcMonitor: RECT::default(),
+        rcWork: RECT::default(),
+        dwFlags: 0,
+    };
+
+    if GetMonitorInfoW(hmonitor, &mut mi).as_bool() {
+        let info = MonitorInfo {
+            index: 0, // Will be assigned after sorting
+            x: mi.rcMonitor.left,
+            y: mi.rcMonitor.top,
+            width: (mi.rcMonitor.right - mi.rcMonitor.left) as u32,
+            height: (mi.rcMonitor.bottom - mi.rcMonitor.top) as u32,
+            is_primary: (mi.dwFlags & MONITORINFOF_PRIMARY) != 0,
+        };
+
+        if let Ok(mut list) = MONITOR_LIST.lock() {
+            list.push(info);
+        }
+    }
+
+    BOOL::from(true) // Continue enumeration
+}
+
+/// Get information about all connected monitors
+/// 接続されているすべてのモニターの情報を取得
+#[cfg(target_os = "windows")]
+pub fn get_all_monitors() -> Vec<MonitorInfo> {
+    unsafe {
+        // Clear the list first
+        if let Ok(mut list) = MONITOR_LIST.lock() {
+            list.clear();
+        }
+
+        // Enumerate all monitors
+        let _ = EnumDisplayMonitors(HDC::default(), None, Some(monitor_enum_callback), LPARAM(0));
+
+        // Get the results and sort by index (assign indices)
+        if let Ok(mut list) = MONITOR_LIST.lock() {
+            // Sort: primary first, then by x position
+            list.sort_by(|a, b| {
+                if a.is_primary && !b.is_primary {
+                    std::cmp::Ordering::Less
+                } else if !a.is_primary && b.is_primary {
+                    std::cmp::Ordering::Greater
+                } else {
+                    a.x.cmp(&b.x)
+                }
+            });
+
+            // Assign indices after sorting
+            for (i, monitor) in list.iter_mut().enumerate() {
+                monitor.index = i as u32;
+            }
+
+            list.clone()
+        } else {
+            Vec::new()
+        }
+    }
+}
+
+/// Get monitor info by index
+/// インデックスでモニター情報を取得
+#[cfg(target_os = "windows")]
+pub fn get_monitor_info(index: u32) -> Option<MonitorInfo> {
+    let monitors = get_all_monitors();
+    monitors.into_iter().find(|m| m.index == index)
+}
+
 /// Get screen dimensions for the given monitor index
 #[cfg(target_os = "windows")]
 pub fn get_screen_dimensions(index: u32) -> Result<(u32, u32)> {
-    unsafe {
-        if index == 0 {
-            let width = GetSystemMetrics(SM_CXSCREEN) as u32;
-            let height = GetSystemMetrics(SM_CYSCREEN) as u32;
-            Ok((width, height))
-        } else {
-            // TODO: Multi-monitor support
-            Err(SikulixError::ScreenCaptureError(format!(
-                "Monitor {} not found",
-                index
-            )))
+    // Use multi-monitor API
+    if let Some(info) = get_monitor_info(index) {
+        Ok((info.width, info.height))
+    } else {
+        // Fallback for primary monitor
+        unsafe {
+            if index == 0 {
+                let width = GetSystemMetrics(SM_CXSCREEN) as u32;
+                let height = GetSystemMetrics(SM_CYSCREEN) as u32;
+                Ok((width, height))
+            } else {
+                Err(SikulixError::ScreenCaptureError(format!(
+                    "Monitor {} not found",
+                    index
+                )))
+            }
         }
     }
 }
@@ -597,6 +717,34 @@ fn key_to_vk(key: Key) -> VIRTUAL_KEY {
 }
 
 // Stub implementations for non-Windows builds
+
+/// Non-Windows stub for MonitorInfo
+#[cfg(not(target_os = "windows"))]
+#[derive(Debug, Clone)]
+pub struct MonitorInfo {
+    pub index: u32,
+    pub x: i32,
+    pub y: i32,
+    pub width: u32,
+    pub height: u32,
+    pub is_primary: bool,
+}
+
+#[cfg(not(target_os = "windows"))]
+pub fn get_number_screens() -> u32 {
+    1 // Return 1 as fallback
+}
+
+#[cfg(not(target_os = "windows"))]
+pub fn get_all_monitors() -> Vec<MonitorInfo> {
+    Vec::new()
+}
+
+#[cfg(not(target_os = "windows"))]
+pub fn get_monitor_info(_index: u32) -> Option<MonitorInfo> {
+    None
+}
+
 #[cfg(not(target_os = "windows"))]
 pub fn get_screen_dimensions(_index: u32) -> Result<(u32, u32)> {
     Err(SikulixError::ScreenCaptureError("Windows-only".to_string()))

@@ -115,6 +115,21 @@ impl PyScreen {
         let region = self.inner.get_region().map_err(to_pyerr)?;
         Ok((region.x, region.y, region.width, region.height))
     }
+
+    /// Get the number of connected screens/monitors
+    /// 接続されている画面/モニターの数を取得
+    #[staticmethod]
+    fn get_number_screens() -> u32 {
+        Screen::get_number_screens()
+    }
+
+    /// Get the number of connected screens/monitors (alias)
+    /// 接続されている画面/モニターの数を取得（エイリアス）
+    #[staticmethod]
+    #[pyo3(name = "getNumberScreens")]
+    fn get_number_screens_alias() -> u32 {
+        Screen::get_number_screens()
+    }
 }
 
 // ============================================================================
