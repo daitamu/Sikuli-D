@@ -56,7 +56,7 @@ jobs:
 
       - name: Create Release
         id: create_release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.get_version.outputs.version }}
           name: Release ${{ steps.get_version.outputs.version }}
@@ -168,7 +168,7 @@ jobs:
           tar -czf ${{ matrix.artifact_name }}.tar.gz ${{ matrix.artifact_name }}/
 
       - name: Upload Release Asset
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.create-release.outputs.release_version }}
           files: |
