@@ -27,44 +27,74 @@ SikuliXの構築に費やされた長年の献身と努力に深く感謝いた�
 Sikuli-D is a fork of SikuliX that automates anything you see on your desktop screen. It uses **image recognition** powered by OpenCV to identify GUI components and can interact with them using mouse and keyboard actions.
 
 **Key Features:**
-- Image-based GUI automation
+- High-performance Rust core with parallel image processing
+- Native Python 3 scripting via PyO3 bindings
 - Cross-platform support (Windows, macOS, Linux)
 - OCR support via Tesseract 5
-- Scripting in Python (Jython), JavaScript, and Ruby
-- Japanese language support (planned)
-- Custom enhancements for personal workflow
+- Observer API for screen monitoring (appear, vanish, change detection)
+- Mouse control (click, drag, scroll, mouseDown/Up)
+- Keyboard control with Japanese/Unicode support
+- SikuliX-compatible API design
 
 ### 日本語
 
-Sikuli-Dは、デスクトップ画面上のあらゆる操作を自動化できるSikuliXのフォークです。OpenCVによる**画像認識**を使用してGUIコンポーネントを識別し、マウスやキーボード操作で制御できます。
+Sikuli-Dは、デスクトップ画面上のあらゆる操作を自動化できるSikuliXのフォークです。Rustで書かれた高性能コアによる**画像認識**を使用してGUIコンポーネントを識別し、マウスやキーボード操作で制御できます。
 
 **主な特徴：**
-- 画像ベースのGUI自動化
+- 並列画像処理による高性能Rustコア
+- PyO3バインディングによるネイティブPython 3スクリプティング
 - クロスプラットフォーム対応（Windows、macOS、Linux）
 - Tesseract 5によるOCRサポート
-- Python (Jython)、JavaScript、Rubyでのスクリプティング
-- 日本語対応（予定）
-- 個人ワークフロー向けのカスタム拡張
+- 画面監視用Observer API（出現・消失・変化検出）
+- マウス制御（クリック、ドラッグ、スクロール、mouseDown/Up）
+- 日本語/Unicode対応キーボード制御
+- SikuliX互換API設計
 
 ---
 
 ## Requirements / 動作要件
 
+### Rust Core (Recommended) / Rustコア（推奨）
+
+| Component | Version |
+|-----------|---------|
+| Rust | 1.70+ |
+| Python | 3.8+ |
+| Tesseract | 5.x (for OCR) |
+
+### Legacy Java Version / レガシーJava版
+
 | Component | Version |
 |-----------|---------|
 | Java | 17+ (LTS) |
 | Maven | 3.6+ |
-| Tesseract | 5.x (for OCR) |
 
 ---
 
 ## Build / ビルド方法
+
+### Rust Core / Rustコア
 
 ```bash
 # Clone the repository / リポジトリをクローン
 git clone https://github.com/daitamu/Sikuli-D.git
 cd Sikuli-D
 
+# Build core library / コアライブラリをビルド
+cd core-rs
+cargo build --release
+
+# Build Python bindings / Pythonバインディングをビルド
+pip install maturin
+maturin build --release
+
+# Run tests / テスト実行
+cargo test
+```
+
+### Legacy Java Version / レガシーJava版
+
+```bash
 # Build all modules / 全モジュールをビルド
 mvn clean install
 
