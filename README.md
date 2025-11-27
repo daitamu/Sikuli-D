@@ -62,7 +62,7 @@ Sikuli-Dは、デスクトップ画面上のあらゆる操作を自動化でき
 | Python | 3.8+ |
 | Tesseract | 5.x (for OCR) |
 
-### Legacy Java Version / レガシーJava版
+### Java Version / Java版
 
 | Component | Version |
 |-----------|---------|
@@ -92,7 +92,7 @@ maturin build --release
 cargo test
 ```
 
-### Legacy Java Version / レガシーJava版
+### Java Version / Java版
 
 ```bash
 # Build all modules / 全モジュールをビルド
