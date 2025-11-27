@@ -1,4 +1,4 @@
-# Sikuli-D
+# Sikuli-D (シクリッド / pronounced "sik-lid")
 
 **Based on SikuliX 2.0.5, this version includes Japanese support and custom features.**
 
