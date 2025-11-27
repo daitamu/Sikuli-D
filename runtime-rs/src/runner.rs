@@ -3,10 +3,10 @@
 
 use std::path::Path;
 use anyhow::{Result, Context, bail};
-use sikulix_core::{Region, Screen};
+use sikulid_core::{Region, Screen};
 
-/// Run a SikuliX script
-/// SikuliXスクリプトを実行
+/// Run a Sikuli-D script
+/// Sikuli-Dスクリプトを実行
 pub fn run_script(
     script: &Path,
     args: &[String],
@@ -56,12 +56,12 @@ pub fn find_image(image_path: &Path, similarity: f64, find_all_matches: bool) ->
         .map_err(|e| anyhow::anyhow!("Failed to capture screen: {}", e))?;
 
     // Load template as Pattern
-    let pattern = sikulix_core::Pattern::from_file(image_path.to_str().unwrap_or(""))
+    let pattern = sikulid_core::Pattern::from_file(image_path.to_str().unwrap_or(""))
         .map_err(|e| anyhow::anyhow!("Failed to read template image: {}", e))?
         .similar(similarity);
 
     // Create matcher
-    let matcher = sikulix_core::ImageMatcher::new().with_min_similarity(similarity);
+    let matcher = sikulid_core::ImageMatcher::new().with_min_similarity(similarity);
 
     if find_all_matches {
         match matcher.find_all(&screen_capture, &pattern) {
@@ -168,7 +168,7 @@ pub fn show_info() -> Result<()> {
 
     // Python info
     println!("=== Python Info ===");
-    match sikulix_core::detect_system_python() {
+    match sikulid_core::python::detect_system_python() {
         Ok(python) => {
             println!(
                 "Python: {}.{}.{} ({})",

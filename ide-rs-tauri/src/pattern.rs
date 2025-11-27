@@ -5,7 +5,7 @@
 
 use log::{debug, error, info, warn};
 use serde::{Deserialize, Serialize};
-use sikulix_core::{Pattern, Screen};
+use sikulid_core::{Pattern, Screen};
 use std::path::PathBuf;
 use std::sync::Mutex;
 use tauri::State;

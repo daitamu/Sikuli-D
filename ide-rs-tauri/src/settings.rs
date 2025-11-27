@@ -5,7 +5,7 @@
 
 use log::{debug, info, warn};
 use serde::{Deserialize, Serialize};
-use sikulix_core::settings::{
+use sikulid_core::settings::{
     AppSettings, HotkeyBinding, HotkeySettings, Language, ProfileManager, Theme,
 };
 use std::sync::Mutex;

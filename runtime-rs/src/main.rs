@@ -6,6 +6,7 @@ use std::path::PathBuf;
 
 mod runner;
 mod bundle;
+mod converter;
 mod python;
 mod repl;
 

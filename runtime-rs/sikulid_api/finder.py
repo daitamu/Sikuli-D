@@ -12,7 +12,25 @@ import subprocess
 import time
 import json
 from .match import Match
-from . import Settings
+
+# Default settings (avoid circular import)
+_DEFAULT_MIN_SIMILARITY = 0.7
+_DEFAULT_AUTO_WAIT_TIMEOUT = 3.0
+_DEFAULT_WAIT_SCAN_RATE = 3.0
+
+
+def _get_settings():
+    """Get settings lazily to avoid circular import."""
+    try:
+        from . import Settings
+        return Settings
+    except ImportError:
+        # Fallback to defaults if Settings not available
+        class DefaultSettings:
+            MinSimilarity = _DEFAULT_MIN_SIMILARITY
+            AutoWaitTimeout = _DEFAULT_AUTO_WAIT_TIMEOUT
+            WaitScanRate = _DEFAULT_WAIT_SCAN_RATE
+        return DefaultSettings
 
 
 def find(target, similarity=None):
@@ -25,6 +43,7 @@ def find(target, similarity=None):
     Returns:
         Match object if found, None otherwise / 見つかれば Match、なければ None
     """
+    Settings = _get_settings()
     if similarity is None:
         similarity = Settings.MinSimilarity
 
@@ -76,6 +95,7 @@ def find_all(target, similarity=None):
     Returns:
         List of Match objects / Match オブジェクトのリスト
     """
+    Settings = _get_settings()
     if similarity is None:
         similarity = Settings.MinSimilarity
 
@@ -134,6 +154,7 @@ def wait(target, timeout=None, similarity=None):
     Raises:
         FindFailed: If target not found within timeout / タイムアウト内に見つからなければ
     """
+    Settings = _get_settings()
     if timeout is None:
         timeout = Settings.AutoWaitTimeout
     if similarity is None:

@@ -1,12 +1,12 @@
 """
-SikuliX Python API
-SikuliX Python API
+Sikuli-D Python API
+Sikuli-D Python API
 
 This module provides a Python interface compatible with SikuliX Java version.
 このモジュールは SikuliX Java版と互換性のある Python インターフェースを提供します。
 
 Usage / 使用方法:
-    from sikulix import *
+    from sikulid import *
 
     # Find and click an image
     click("button.png")
@@ -20,17 +20,22 @@ Usage / 使用方法:
 
 # Try to import native module (PyO3)
 try:
-    from sikulix_py import (
+    from sikulid import (
         Region,
         Match,
         Screen,
+        Location,
+        Pattern,
         find,
         find_all,
         wait,
+        exists as native_exists,
         click,
         double_click,
         right_click,
-        type as type_text,
+        type_text,
+        mouseMove,
+        hover,
     )
     _NATIVE_AVAILABLE = True
 except ImportError:
@@ -39,8 +44,10 @@ except ImportError:
     from .region import Region
     from .match import Match
     from .screen import Screen
+    from .location import Location
+    from .pattern import Pattern
     from .finder import find, find_all, wait
-    from .input import click, double_click, right_click, type_text
+    from .input import click, double_click, right_click, type_text, mouseMove, hover
 
 # Aliases for compatibility
 doubleClick = double_click
@@ -162,7 +169,7 @@ def highlight(target, seconds=None):
     pass
 
 
-def popup(message, title="SikuliX"):
+def popup(message, title="Sikuli-D"):
     """Show a popup dialog / ポップアップダイアログを表示
 
     Args:
@@ -172,7 +179,7 @@ def popup(message, title="SikuliX"):
     print(f"[{title}] {message}")
 
 
-def input(message="", default="", title="SikuliX"):
+def input(message="", default="", title="Sikuli-D"):
     """Show an input dialog / 入力ダイアログを表示
 
     Args:
@@ -192,6 +199,8 @@ __all__ = [
     "Region",
     "Match",
     "Screen",
+    "Location",
+    "Pattern",
     "Key",
     "Settings",
     "find",
@@ -204,6 +213,8 @@ __all__ = [
     "doubleClick",
     "right_click",
     "rightClick",
+    "mouseMove",
+    "hover",
     "type_text",
     "highlight",
     "popup",

@@ -11,7 +11,41 @@ Note: This fallback uses subprocess to call the sikulix CLI or system tools.
 import subprocess
 import sys
 import time
-from . import Settings
+
+# Default settings (avoid circular import)
+_DEFAULT_MOVE_MOUSE_DELAY = 0.3
+_DEFAULT_CLICK_DELAY = 0.0
+_DEFAULT_TYPE_DELAY = 0.0
+
+
+def _get_settings():
+    """Get settings lazily to avoid circular import."""
+    try:
+        from . import Settings
+        return Settings
+    except ImportError:
+        # Fallback to defaults
+        class DefaultSettings:
+            MoveMouseDelay = _DEFAULT_MOVE_MOUSE_DELAY
+            ClickDelay = _DEFAULT_CLICK_DELAY
+            TypeDelay = _DEFAULT_TYPE_DELAY
+        return DefaultSettings
+
+
+def mouseMove(target):
+    """Move mouse to target / マウスをターゲットに移動
+
+    Args:
+        target: (x, y) tuple, Location, Match object, or image path /
+                (x, y) タプル、Location、Match オブジェクト、または画像パス
+    """
+    x, y = _resolve_target(target)
+    _do_mouse_move(x, y)
+
+
+def hover(target):
+    """Alias for mouseMove / mouseMoveのエイリアス"""
+    mouseMove(target)
 
 
 def click(target):
@@ -54,6 +88,7 @@ def type_text(text, modifiers=None):
         text: Text to type / 入力するテキスト
         modifiers: Optional key modifiers / オプションのキー修飾子
     """
+    Settings = _get_settings()
     if Settings.TypeDelay > 0:
         for char in text:
             _type_char(char)
@@ -66,13 +101,17 @@ def _resolve_target(target):
     """Resolve target to (x, y) coordinates / ターゲットを (x, y) 座標に解決
 
     Args:
-        target: (x, y) tuple, Match/Region object, or image path
+        target: (x, y) tuple, Location, Match/Region object, or image path
 
     Returns:
         Tuple (x, y) / タプル (x, y)
     """
     if isinstance(target, tuple) and len(target) == 2:
         return target
+
+    # Check for Location object (has x and y attributes but not w/h)
+    if hasattr(target, "x") and hasattr(target, "y") and not hasattr(target, "w"):
+        return (target.x, target.y)
 
     if hasattr(target, "center"):
         return target.center()
@@ -101,6 +140,7 @@ def _do_click(x, y, clicks=1):
         y: Y coordinate / Y座標
         clicks: Number of clicks (1 or 2) / クリック回数 (1 または 2)
     """
+    Settings = _get_settings()
     # Move mouse delay
     if Settings.MoveMouseDelay > 0:
         time.sleep(Settings.MoveMouseDelay)
@@ -119,6 +159,7 @@ def _do_click(x, y, clicks=1):
 
 def _do_right_click(x, y):
     """Perform right click at coordinates / 座標で右クリックを実行"""
+    Settings = _get_settings()
     if Settings.MoveMouseDelay > 0:
         time.sleep(Settings.MoveMouseDelay)
 
@@ -131,6 +172,16 @@ def _do_right_click(x, y):
 
     if Settings.ClickDelay > 0:
         time.sleep(Settings.ClickDelay)
+
+
+def _do_mouse_move(x, y):
+    """Move mouse to coordinates / マウスを座標に移動"""
+    if sys.platform == "win32":
+        _windows_mouse_move(x, y)
+    elif sys.platform == "darwin":
+        _macos_mouse_move(x, y)
+    else:
+        _linux_mouse_move(x, y)
 
 
 def _type_char(char):
@@ -200,6 +251,15 @@ Add-Type -AssemblyName System.Windows.Forms
     subprocess.run(["powershell", "-Command", script], capture_output=True)
 
 
+def _windows_mouse_move(x, y):
+    """Windows mouse move using PowerShell"""
+    script = f'''
+Add-Type -AssemblyName System.Windows.Forms
+[System.Windows.Forms.Cursor]::Position = New-Object System.Drawing.Point({x}, {y})
+'''
+    subprocess.run(["powershell", "-Command", script], capture_output=True)
+
+
 # macOS implementations
 def _macos_click(x, y, clicks):
     """macOS click using cliclick or AppleScript"""
@@ -245,6 +305,18 @@ def _macos_type(text):
     subprocess.run(["osascript", "-e", script], capture_output=True)
 
 
+def _macos_mouse_move(x, y):
+    """macOS mouse move using cliclick or AppleScript"""
+    try:
+        subprocess.run(["cliclick", f"m:{x},{y}"], capture_output=True)
+    except FileNotFoundError:
+        # Fallback to AppleScript with Quartz (limited)
+        script = f'''
+do shell script "python3 -c 'from Quartz.CoreGraphics import CGEventCreateMouseEvent, CGEventPost, kCGEventMouseMoved, kCGMouseButtonLeft, kCGHIDEventTap; e = CGEventCreateMouseEvent(None, kCGEventMouseMoved, ({x}, {y}), kCGMouseButtonLeft); CGEventPost(kCGHIDEventTap, e)'"
+'''
+        subprocess.run(["osascript", "-e", script], capture_output=True)
+
+
 # Linux implementations
 def _linux_click(x, y, clicks):
     """Linux click using xdotool"""
@@ -260,3 +332,8 @@ def _linux_right_click(x, y):
 def _linux_type(text):
     """Linux type using xdotool"""
     subprocess.run(["xdotool", "type", "--", text], capture_output=True)
+
+
+def _linux_mouse_move(x, y):
+    """Linux mouse move using xdotool"""
+    subprocess.run(f"xdotool mousemove {x} {y}", shell=True, capture_output=True)

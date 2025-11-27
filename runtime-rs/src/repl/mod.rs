@@ -1,21 +1,21 @@
 //! REPL module - Interactive Python REPL with SikuliX API
 //! REPLモジュール - SikuliX API付きインタラクティブPython REPL
 
-use anyhow::{Context, Result, bail};
+use anyhow::{Context, Result};
 use rustyline::error::ReadlineError;
-use rustyline::{DefaultEditor, Editor};
-use std::io::Write;
+use rustyline::DefaultEditor;
+use std::io::{BufRead, Write};
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
 use std::thread;
-use std::sync::mpsc;
+
 
 mod completer;
 mod special_commands;
 #[cfg(test)]
 mod tests;
 
-use completer::SikulixCompleter;
+
 use special_commands::SpecialCommand;
 
 /// REPL configuration
@@ -90,20 +90,20 @@ impl Repl {
         self.print_banner();
 
         // Find Python interpreter
-        let python = if let Some(ref path) = self.config.python_path {
-            path.clone()
+        let python_cmd = if let Some(ref path) = self.config.python_path {
+            crate::python::PythonCommand::new(path)
         } else {
             crate::python::find_python()?
         };
 
-        log::info!("Using Python: {}", python);
+        log::info!("Using Python: {} {:?}", python_cmd.program, python_cmd.extra_args);
 
         // Start Python REPL process
-        self.python_process = Some(PythonRepl::start(&python)?);
+        self.python_process = Some(PythonRepl::start(&python_cmd)?);
 
         // Execute startup script if provided
-        if let Some(ref script) = self.config.startup_script {
-            self.execute_file(script)?;
+        if let Some(script) = self.config.startup_script.clone() {
+            self.execute_file(&script)?;
         }
 
         // Main REPL loop
@@ -227,9 +227,12 @@ impl Repl {
             SpecialCommand::Reset => {
                 println!("Resetting Python context...");
                 // Restart Python process
-                if let Some(ref python_path) = self.config.python_path {
-                    self.python_process = Some(PythonRepl::start(python_path)?);
-                }
+                let python_cmd = if let Some(ref path) = self.config.python_path {
+                    crate::python::PythonCommand::new(path)
+                } else {
+                    crate::python::find_python()?
+                };
+                self.python_process = Some(PythonRepl::start(&python_cmd)?);
                 Ok(true)
             }
         }
@@ -370,16 +373,20 @@ struct PythonRepl {
 impl PythonRepl {
     /// Start Python REPL process
     /// Python REPLプロセスを開始
-    fn start(python_cmd: &str) -> Result<Self> {
+    fn start(python_cmd: &crate::python::PythonCommand) -> Result<Self> {
         // Get SikuliX API path
-        let api_path = crate::python::get_sikulix_api_path()
-            .context("Failed to locate sikulix_api")?;
+        let api_path = crate::python::get_sikulid_api_path()
+            .context("Failed to locate sikulid_api")?;
 
         // Create startup script
         let startup_script = Self::create_startup_script();
 
         // Start Python in interactive mode
-        let mut child = Command::new(python_cmd)
+        let mut cmd = Command::new(&python_cmd.program);
+        for arg in &python_cmd.extra_args {
+            cmd.arg(arg);
+        }
+        let mut child = cmd
             .arg("-i")  // Interactive mode
             .arg("-u")  // Unbuffered
             .stdin(Stdio::piped())

@@ -1,8 +1,8 @@
 [package]
-name = "sikulix-ide-tauri"
+name = "sikulid-ide-tauri"
 version = "0.3.0"
 edition = "2021"
-description = "SikuliX IDE - Tauri prototype"
+description = "Sikuli-D IDE - Tauri prototype"
 authors = ["Sikuli-D Team"]
 
 [build-dependencies]
@@ -16,7 +16,7 @@ tauri-plugin-dialog = "2"
 tauri-plugin-fs = "2"
 
 # Core library
-sikulix-core = { path = "../core-rs" }
+sikulid-core = { path = "../core-rs" }
 
 # Async runtime
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "time", "process", "io-util"] }

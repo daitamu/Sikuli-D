@@ -72,11 +72,8 @@ impl PyScreen {
     /// 画面全体をキャプチャ
     fn capture(&self, py: Python) -> PyResult<Vec<u8>> {
         py.allow_threads(|| {
-            self.inner
-                .capture()
-                .map_err(to_pyerr)?
-                .into_bytes()
-                .map_err(|e| PyRuntimeError::new_err(format!("Failed to convert image: {}", e)))
+            let img = self.inner.capture().map_err(to_pyerr)?;
+            Ok(img.into_bytes())
         })
     }
 
@@ -93,6 +90,30 @@ impl PyScreen {
     fn get_region(&mut self) -> PyResult<PyRegion> {
         let region = self.inner.get_region().map_err(to_pyerr)?;
         Ok(PyRegion { inner: region })
+    }
+
+    /// Get screen width
+    /// 画面幅を取得
+    #[pyo3(name = "getW")]
+    fn get_w(&mut self) -> PyResult<u32> {
+        let (w, _) = self.inner.dimensions().map_err(to_pyerr)?;
+        Ok(w)
+    }
+
+    /// Get screen height
+    /// 画面高さを取得
+    #[pyo3(name = "getH")]
+    fn get_h(&mut self) -> PyResult<u32> {
+        let (_, h) = self.inner.dimensions().map_err(to_pyerr)?;
+        Ok(h)
+    }
+
+    /// Get screen bounds (x, y, w, h)
+    /// 画面境界を取得 (x, y, w, h)
+    #[pyo3(name = "getBounds")]
+    fn get_bounds(&mut self) -> PyResult<(i32, i32, u32, u32)> {
+        let region = self.inner.get_region().map_err(to_pyerr)?;
+        Ok((region.x, region.y, region.width, region.height))
     }
 }
 
@@ -254,45 +275,178 @@ impl PyMatch {
 }
 
 // ============================================================================
-// PyPattern - Pattern wrapper
+// PyPattern - Pattern wrapper (lazy loading)
+// PyPattern - パターンラッパー（遅延読み込み）
 // ============================================================================
 
 #[cfg(feature = "python")]
 #[pyclass(name = "Pattern")]
+#[derive(Clone)]
 struct PyPattern {
-    inner: Pattern,
+    /// Image path / 画像パス
+    path: String,
+    /// Similarity threshold (0.0-1.0) / 類似度閾値 (0.0-1.0)
+    similarity_value: f64,
+    /// Target offset / ターゲットオフセット
+    offset: (i32, i32),
+}
+
+#[cfg(feature = "python")]
+impl PyPattern {
+    /// Convert to Pattern (loads file) / Patternに変換（ファイルを読み込む）
+    fn to_pattern(&self) -> std::result::Result<Pattern, SikulixError> {
+        let mut pattern = Pattern::from_file(&self.path)?;
+        pattern.similarity = self.similarity_value;
+        pattern.target_offset = self.offset;
+        Ok(pattern)
+    }
 }
 
 #[cfg(feature = "python")]
 #[pymethods]
 impl PyPattern {
+    /// Create pattern from image path with optional similarity
+    /// 画像パスからパターンを作成（オプションで類似度を指定）
     #[new]
-    fn new(path: String) -> PyResult<Self> {
-        let pattern = Pattern::from_file(&path).map_err(to_pyerr)?;
-        Ok(Self { inner: pattern })
+    #[pyo3(signature = (path, similarity=None))]
+    fn new(path: String, similarity: Option<f64>) -> Self {
+        Self {
+            path,
+            similarity_value: similarity.unwrap_or(0.7),
+            offset: (0, 0),
+        }
     }
 
-    /// Set similarity threshold (0.0-1.0)
-    /// 類似度閾値を設定 (0.0-1.0)
-    fn similar(mut slf: PyRefMut<Self>, similarity: f64) -> PyRefMut<Self> {
-        slf.inner = slf.inner.clone().similar(similarity);
-        slf
+    /// Create new Pattern with different similarity threshold (0.0-1.0)
+    /// 異なる類似度閾値で新しいPatternを作成 (0.0-1.0)
+    fn similar(&self, similarity: f64) -> Self {
+        Self {
+            path: self.path.clone(),
+            similarity_value: similarity.clamp(0.0, 1.0),
+            offset: self.offset,
+        }
     }
 
-    /// Set target offset (x, y)
-    /// ターゲットオフセットを設定 (x, y)
-    fn target_offset(mut slf: PyRefMut<Self>, x: i32, y: i32) -> PyRefMut<Self> {
-        slf.inner = slf.inner.clone().target_offset(x, y);
-        slf
+    /// Create new Pattern with target offset (x, y)
+    /// ターゲットオフセット付きの新しいPatternを作成 (x, y)
+    #[pyo3(name = "targetOffset")]
+    fn target_offset(&self, x: i32, y: i32) -> Self {
+        Self {
+            path: self.path.clone(),
+            similarity_value: self.similarity_value,
+            offset: (x, y),
+        }
     }
 
+    /// Get similarity threshold
+    /// 類似度閾値を取得
     #[getter]
     fn similarity(&self) -> f64 {
-        self.inner.similarity
+        self.similarity_value
+    }
+
+    /// Get image path
+    /// 画像パスを取得
+    #[getter]
+    fn get_path(&self) -> &str {
+        &self.path
+    }
+
+    /// Get filename (without directory)
+    /// ファイル名を取得（ディレクトリなし）
+    #[pyo3(name = "getFilename")]
+    fn get_filename(&self) -> String {
+        std::path::Path::new(&self.path)
+            .file_name()
+            .map(|s| s.to_string_lossy().to_string())
+            .unwrap_or_else(|| self.path.clone())
     }
 
     fn __repr__(&self) -> String {
-        format!("Pattern(similarity={:.2})", self.inner.similarity)
+        format!("Pattern('{}', {:.2})", self.path, self.similarity_value)
+    }
+}
+
+// ============================================================================
+// PyLocation - Location wrapper
+// ============================================================================
+
+#[cfg(feature = "python")]
+#[pyclass(name = "Location")]
+#[derive(Clone)]
+struct PyLocation {
+    x: i32,
+    y: i32,
+}
+
+#[cfg(feature = "python")]
+#[pymethods]
+impl PyLocation {
+    #[new]
+    fn new(x: i32, y: i32) -> Self {
+        Self { x, y }
+    }
+
+    /// Get X coordinate
+    /// X座標を取得
+    #[pyo3(name = "getX")]
+    fn get_x(&self) -> i32 {
+        self.x
+    }
+
+    /// Get Y coordinate
+    /// Y座標を取得
+    #[pyo3(name = "getY")]
+    fn get_y(&self) -> i32 {
+        self.y
+    }
+
+    /// Set location
+    /// 位置を設定
+    #[pyo3(name = "setLocation")]
+    fn set_location(&mut self, x: i32, y: i32) {
+        self.x = x;
+        self.y = y;
+    }
+
+    /// Create offset location
+    /// オフセット位置を作成
+    fn offset(&self, dx: i32, dy: i32) -> Self {
+        Self { x: self.x + dx, y: self.y + dy }
+    }
+
+    /// Get location above
+    /// 上の位置を取得
+    fn above(&self, dy: i32) -> Self {
+        Self { x: self.x, y: self.y - dy }
+    }
+
+    /// Get location below
+    /// 下の位置を取得
+    fn below(&self, dy: i32) -> Self {
+        Self { x: self.x, y: self.y + dy }
+    }
+
+    /// Get location to left
+    /// 左の位置を取得
+    fn left(&self, dx: i32) -> Self {
+        Self { x: self.x - dx, y: self.y }
+    }
+
+    /// Get location to right
+    /// 右の位置を取得
+    fn right(&self, dx: i32) -> Self {
+        Self { x: self.x + dx, y: self.y }
+    }
+
+    #[getter(x)]
+    fn get_x_prop(&self) -> i32 { self.x }
+
+    #[getter(y)]
+    fn get_y_prop(&self) -> i32 { self.y }
+
+    fn __repr__(&self) -> String {
+        format!("Location({}, {})", self.x, self.y)
     }
 }
 
@@ -375,6 +529,51 @@ fn exists(py: Python, pattern: &str, timeout: Option<f64>) -> PyResult<Option<Py
 // ============================================================================
 // Mouse/Keyboard Input Functions / マウス・キーボード入力関数
 // ============================================================================
+
+/// Move mouse to location
+/// マウスを位置に移動
+#[cfg(feature = "python")]
+#[pyfunction]
+#[pyo3(name = "mouseMove")]
+fn mouse_move(target: &PyAny) -> PyResult<()> {
+    let (x, y) = resolve_target(target)?;
+    Mouse::move_to(x, y).map_err(to_pyerr)
+}
+
+/// Hover (alias for mouseMove)
+/// ホバー（mouseMoveのエイリアス）
+#[cfg(feature = "python")]
+#[pyfunction]
+fn hover(target: &PyAny) -> PyResult<()> {
+    mouse_move(target)
+}
+
+/// Resolve target to (x, y) coordinates
+/// ターゲットを (x, y) 座標に解決
+#[cfg(feature = "python")]
+fn resolve_target(target: &PyAny) -> PyResult<(i32, i32)> {
+    // Check if it's a tuple
+    if let Ok((x, y)) = target.extract::<(i32, i32)>() {
+        return Ok((x, y));
+    }
+
+    // Check if it's a PyLocation
+    if let Ok(loc) = target.extract::<PyRef<PyLocation>>() {
+        return Ok((loc.x, loc.y));
+    }
+
+    // Check if it's a PyMatch (use target() method)
+    if let Ok(m) = target.extract::<PyRef<PyMatch>>() {
+        return Ok(m.target());
+    }
+
+    // Check if it's a PyRegion (use center)
+    if let Ok(r) = target.extract::<PyRef<PyRegion>>() {
+        return Ok(r.center());
+    }
+
+    Err(PyValueError::new_err("Invalid target: expected (x, y), Location, Match, or Region"))
+}
 
 /// Click at coordinates or current position
 /// 座標または現在位置でクリック
@@ -511,12 +710,13 @@ fn parse_key(s: &str) -> std::result::Result<Key, String> {
 /// Python モジュールを作成
 #[cfg(feature = "python")]
 #[pymodule]
-fn sikulix_py(_py: Python, m: &PyModule) -> PyResult<()> {
+fn sikulid(_py: Python, m: &PyModule) -> PyResult<()> {
     // Add classes
     m.add_class::<PyScreen>()?;
     m.add_class::<PyRegion>()?;
     m.add_class::<PyMatch>()?;
     m.add_class::<PyPattern>()?;
+    m.add_class::<PyLocation>()?;
 
     // Add image finding functions
     m.add_function(wrap_pyfunction!(find, m)?)?;
@@ -525,6 +725,8 @@ fn sikulix_py(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(exists, m)?)?;
 
     // Add input functions
+    m.add_function(wrap_pyfunction!(mouse_move, m)?)?;
+    m.add_function(wrap_pyfunction!(hover, m)?)?;
     m.add_function(wrap_pyfunction!(click, m)?)?;
     m.add_function(wrap_pyfunction!(double_click, m)?)?;
     m.add_function(wrap_pyfunction!(right_click, m)?)?;

@@ -17,6 +17,7 @@ resolver = "2"
 members = [
     "core-rs",
     "ide-rs-tauri",
+    "runtime-rs",
 ]
 
 # Shared dependencies for workspace members

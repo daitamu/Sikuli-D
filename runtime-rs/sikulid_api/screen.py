@@ -111,6 +111,30 @@ class Screen(Region):
         # TODO: Implement interactive capture
         raise NotImplementedError("Interactive capture not available in pure Python mode")
 
+    def getW(self):
+        """Get screen width / 画面幅を取得
+
+        Returns:
+            Screen width in pixels / 画面幅（ピクセル）
+        """
+        return self.w
+
+    def getH(self):
+        """Get screen height / 画面高さを取得
+
+        Returns:
+            Screen height in pixels / 画面高さ（ピクセル）
+        """
+        return self.h
+
+    def getBounds(self):
+        """Get screen bounds as (x, y, w, h) / 画面境界を (x, y, w, h) で取得
+
+        Returns:
+            Tuple of (x, y, width, height) / (x, y, 幅, 高さ) のタプル
+        """
+        return (self.x, self.y, self.w, self.h)
+
     def __repr__(self):
         return f"Screen({self.index})"
 
