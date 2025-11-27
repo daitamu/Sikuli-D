@@ -1,6 +1,0 @@
-#globals; m 20; c; f 20
-
-#image; /icons/sikulix-red-x.png
----
-SikuliX-IDE  ---  {sxversion}  ---  starting on Java {javaversion}; bold
-

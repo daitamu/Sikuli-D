@@ -54,26 +54,15 @@ Sikuli-Dは、デスクトップ画面上のあらゆる操作を自動化でき
 
 ## Requirements / 動作要件
 
-### Rust Core (Recommended) / Rustコア（推奨）
-
 | Component | Version |
 |-----------|---------|
 | Rust | 1.70+ |
 | Python | 3.8+ |
 | Tesseract | 5.x (for OCR) |
 
-### Java Version / Java版
-
-| Component | Version |
-|-----------|---------|
-| Java | 17+ (LTS) |
-| Maven | 3.6+ |
-
 ---
 
 ## Build / ビルド方法
-
-### Rust Core / Rustコア
 
 ```bash
 # Clone the repository / リポジトリをクローン
@@ -92,48 +81,20 @@ maturin build --release
 cargo test
 ```
 
-### Java Version / Java版
-
-```bash
-# Build all modules / 全モジュールをビルド
-mvn clean install
-
-# Build without tests / テストなしでビルド
-mvn clean install -DskipTests
-```
-
 ---
 
 ## Project Structure / プロジェクト構成
 
 ```
 Sikuli-D/
-├── API/           # Java Core library / Javaコアライブラリ
-├── IDE/           # Java GUI IDE / Java GUI開発環境
 ├── core-rs/       # Rust Core library / Rustコアライブラリ
 ├── ide-rs-tauri/  # Rust/Tauri IDE / Rust/Tauri開発環境
 ├── runtime-rs/    # Python runtime / Pythonランタイム
-├── Support/       # Support tools / サポートツール
-├── pages/         # Documentation / ドキュメント
-└── pom.xml        # Maven parent POM
+└── pages/         # Documentation / ドキュメント
 ```
 
-### Rust Core (core-rs) / Rustコア
-
-A next-generation core library written in Rust with:
-- **High Performance** - Optimized image matching with parallel processing
-- **Python 3 Bindings** - Native Python API via PyO3
-- **Cross-platform** - Windows, macOS, Linux support
-- **Observer API** - Screen region monitoring for GUI automation
-
-Rustで書かれた次世代コアライブラリ：
-- **高性能** - 並列処理による最適化された画像マッチング
-- **Python 3バインディング** - PyO3によるネイティブPython API
-- **クロスプラットフォーム** - Windows, macOS, Linux対応
-- **Observer API** - GUI自動化のための画面領域監視
-
-See [core-rs/README.md](core-rs/README.md) for details.
-詳細は [core-rs/README.md](core-rs/README.md) を参照。
+See [core-rs/README.md](core-rs/README.md) for detailed documentation.
+詳細なドキュメントは [core-rs/README.md](core-rs/README.md) を参照。
 
 ---
 
