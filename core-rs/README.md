@@ -20,8 +20,12 @@ Rustで書かれた高性能・省メモリのGUI自動化ライブラリ。
   - **スクリーンキャプチャ** - クロスプラットフォーム対応（Windows, macOS, Linux）
 - **Input Control** - Mouse and keyboard simulation
   - **入力制御** - マウス・キーボードシミュレーション
-- **Python Integration** - Python 2/3 dual runtime support
-  - **Python統合** - Python 2/3デュアルランタイム対応
+- **Python Integration** - Python 3 native bindings via PyO3
+  - **Python統合** - PyO3によるPython 3ネイティブバインディング
+- **Observer API** - Monitor screen regions for appearance, vanishing, and changes
+  - **Observer API** - 画面領域の出現・消失・変化を監視
+- **Scroll/Drag Support** - Mouse scroll and drag operations
+  - **スクロール/ドラッグ対応** - マウススクロールとドラッグ操作
 - **Debug Support** - Breakpoints, step execution, variable inspection
   - **デバッグ対応** - ブレークポイント、ステップ実行、変数表示
 - **Plugin System** - Extensible plugin architecture with permission model
@@ -82,6 +86,15 @@ Mouse::click().expect("Failed to click");
 
 // Drag from one point to another
 Mouse::drag(100, 100, 300, 300).expect("Failed to drag");
+
+// Scroll operations
+Mouse::scroll(3).expect("Failed to scroll up");
+Mouse::scroll(-3).expect("Failed to scroll down");
+Mouse::scroll_horizontal(3).expect("Failed to scroll right");
+
+// Mouse button control
+Mouse::mouse_down().expect("Failed to press mouse");
+Mouse::mouse_up().expect("Failed to release mouse");
 ```
 
 ### Keyboard Control / キーボード制御
@@ -115,13 +128,45 @@ if let Ok(Some(match_result)) = matcher.find(&screenshot, &pattern) {
 }
 ```
 
+### Observer (Python) / オブザーバー (Python)
+
+```python
+from sikulid_api import Observer, Screen
+
+# Create observer for a region
+screen = Screen()
+region = screen.get_region()
+observer = Observer(region)
+
+# Set observation interval (milliseconds)
+observer.setInterval(200)
+
+# Register callbacks
+def on_appear(match):
+    print(f"Pattern appeared at {match}")
+
+def on_vanish():
+    print("Pattern vanished!")
+
+def on_change(amount):
+    print(f"Screen changed by {amount}")
+
+observer.onAppear("button.png", on_appear, 0.8)
+observer.onVanish("dialog.png", on_vanish)
+observer.onChange(0.1, on_change)
+
+# Start observing (blocks for specified seconds)
+observer.observe(10.0)
+```
+
 ## Module Overview / モジュール概要
 
 | Module | Description |
 |--------|-------------|
 | `screen` | Screen capture, Mouse, Keyboard control |
 | `image` | Image matching, OCR |
-| `python` | Python script execution |
+| `python` | Python script execution, PyO3 bindings |
+| `observer` | Screen region monitoring (appear, vanish, change) |
 | `debug` | Debugging support |
 | `settings` | Configuration management |
 | `plugin` | Plugin system |

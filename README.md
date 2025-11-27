@@ -78,12 +78,32 @@ mvn clean install -DskipTests
 
 ```
 Sikuli-D/
-├── API/        # Core library / コアライブラリ
-├── IDE/        # GUI IDE / GUI開発環境
-├── Support/    # Support tools / サポートツール
-├── pages/      # Documentation / ドキュメント
-└── pom.xml     # Maven parent POM
+├── API/           # Java Core library / Javaコアライブラリ
+├── IDE/           # Java GUI IDE / Java GUI開発環境
+├── core-rs/       # Rust Core library / Rustコアライブラリ
+├── ide-rs-tauri/  # Rust/Tauri IDE / Rust/Tauri開発環境
+├── runtime-rs/    # Python runtime / Pythonランタイム
+├── Support/       # Support tools / サポートツール
+├── pages/         # Documentation / ドキュメント
+└── pom.xml        # Maven parent POM
 ```
+
+### Rust Core (core-rs) / Rustコア
+
+A next-generation core library written in Rust with:
+- **High Performance** - Optimized image matching with parallel processing
+- **Python 3 Bindings** - Native Python API via PyO3
+- **Cross-platform** - Windows, macOS, Linux support
+- **Observer API** - Screen region monitoring for GUI automation
+
+Rustで書かれた次世代コアライブラリ：
+- **高性能** - 並列処理による最適化された画像マッチング
+- **Python 3バインディング** - PyO3によるネイティブPython API
+- **クロスプラットフォーム** - Windows, macOS, Linux対応
+- **Observer API** - GUI自動化のための画面領域監視
+
+See [core-rs/README.md](core-rs/README.md) for details.
+詳細は [core-rs/README.md](core-rs/README.md) を参照。
 
 ---
 
