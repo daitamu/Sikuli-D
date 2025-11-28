@@ -4,12 +4,12 @@
 //! Supports automatic Python 2 to Python 3 conversion using lib2to3.
 //! lib2to3を使用した自動Python 2→Python 3変換に対応。
 
+use anyhow::{bail, Context, Result};
+use std::io::{BufRead, BufReader};
 use std::path::Path;
+use std::process::{Command, Stdio};
 use std::sync::Arc;
 use std::time::Duration;
-use anyhow::{Result, Context, bail};
-use std::process::{Command, Stdio};
-use std::io::{BufRead, BufReader};
 use wait_timeout::ChildExt;
 
 use crate::hotkey::StopSignal;
@@ -58,8 +58,9 @@ pub fn execute_script_with_signal(
 
         // Create temporary file for converted code
         let temp_path = script_path.with_extension("py3.tmp");
-        std::fs::write(&temp_path, &converted)
-            .with_context(|| format!("Failed to write converted script: {}", temp_path.display()))?;
+        std::fs::write(&temp_path, &converted).with_context(|| {
+            format!("Failed to write converted script: {}", temp_path.display())
+        })?;
         (temp_path.clone(), Some(temp_path))
     } else if python_version == PythonVersionDetected::Mixed {
         log::warn!("Warning: Script contains mixed Python 2/3 syntax");
@@ -68,8 +69,9 @@ pub fn execute_script_with_signal(
             .context("Failed to convert mixed Python 2/3 code")?;
 
         let temp_path = script_path.with_extension("py3.tmp");
-        std::fs::write(&temp_path, &converted)
-            .with_context(|| format!("Failed to write converted script: {}", temp_path.display()))?;
+        std::fs::write(&temp_path, &converted).with_context(|| {
+            format!("Failed to write converted script: {}", temp_path.display())
+        })?;
         (temp_path.clone(), Some(temp_path))
     } else {
         (script_path.to_path_buf(), None)
@@ -277,7 +279,11 @@ fn execute_python_script(
 ) -> Result<()> {
     // Find Python interpreter
     let python_cmd = find_python()?;
-    log::debug!("Using Python: {} {:?}", python_cmd.program, python_cmd.extra_args);
+    log::debug!(
+        "Using Python: {} {:?}",
+        python_cmd.program,
+        python_cmd.extra_args
+    );
 
     // Build command
     let mut cmd = Command::new(&python_cmd.program);
@@ -305,8 +311,7 @@ fn execute_python_script(
     log::debug!("Command: {:?}", cmd);
 
     // Start process
-    let mut child = cmd.spawn()
-        .context("Failed to start Python process")?;
+    let mut child = cmd.spawn().context("Failed to start Python process")?;
 
     // Handle output streaming
     let stdout = child.stdout.take().expect("stdout");
@@ -355,7 +360,10 @@ fn execute_python_script(
         // Check timeout
         if let Some(timeout) = timeout_duration {
             if start_time.elapsed() >= timeout {
-                log::warn!("Script execution timed out after {}s, killing process...", timeout_secs);
+                log::warn!(
+                    "Script execution timed out after {}s, killing process...",
+                    timeout_secs
+                );
                 let _ = child.kill();
                 let _ = child.wait(); // Reap the zombie process
                 bail!("Script execution timed out after {}s / スクリプト実行がタイムアウトしました ({}秒)", timeout_secs, timeout_secs);
@@ -363,7 +371,10 @@ fn execute_python_script(
         }
 
         // Wait for process with short timeout
-        match child.wait_timeout(poll_interval).context("Failed to wait for process")? {
+        match child
+            .wait_timeout(poll_interval)
+            .context("Failed to wait for process")?
+        {
             Some(status) => break status,
             None => continue, // Process still running
         }
@@ -418,7 +429,12 @@ pub fn find_python() -> Result<PythonCommand> {
 
     // Windows: try py launcher
     #[cfg(windows)]
-    if Command::new("py").arg("-3").arg("--version").output().is_ok() {
+    if Command::new("py")
+        .arg("-3")
+        .arg("--version")
+        .output()
+        .is_ok()
+    {
         return Ok(PythonCommand::new("py").with_arg("-3"));
     }
 
@@ -500,37 +516,55 @@ mod tests {
     #[test]
     fn test_detect_python2_print() {
         let source = "print 'hello'";
-        assert_eq!(detect_python_version(source), PythonVersionDetected::Python2);
+        assert_eq!(
+            detect_python_version(source),
+            PythonVersionDetected::Python2
+        );
     }
 
     #[test]
     fn test_detect_python2_xrange() {
         let source = "for i in xrange(10): pass";
-        assert_eq!(detect_python_version(source), PythonVersionDetected::Python2);
+        assert_eq!(
+            detect_python_version(source),
+            PythonVersionDetected::Python2
+        );
     }
 
     #[test]
     fn test_detect_python2_raw_input() {
         let source = "name = raw_input('Name: ')";
-        assert_eq!(detect_python_version(source), PythonVersionDetected::Python2);
+        assert_eq!(
+            detect_python_version(source),
+            PythonVersionDetected::Python2
+        );
     }
 
     #[test]
     fn test_detect_python3_fstring() {
         let source = "print(f'hello {name}')";
-        assert_eq!(detect_python_version(source), PythonVersionDetected::Python3);
+        assert_eq!(
+            detect_python_version(source),
+            PythonVersionDetected::Python3
+        );
     }
 
     #[test]
     fn test_detect_python3_async() {
         let source = "async def foo(): pass";
-        assert_eq!(detect_python_version(source), PythonVersionDetected::Python3);
+        assert_eq!(
+            detect_python_version(source),
+            PythonVersionDetected::Python3
+        );
     }
 
     #[test]
     fn test_detect_python3_type_hint() {
         let source = "def greet(name: str) -> str:\n    return name";
-        assert_eq!(detect_python_version(source), PythonVersionDetected::Python3);
+        assert_eq!(
+            detect_python_version(source),
+            PythonVersionDetected::Python3
+        );
     }
 
     #[test]
@@ -542,7 +576,10 @@ mod tests {
     #[test]
     fn test_detect_unknown() {
         let source = "x = 1\ny = 2";
-        assert_eq!(detect_python_version(source), PythonVersionDetected::Unknown);
+        assert_eq!(
+            detect_python_version(source),
+            PythonVersionDetected::Unknown
+        );
     }
 
     #[test]

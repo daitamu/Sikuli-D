@@ -137,7 +137,7 @@ pub fn create_pattern(
     // Create default pattern configuration
     let pattern = PatternConfig {
         image_path: image_path.clone(),
-        similarity: 0.8, // Default similarity
+        similarity: 0.8,       // Default similarity
         target_offset: (0, 0), // No offset by default
         mask_path: None,
     };
@@ -151,7 +151,10 @@ pub fn create_pattern(
 
     Ok(PatternOperationResult {
         success: true,
-        message: format!("Pattern created from {}", path.file_name().unwrap_or_default().to_string_lossy()),
+        message: format!(
+            "Pattern created from {}",
+            path.file_name().unwrap_or_default().to_string_lossy()
+        ),
         pattern: Some(pattern),
     })
 }
@@ -159,16 +162,16 @@ pub fn create_pattern(
 /// Update pattern configuration
 /// パターン設定を更新
 #[tauri::command]
-pub fn update_pattern(
-    config: PatternConfig,
-    state: State<'_, PatternState>,
-) -> Result<(), String> {
+pub fn update_pattern(config: PatternConfig, state: State<'_, PatternState>) -> Result<(), String> {
     info!("Updating pattern: {}", config.image_path);
 
     // Validate similarity is in valid range
     if config.similarity < 0.0 || config.similarity > 1.0 {
         error!("Invalid similarity value: {}", config.similarity);
-        return Err(format!("Similarity must be between 0.0 and 1.0, got: {}", config.similarity));
+        return Err(format!(
+            "Similarity must be between 0.0 and 1.0, got: {}",
+            config.similarity
+        ));
     }
 
     // Validate image path exists
@@ -234,7 +237,10 @@ pub async fn test_pattern(
 
             let test_result = TestResult {
                 found: true,
-                message: format!("Pattern found at ({}, {})", match_result.region.x, match_result.region.y),
+                message: format!(
+                    "Pattern found at ({}, {})",
+                    match_result.region.x, match_result.region.y
+                ),
                 location: Some(LocationInfo {
                     x: match_result.region.x,
                     y: match_result.region.y,
@@ -257,7 +263,10 @@ pub async fn test_pattern(
 
             TestResult {
                 found: false,
-                message: format!("Pattern not found on screen (searched for {}ms)", search_time_ms),
+                message: format!(
+                    "Pattern not found on screen (searched for {}ms)",
+                    search_time_ms
+                ),
                 location: None,
                 confidence: None,
                 search_time_ms,
@@ -276,9 +285,7 @@ pub async fn test_pattern(
 /// Preview target offset position
 /// ターゲットオフセット位置をプレビュー
 #[tauri::command]
-pub fn preview_target_offset(
-    config: PatternConfig,
-) -> Result<String, String> {
+pub fn preview_target_offset(config: PatternConfig) -> Result<String, String> {
     info!("Previewing target offset for: {}", config.image_path);
 
     // Return information about the offset
@@ -332,9 +339,7 @@ pub fn generate_pattern_code(config: PatternConfig) -> Result<String, String> {
 /// Get current pattern configuration
 /// 現在のパターン設定を取得
 #[tauri::command]
-pub fn get_current_pattern(
-    state: State<'_, PatternState>,
-) -> Option<PatternConfig> {
+pub fn get_current_pattern(state: State<'_, PatternState>) -> Option<PatternConfig> {
     state
         .current_pattern
         .lock()
@@ -345,9 +350,7 @@ pub fn get_current_pattern(
 /// Get last test result
 /// 最後のテスト結果を取得
 #[tauri::command]
-pub fn get_last_test_result(
-    state: State<'_, PatternState>,
-) -> Option<TestResult> {
+pub fn get_last_test_result(state: State<'_, PatternState>) -> Option<TestResult> {
     state
         .last_test_result
         .lock()
@@ -481,6 +484,9 @@ mod tests {
         };
 
         let code = generate_pattern_code(config).unwrap();
-        assert_eq!(code, "Pattern(\"icon.png\").similar(0.90).targetOffset(20, 15)");
+        assert_eq!(
+            code,
+            "Pattern(\"icon.png\").similar(0.90).targetOffset(20, 15)"
+        );
     }
 }

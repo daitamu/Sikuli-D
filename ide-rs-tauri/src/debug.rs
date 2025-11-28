@@ -6,7 +6,9 @@
 
 use log::{debug, error, info};
 use serde::{Deserialize, Serialize};
-use sikulid::debug::{CallFrame, DebugEvent, DebugState as CoreDebugState, Debugger, Scope, VariableInfo};
+use sikulid::debug::{
+    CallFrame, DebugEvent, DebugState as CoreDebugState, Debugger, Scope, VariableInfo,
+};
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use tauri::{Emitter, State, Window};
@@ -191,13 +193,15 @@ pub enum DebugEventData {
 impl DebugEventData {
     fn from_core_event(event: DebugEvent) -> Self {
         match event {
-            DebugEvent::BreakpointHit { file, line, hit_count } => {
-                DebugEventData::BreakpointHit {
-                    file: file.to_string_lossy().to_string(),
-                    line,
-                    hit_count,
-                }
-            }
+            DebugEvent::BreakpointHit {
+                file,
+                line,
+                hit_count,
+            } => DebugEventData::BreakpointHit {
+                file: file.to_string_lossy().to_string(),
+                line,
+                hit_count,
+            },
             DebugEvent::Paused { file, line } => DebugEventData::Paused {
                 file: file.to_string_lossy().to_string(),
                 line,
@@ -504,9 +508,7 @@ pub fn debug_get_variables(
 /// Get call stack
 /// コールスタックを取得
 #[tauri::command]
-pub fn debug_get_call_stack(
-    state: State<DebugPanelState>,
-) -> Result<Vec<CallFrameData>, String> {
+pub fn debug_get_call_stack(state: State<DebugPanelState>) -> Result<Vec<CallFrameData>, String> {
     debug!("Getting call stack");
 
     let debugger = state.get_debugger();

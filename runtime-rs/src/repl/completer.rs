@@ -25,7 +25,6 @@ impl SikulixCompleter {
             "wait",
             "waitVanish",
             "exists",
-
             // Mouse actions
             "click",
             "doubleClick",
@@ -37,14 +36,12 @@ impl SikulixCompleter {
             "mouseMove",
             "mouseDown",
             "mouseUp",
-
             // Keyboard actions
             "type",
             "paste",
             "hotkey",
             "keyDown",
             "keyUp",
-
             // Classes
             "Screen",
             "Region",
@@ -52,31 +49,25 @@ impl SikulixCompleter {
             "Pattern",
             "Location",
             "Key",
-
             // Screen operations
             "capture",
             "selectRegion",
-
             // Settings
             "Settings",
-
             // Special functions
             "sleep",
             "popup",
             "input",
             "popAsk",
             "popError",
-
             // Observation
             "observe",
             "onAppear",
             "onVanish",
             "onChange",
-
             // OCR
             "text",
             "textRead",
-
             // Utilities
             "getImagePath",
             "setImagePath",
@@ -84,13 +75,11 @@ impl SikulixCompleter {
             "removeImagePath",
             "getBundlePath",
             "setBundlePath",
-
             // App control
             "openApp",
             "closeApp",
             "switchApp",
             "App",
-
             // Special REPL commands
             ":help",
             ":exit",

@@ -122,7 +122,8 @@ pub fn list_images(project_path: &str) -> Result<Vec<ImageInfo>, String> {
 /// Get detailed information about a single image
 /// 単一画像の詳細情報を取得します
 fn get_image_info(image_path: &Path, project_path: &str) -> Result<ImageInfo, String> {
-    let metadata = fs::metadata(image_path).map_err(|e| format!("Failed to read metadata: {}", e))?;
+    let metadata =
+        fs::metadata(image_path).map_err(|e| format!("Failed to read metadata: {}", e))?;
 
     let file_size = metadata.len();
 
@@ -194,7 +195,10 @@ pub fn get_image_thumbnail(path: &str, size: u32) -> Result<String, String> {
     // Convert to Base64 / Base64に変換
     let base64 = base64_encode(buffer.get_ref());
 
-    debug!("Thumbnail generated successfully, size: {} bytes", base64.len());
+    debug!(
+        "Thumbnail generated successfully, size: {} bytes",
+        base64.len()
+    );
     Ok(base64)
 }
 
@@ -347,7 +351,8 @@ fn count_image_usage(project_path: &str, image_name: &str) -> Result<u32, String
     // Find script files / スクリプトファイルを検索
     let script_extensions = ["py", "js", "rb"];
 
-    let entries = fs::read_dir(bundle_path).map_err(|e| format!("Failed to read directory: {}", e))?;
+    let entries =
+        fs::read_dir(bundle_path).map_err(|e| format!("Failed to read directory: {}", e))?;
 
     for entry in entries {
         let entry = entry.map_err(|e| format!("Failed to read entry: {}", e))?;
@@ -425,7 +430,10 @@ pub fn find_unused_images_command(project_path: String) -> Result<Vec<String>, S
 /// Tauri command: Import images to project
 /// Tauriコマンド：プロジェクトに画像をインポート
 #[tauri::command]
-pub fn import_images_command(paths: Vec<String>, project_path: String) -> Result<Vec<String>, String> {
+pub fn import_images_command(
+    paths: Vec<String>,
+    project_path: String,
+) -> Result<Vec<String>, String> {
     import_images(paths, &project_path)
 }
 

@@ -81,8 +81,7 @@ mod integration_tests {
     #[test]
     #[ignore]
     fn test_python_repl_start() {
-        let python = crate::python::find_python()
-            .expect("Python not found");
+        let python = crate::python::find_python().expect("Python not found");
 
         let result = PythonRepl::start(&python);
         assert!(result.is_ok(), "Should start Python REPL");

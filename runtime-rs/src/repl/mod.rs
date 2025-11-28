@@ -10,12 +10,10 @@ use std::path::PathBuf;
 use std::process::{Command, Stdio};
 use std::thread;
 
-
 mod completer;
 mod special_commands;
 #[cfg(test)]
 mod tests;
-
 
 pub use completer::SikulixCompleter;
 use special_commands::SpecialCommand;
@@ -68,8 +66,7 @@ impl Repl {
     /// 新しいREPLインスタンスを作成
     pub fn new(config: ReplConfig) -> Result<Self> {
         let completer = SikulixCompleter::new();
-        let mut editor = Editor::new()
-            .context("Failed to create readline editor")?;
+        let mut editor = Editor::new().context("Failed to create readline editor")?;
         editor.set_helper(Some(completer));
 
         // Set up history
@@ -101,7 +98,11 @@ impl Repl {
             crate::python::find_python()?
         };
 
-        log::info!("Using Python: {} {:?}", python_cmd.program, python_cmd.extra_args);
+        log::info!(
+            "Using Python: {} {:?}",
+            python_cmd.program,
+            python_cmd.extra_args
+        );
 
         // Start Python REPL process
         self.python_process = Some(PythonRepl::start(&python_cmd)?);
@@ -132,8 +133,8 @@ impl Repl {
                     if !in_multiline {
                         if let Some(cmd) = SpecialCommand::parse(&line) {
                             match self.handle_special_command(cmd) {
-                                Ok(true) => continue,  // Continue REPL
-                                Ok(false) => break,    // Exit REPL
+                                Ok(true) => continue, // Continue REPL
+                                Ok(false) => break,   // Exit REPL
                                 Err(e) => {
                                     eprintln!("Error: {}", e);
                                     continue;
@@ -211,9 +212,7 @@ impl Repl {
                 self.print_help();
                 Ok(true)
             }
-            SpecialCommand::Exit | SpecialCommand::Quit => {
-                Ok(false)
-            }
+            SpecialCommand::Exit | SpecialCommand::Quit => Ok(false),
             SpecialCommand::Clear => {
                 // Clear screen
                 print!("\x1B[2J\x1B[1;1H");
@@ -246,8 +245,7 @@ impl Repl {
     /// Execute a Python file
     /// Pythonファイルを実行
     fn execute_file(&mut self, path: &PathBuf) -> Result<()> {
-        let content = std::fs::read_to_string(path)
-            .context("Failed to read startup script")?;
+        let content = std::fs::read_to_string(path).context("Failed to read startup script")?;
 
         if let Some(ref mut python) = self.python_process {
             python.execute(&content)?;
@@ -262,9 +260,7 @@ impl Repl {
         let trimmed = line.trim();
 
         // Check for continuation indicators
-        trimmed.ends_with(':') ||
-        trimmed.ends_with('\\') ||
-        self.has_unclosed_brackets(trimmed)
+        trimmed.ends_with(':') || trimmed.ends_with('\\') || self.has_unclosed_brackets(trimmed)
     }
 
     /// Check if code block is complete
@@ -361,8 +357,7 @@ impl Repl {
     /// Get history file path
     /// 履歴ファイルのパスを取得
     fn get_history_file() -> PathBuf {
-        let home = dirs::home_dir()
-            .unwrap_or_else(|| PathBuf::from("."));
+        let home = dirs::home_dir().unwrap_or_else(|| PathBuf::from("."));
         home.join(".sikulix_history")
     }
 }
@@ -380,8 +375,8 @@ impl PythonRepl {
     /// Python REPLプロセスを開始
     fn start(python_cmd: &crate::python::PythonCommand) -> Result<Self> {
         // Get SikuliX API path
-        let api_path = crate::python::get_sikulid_api_path()
-            .context("Failed to locate sikulid_api")?;
+        let api_path =
+            crate::python::get_sikulid_api_path().context("Failed to locate sikulid_api")?;
 
         // Create startup script
         let startup_script = Self::create_startup_script();
@@ -442,10 +437,10 @@ impl PythonRepl {
     /// Execute Python code
     /// Pythonコードを実行
     fn execute(&mut self, code: &str) -> Result<()> {
-        self.stdin.write_all(code.as_bytes())
+        self.stdin
+            .write_all(code.as_bytes())
             .context("Failed to write to Python stdin")?;
-        self.stdin.flush()
-            .context("Failed to flush stdin")?;
+        self.stdin.flush().context("Failed to flush stdin")?;
 
         // Small delay to allow output to appear
         thread::sleep(std::time::Duration::from_millis(50));
@@ -508,7 +503,8 @@ For more information: help(function_name)
 sys.ps1 = ""
 sys.ps2 = ""
 
-"#.to_string()
+"#
+        .to_string()
     }
 }
 

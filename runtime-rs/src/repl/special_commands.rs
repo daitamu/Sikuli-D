@@ -99,6 +99,9 @@ mod tests {
 
     #[test]
     fn test_parse_whitespace() {
-        assert_eq!(SpecialCommand::parse("  :help  "), Some(SpecialCommand::Help));
+        assert_eq!(
+            SpecialCommand::parse("  :help  "),
+            Some(SpecialCommand::Help)
+        );
     }
 }

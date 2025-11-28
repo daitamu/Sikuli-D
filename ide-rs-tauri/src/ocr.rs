@@ -270,9 +270,7 @@ pub async fn ocr_recognize_with_options(
     // sikulixが利用可能か確認
     if !check_sikulix_available()? {
         error!("sikulix CLI not available");
-        return Err(
-            "sikulix CLI not found. Please ensure it's installed and in PATH.".to_string(),
-        );
+        return Err("sikulix CLI not found. Please ensure it's installed and in PATH.".to_string());
     }
 
     // Build sikulix command

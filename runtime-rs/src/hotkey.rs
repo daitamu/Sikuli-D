@@ -8,8 +8,8 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
 use global_hotkey::{
-    GlobalHotKeyEvent, GlobalHotKeyManager,
     hotkey::{Code, HotKey, Modifiers},
+    GlobalHotKeyEvent, GlobalHotKeyManager,
 };
 
 /// Stop signal shared between hotkey handler and script execution
@@ -79,12 +79,10 @@ impl HotkeyManager {
             .map_err(|e| anyhow::anyhow!("Failed to create hotkey manager: {}", e))?;
 
         // Shift+Alt+C
-        let hotkey = HotKey::new(
-            Some(Modifiers::SHIFT | Modifiers::ALT),
-            Code::KeyC,
-        );
+        let hotkey = HotKey::new(Some(Modifiers::SHIFT | Modifiers::ALT), Code::KeyC);
 
-        manager.register(hotkey)
+        manager
+            .register(hotkey)
             .map_err(|e| anyhow::anyhow!("Failed to register Shift+Alt+C hotkey: {}", e))?;
 
         log::info!("Registered Shift+Alt+C hotkey for script interruption");

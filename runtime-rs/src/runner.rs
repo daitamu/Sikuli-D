@@ -1,12 +1,12 @@
 //! Script runner module
 //! スクリプト実行モジュール
 
+use anyhow::{bail, Context, Result};
+use sikulid::{Region, Screen};
 use std::path::Path;
 use std::sync::Arc;
-use anyhow::{Result, Context, bail};
-use sikulid::{Region, Screen};
 
-use crate::hotkey::{HotkeyManager, StopSignal, is_running_from_ide};
+use crate::hotkey::{is_running_from_ide, HotkeyManager, StopSignal};
 
 /// Run a Sikuli-D script
 /// Sikuli-Dスクリプトを実行
@@ -24,7 +24,8 @@ pub fn run_script(
     }
 
     // Determine script type
-    let is_bundle = script.extension()
+    let is_bundle = script
+        .extension()
         .map(|ext| ext == "sikuli")
         .unwrap_or(false);
 
@@ -109,7 +110,11 @@ pub fn run_script(
 /// Find an image on screen
 /// 画面上で画像を検索
 pub fn find_image(image_path: &Path, similarity: f64, find_all_matches: bool) -> Result<()> {
-    log::info!("Finding image: {} (similarity: {})", image_path.display(), similarity);
+    log::info!(
+        "Finding image: {} (similarity: {})",
+        image_path.display(),
+        similarity
+    );
 
     if !image_path.exists() {
         bail!("Image not found: {}", image_path.display());
@@ -117,7 +122,8 @@ pub fn find_image(image_path: &Path, similarity: f64, find_all_matches: bool) ->
 
     // Capture screen
     let screen = Screen::primary();
-    let screen_capture = screen.capture()
+    let screen_capture = screen
+        .capture()
         .map_err(|e| anyhow::anyhow!("Failed to capture screen: {}", e))?;
 
     // Load template as Pattern
@@ -135,7 +141,12 @@ pub fn find_image(image_path: &Path, similarity: f64, find_all_matches: bool) ->
                 for (i, m) in matches.iter().enumerate() {
                     println!(
                         "  [{}] x={}, y={}, w={}, h={}, score={:.3}",
-                        i + 1, m.region.x, m.region.y, m.region.width, m.region.height, m.score
+                        i + 1,
+                        m.region.x,
+                        m.region.y,
+                        m.region.width,
+                        m.region.height,
+                        m.score
                     );
                 }
             }
@@ -184,16 +195,19 @@ pub fn capture_screen(output: Option<&Path>, region_str: Option<&str>) -> Result
 
         let region = Region::new(parts[0], parts[1], parts[2] as u32, parts[3] as u32);
         log::info!("Capturing region: {:?}", region);
-        screen.capture_region(&region)
+        screen
+            .capture_region(&region)
             .map_err(|e| anyhow::anyhow!("Failed to capture region: {}", e))?
     } else {
         log::info!("Capturing full screen");
-        screen.capture()
+        screen
+            .capture()
             .map_err(|e| anyhow::anyhow!("Failed to capture screen: {}", e))?
     };
 
     // Save image
-    screen_image.save(output_path)
+    screen_image
+        .save(output_path)
         .context("Failed to save screenshot")?;
 
     println!("Screenshot saved: {}", output_path.display());
@@ -229,7 +243,9 @@ pub fn show_info() -> Result<()> {
         Ok(python) => {
             println!(
                 "Python: {}.{}.{} ({})",
-                python.version.0, python.version.1, python.version.2,
+                python.version.0,
+                python.version.1,
+                python.version.2,
                 python.path.display()
             );
         }

@@ -7,8 +7,7 @@ fn main() {
     let build_number_path = Path::new("BUILD_NUMBER");
 
     let build_number = if build_number_path.exists() {
-        let content = fs::read_to_string(build_number_path)
-            .unwrap_or_else(|_| "0".to_string());
+        let content = fs::read_to_string(build_number_path).unwrap_or_else(|_| "0".to_string());
         let num: u32 = content.trim().parse().unwrap_or(0);
         num + 1
     } else {

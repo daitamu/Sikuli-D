@@ -4,12 +4,12 @@
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 
-mod runner;
 mod bundle;
 mod converter;
 mod hotkey;
 mod python;
 mod repl;
+mod runner;
 
 /// SikuliX Runtime CLI
 /// SikuliX ランタイム コマンドラインインターフェース
@@ -18,7 +18,9 @@ mod repl;
 #[command(author = "Sikuli-D Team")]
 #[command(version = env!("CARGO_PKG_VERSION"))]
 #[command(about = "SikuliX headless runtime for script execution")]
-#[command(long_about = "SikuliX headless runtime - Run SikuliX Python scripts without GUI.\nSikuliX ヘッドレスランタイム - GUIなしでSikuliX Pythonスクリプトを実行")]
+#[command(
+    long_about = "SikuliX headless runtime - Run SikuliX Python scripts without GUI.\nSikuliX ヘッドレスランタイム - GUIなしでSikuliX Pythonスクリプトを実行"
+)]
 struct Cli {
     /// Enable verbose logging / 詳細ログを有効化
     #[arg(short, long)]
@@ -102,23 +104,34 @@ fn main() -> anyhow::Result<()> {
 
     // Initialize logging
     let log_level = if cli.verbose { "debug" } else { &cli.log_level };
-    env_logger::Builder::from_env(
-        env_logger::Env::default().default_filter_or(log_level)
-    ).init();
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or(log_level)).init();
 
     log::info!("SikuliX Runtime v{}", env!("CARGO_PKG_VERSION"));
 
     match cli.command {
-        Commands::Run { script, args, workdir, timeout } => {
+        Commands::Run {
+            script,
+            args,
+            workdir,
+            timeout,
+        } => {
             runner::run_script(&script, &args, workdir.as_deref(), timeout)?;
         }
-        Commands::Find { image, similarity, all } => {
+        Commands::Find {
+            image,
+            similarity,
+            all,
+        } => {
             runner::find_image(&image, similarity, all)?;
         }
         Commands::Capture { output, region } => {
             runner::capture_screen(output.as_deref(), region.as_deref())?;
         }
-        Commands::Repl { python, no_history, startup } => {
+        Commands::Repl {
+            python,
+            no_history,
+            startup,
+        } => {
             let config = repl::ReplConfig {
                 python_path: python,
                 enable_history: !no_history,

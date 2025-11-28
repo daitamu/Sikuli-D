@@ -223,18 +223,16 @@ impl ScriptExecutor {
 
         // Execute with optional timeout
         let output = match options.timeout_secs {
-            Some(timeout) => {
-                tokio::time::timeout(Duration::from_secs(timeout), cmd.output())
-                    .await
-                    .map_err(|_| {
-                        error!("Script execution timed out after {}s", timeout);
-                        format!("Script execution timed out after {} seconds", timeout)
-                    })?
-                    .map_err(|e| {
-                        error!("Failed to execute script: {}", e);
-                        format!("Failed to execute script: {}", e)
-                    })?
-            }
+            Some(timeout) => tokio::time::timeout(Duration::from_secs(timeout), cmd.output())
+                .await
+                .map_err(|_| {
+                    error!("Script execution timed out after {}s", timeout);
+                    format!("Script execution timed out after {} seconds", timeout)
+                })?
+                .map_err(|e| {
+                    error!("Failed to execute script: {}", e);
+                    format!("Failed to execute script: {}", e)
+                })?,
             None => cmd.output().await.map_err(|e| {
                 error!("Failed to execute script: {}", e);
                 format!("Failed to execute script: {}", e)

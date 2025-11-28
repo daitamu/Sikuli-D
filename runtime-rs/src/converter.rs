@@ -52,8 +52,8 @@ pub fn convert_python2_to_3(source: &str) -> Result<String> {
         bail!("Python 2 to 3 conversion failed: {}", stderr);
     }
 
-    let converted = String::from_utf8(output.stdout)
-        .context("Converter output is not valid UTF-8")?;
+    let converted =
+        String::from_utf8(output.stdout).context("Converter output is not valid UTF-8")?;
 
     log::debug!(
         "Conversion complete: {} bytes -> {} bytes",

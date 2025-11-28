@@ -1,8 +1,8 @@
 //! SikuliX bundle (.sikuli) handling
 //! SikuliX バンドル (.sikuli) 処理
 
+use anyhow::{bail, Context, Result};
 use std::path::{Path, PathBuf};
-use anyhow::{Result, bail, Context};
 
 /// SikuliX Bundle structure
 /// SikuliX バンドル構造
@@ -66,9 +66,7 @@ pub fn find_main_script(bundle_path: &Path) -> Result<PathBuf> {
 
     // Otherwise, find first .py file
     // なければ、最初の .py ファイルを検索
-    for entry in std::fs::read_dir(bundle_path)
-        .context("Failed to read bundle directory")?
-    {
+    for entry in std::fs::read_dir(bundle_path).context("Failed to read bundle directory")? {
         let entry = entry?;
         let path = entry.path();
         if path.extension().map(|e| e == "py").unwrap_or(false) {
@@ -76,7 +74,10 @@ pub fn find_main_script(bundle_path: &Path) -> Result<PathBuf> {
         }
     }
 
-    bail!("No Python script found in bundle: {}", bundle_path.display())
+    bail!(
+        "No Python script found in bundle: {}",
+        bundle_path.display()
+    )
 }
 
 /// Find all image files in a bundle
@@ -86,9 +87,7 @@ pub fn find_images(bundle_path: &Path) -> Result<Vec<PathBuf>> {
     let mut images = Vec::new();
     let image_extensions = ["png", "jpg", "jpeg", "gif", "bmp"];
 
-    for entry in std::fs::read_dir(bundle_path)
-        .context("Failed to read bundle directory")?
-    {
+    for entry in std::fs::read_dir(bundle_path).context("Failed to read bundle directory")? {
         let entry = entry?;
         let path = entry.path();
 
