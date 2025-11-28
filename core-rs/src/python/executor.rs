@@ -357,7 +357,6 @@ impl ScriptExecutor {
             // Try graceful termination first
             #[cfg(unix)]
             {
-                use std::os::unix::process::CommandExt;
                 unsafe {
                     libc::kill(child.id() as i32, libc::SIGTERM);
                 }

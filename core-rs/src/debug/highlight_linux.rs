@@ -4,7 +4,10 @@
 //! Provides platform-specific highlight overlay using X11 override-redirect windows.
 //! X11 オーバーライドリダイレクトウィンドウを使用したプラットフォーム固有のハイライトオーバーレイを提供します。
 
-use crate::{Color, Region, Result};
+use crate::{Color, Region, Result, SikulixError};
+#[cfg(target_os = "linux")]
+use log::{debug, info, warn};
+#[cfg(not(target_os = "linux"))]
 use log::{info, warn};
 use std::thread;
 use std::time::Duration;

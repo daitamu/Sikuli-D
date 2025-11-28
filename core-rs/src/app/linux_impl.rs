@@ -301,9 +301,10 @@ fn find_window_by_name(name: &str) -> Result<Option<Window>> {
     for &window in window_list {
         // Try _NET_WM_NAME first (UTF-8)
         // まず_NET_WM_NAMEを試す（UTF-8）
-        if let Ok(prop) = conn
+        if let Some(prop) = conn
             .get_property(false, window, net_wm_name, utf8_string, 0, 1024)
-            .and_then(|cookie| cookie.reply())
+            .ok()
+            .and_then(|cookie| cookie.reply().ok())
         {
             if !prop.value.is_empty() {
                 if let Ok(title) = String::from_utf8(prop.value.clone()) {
@@ -316,9 +317,10 @@ fn find_window_by_name(name: &str) -> Result<Option<Window>> {
 
         // Fallback to WM_NAME
         // WM_NAMEにフォールバック
-        if let Ok(prop) = conn
+        if let Some(prop) = conn
             .get_property(false, window, wm_name, AtomEnum::STRING, 0, 1024)
-            .and_then(|cookie| cookie.reply())
+            .ok()
+            .and_then(|cookie| cookie.reply().ok())
         {
             if !prop.value.is_empty() {
                 if let Ok(title) = String::from_utf8(prop.value.clone()) {
