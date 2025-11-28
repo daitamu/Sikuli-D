@@ -1,6 +1,6 @@
 [package]
 name = "sikulid-ide-tauri"
-version = "0.1.7"
+version = "0.1.8"
 edition = "2021"
 description = "Sikuli-D IDE - Tauri prototype"
 authors = ["Sikuli-D Team"]
