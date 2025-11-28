@@ -62,8 +62,9 @@ jobs:
       - name: Install cargo-audit
         run: cargo install cargo-audit --locked
 
-      - name: Security audit (core-rs)
-        working-directory: core-rs
+      - name: Security audit
+        # Run from workspace root to use root Cargo.lock
+        # ワークスペースルートから実行してルートのCargo.lockを使用
         run: cargo audit
 
       - name: Install cargo-deny
