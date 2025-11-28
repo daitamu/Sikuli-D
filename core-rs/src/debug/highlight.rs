@@ -4,12 +4,12 @@
 //! Provides platform-specific visual overlays to highlight regions on screen.
 //! プラットフォーム固有のビジュアルオーバーレイを提供し、画面上の領域をハイライト表示します。
 
-use crate::{Color, Region, Result};
 #[cfg(any(
     target_os = "windows",
     not(any(target_os = "windows", target_os = "macos", target_os = "linux"))
 ))]
 use crate::SikulixError;
+use crate::{Color, Region, Result};
 #[cfg(target_os = "windows")]
 use log::debug;
 #[cfg(any(target_os = "windows", target_os = "macos"))]
