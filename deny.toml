@@ -4,27 +4,20 @@
 # Advisory database configuration
 # アドバイザリデータベース設定
 [advisories]
-# Deny crates with security vulnerabilities / セキュリティ脆弱性のあるクレートを拒否
-vulnerability = "deny"
-
-# Warn about unmaintained crates / メンテナンスされていないクレートを警告
-unmaintained = "warn"
-
-# Warn about yanked crates / yank されたクレートを警告
-yanked = "warn"
-
-# Warn about notices / 通知を警告
-notice = "warn"
+# Use version 2 of the advisories format (for newer cargo-deny)
+# アドバイザリフォーマットのバージョン2を使用（新しいcargo-deny用）
+version = 2
 
 # Ignore specific advisories (if needed)
 # 特定のアドバイザリを無視（必要な場合）
-# ignore = []
+ignore = []
 
 # License configuration
 # ライセンス設定
 [licenses]
-# Deny unlicensed crates / ライセンスなしのクレートを拒否
-unlicensed = "deny"
+# Use version 2 of the licenses format
+# ライセンスフォーマットのバージョン2を使用
+version = 2
 
 # Allow specific licenses / 許可されたライセンス
 allow = [
@@ -39,19 +32,9 @@ allow = [
     "BSL-1.0", # Boost Software License
 ]
 
-# Deny specific licenses / 拒否されたライセンス
-deny = [
-    "GPL-3.0",
-    "AGPL-3.0",
-]
-
 # Confidence threshold for license detection
 # ライセンス検出の信頼度閾値
 confidence-threshold = 0.8
-
-# Allow licenses from these organizations without explicit listing
-# これらの組織からのライセンスを明示的なリストなしで許可
-# exceptions = []
 
 # Ban configuration (duplicate dependencies)
 # 禁止設定（重複依存関係）
