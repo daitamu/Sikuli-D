@@ -58,7 +58,7 @@ pub fn open_application(path: &str) -> Result<crate::App> {
 
     Ok(crate::App {
         name: exe.to_string(),
-        window_id: window_id.map(|w| w as u32),
+        window_id,
     })
 }
 
@@ -207,7 +207,7 @@ pub fn focus_application(app: &mut crate::App) -> Result<()> {
         false,
         root,
         EventMask::SUBSTRUCTURE_NOTIFY | EventMask::SUBSTRUCTURE_REDIRECT,
-        &event,
+        event,
     )
     .map_err(|e| SikulixError::AppError(format!("Failed to send event: {}", e)))?;
 
@@ -387,7 +387,7 @@ pub fn close_application(app: &mut crate::App) -> Result<()> {
         data: [wm_delete_window, 0, 0, 0, 0].into(),
     };
 
-    conn.send_event(false, window, EventMask::NO_EVENT, &event)
+    conn.send_event(false, window, EventMask::NO_EVENT, event)
         .map_err(|e| SikulixError::AppError(format!("Failed to send event: {}", e)))?;
 
     conn.flush()

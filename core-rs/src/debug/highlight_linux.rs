@@ -271,7 +271,6 @@ fn try_set_transparency(conn: &impl Connection, window: Window) -> Result<()> {
         // Set opacity to 90% (0xE6000000 in X11 format)
         // 不透明度を90%に設定（X11フォーマットで0xE6000000）
         let opacity: u32 = 0xE6000000;
-        let data = opacity.to_ne_bytes();
 
         let _ = conn.change_property32(
             PropMode::REPLACE,
