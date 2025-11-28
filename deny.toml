@@ -30,6 +30,7 @@ allow = [
     "Unicode-DFS-2016",
     "Zlib",
     "BSL-1.0", # Boost Software License
+    "NCSA",    # University of Illinois/NCSA Open Source License (OSI-approved, used by libfuzzer-sys)
 ]
 
 # Confidence threshold for license detection
