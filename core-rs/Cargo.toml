@@ -1,6 +1,6 @@
 [package]
 name = "sikulid-core"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 authors = ["Sikuli-D Team"]
 description = "Next-generation Sikuli-D core library in Rust"
