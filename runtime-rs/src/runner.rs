@@ -2,8 +2,11 @@
 //! スクリプト実行モジュール
 
 use std::path::Path;
+use std::sync::Arc;
 use anyhow::{Result, Context, bail};
 use sikulid::{Region, Screen};
+
+use crate::hotkey::{HotkeyManager, StopSignal, is_running_from_ide};
 
 /// Run a Sikuli-D script
 /// Sikuli-Dスクリプトを実行
@@ -37,8 +40,70 @@ pub fn run_script(
     log::debug!("Working directory: {:?}", workdir);
     log::debug!("Timeout: {} seconds", timeout);
 
-    // Execute with Python
-    crate::python::execute_script(&script_path, args, workdir, timeout)
+    // Set up stop signal and hotkey manager
+    // 停止シグナルとホットキーマネージャーをセットアップ
+    let stop_signal = Arc::new(StopSignal::new());
+    let from_ide = is_running_from_ide();
+    stop_signal.set_from_ide(from_ide);
+
+    if from_ide {
+        log::debug!("Running from IDE - hotkey will be handled by IDE");
+    }
+
+    // Try to register hotkey (may fail if IDE already registered it)
+    // ホットキーを登録（IDEが既に登録している場合は失敗する可能性あり）
+    let _hotkey_manager = match HotkeyManager::new(Arc::clone(&stop_signal)) {
+        Ok(manager) => {
+            log::info!("Shift+Alt+C hotkey registered for script interruption");
+            Some(manager)
+        }
+        Err(e) => {
+            if from_ide {
+                log::debug!("Hotkey registration skipped (handled by IDE): {}", e);
+            } else {
+                log::warn!("Failed to register Shift+Alt+C hotkey: {}", e);
+            }
+            None
+        }
+    };
+
+    // Start hotkey event processing in a separate thread
+    // 別スレッドでホットキーイベント処理を開始
+    let signal_for_thread = Arc::clone(&stop_signal);
+    let hotkey_thread = std::thread::spawn(move || {
+        use std::time::Duration;
+        loop {
+            // Check hotkey events
+            if let Ok(event) = global_hotkey::GlobalHotKeyEvent::receiver().try_recv() {
+                log::debug!("Hotkey event received: {:?}", event);
+                signal_for_thread.request_stop();
+            }
+
+            // Exit if stop was requested
+            if signal_for_thread.is_stop_requested() {
+                break;
+            }
+
+            // Small sleep to prevent busy loop
+            std::thread::sleep(Duration::from_millis(50));
+        }
+    });
+
+    // Execute with Python (with stop signal)
+    // Python実行（停止シグナル付き）
+    let result = crate::python::execute_script_with_signal(
+        &script_path,
+        args,
+        workdir,
+        timeout,
+        Some(stop_signal),
+    );
+
+    // Signal the hotkey thread to exit
+    // ホットキースレッドに終了を通知
+    let _ = hotkey_thread.join();
+
+    result
 }
 
 /// Find an image on screen

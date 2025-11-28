@@ -43,6 +43,9 @@ dirs = "5.0"
 # Process management
 wait-timeout = "0.2"
 
+# Global hotkey support
+global-hotkey = "0.6"
+
 [dev-dependencies]
 tempfile = "3"
 

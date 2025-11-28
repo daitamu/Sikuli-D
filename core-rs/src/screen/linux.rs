@@ -63,12 +63,17 @@ pub fn get_number_screens() -> u32 {
 #[cfg(target_os = "linux")]
 pub fn capture_screen(index: u32) -> Result<DynamicImage> {
     let (width, height) = get_screen_dimensions(index)?;
-    capture_region(index, &Region::new(0, 0, width, height))
+    // TODO: Get monitor origin for multi-monitor support
+    capture_region(&Region::new(0, 0, width, height))
 }
 
-/// Capture a specific region of the screen
+/// Capture a specific region of the screen (using global coordinates)
+/// 画面の特定領域をキャプチャ（グローバル座標使用）
+///
+/// Region coordinates are in global logical pixels across all monitors.
+/// Regionの座標は全モニターにわたるグローバル論理ピクセルです。
 #[cfg(target_os = "linux")]
-pub fn capture_region(index: u32, region: &Region) -> Result<DynamicImage> {
+pub fn capture_region(region: &Region) -> Result<DynamicImage> {
     let (conn, screen_num) = RustConnection::connect(None).map_err(|e| {
         SikulixError::ScreenCaptureError(format!("Failed to connect to X11: {}", e))
     })?;
@@ -76,13 +81,8 @@ pub fn capture_region(index: u32, region: &Region) -> Result<DynamicImage> {
     let setup = conn.setup();
     let screens = &setup.roots;
 
-    let screen_index = if (index as usize) < screens.len() {
-        index as usize
-    } else {
-        screen_num
-    };
-
-    let screen = &screens[screen_index];
+    // Use the default screen for now (X11 uses virtual desktop for multi-monitor)
+    let screen = &screens[screen_num];
     let root = screen.root;
 
     // Get image from X server
@@ -782,7 +782,7 @@ pub fn capture_screen(_index: u32) -> Result<DynamicImage> {
 }
 
 #[cfg(not(target_os = "linux"))]
-pub fn capture_region(_index: u32, _region: &Region) -> Result<DynamicImage> {
+pub fn capture_region(_region: &Region) -> Result<DynamicImage> {
     Err(SikulixError::ScreenCaptureError(
         "Linux implementation pending".to_string(),
     ))

@@ -9,6 +9,8 @@
     "shell:allow-execute",
     "dialog:default",
     "global-shortcut:default",
+    "global-shortcut:allow-register",
+    "global-shortcut:allow-unregister",
     {
       "identifier": "fs:default",
       "allow": [{ "path": "**" }]

@@ -148,7 +148,9 @@ fn main() {
         .format_timestamp_millis()
         .init();
 
-    info!("Starting SikuliX IDE v{}", env!("CARGO_PKG_VERSION"));
+    // Use build-time generated version (0.8.BUILD_NUMBER)
+    // ビルド時に生成されたバージョンを使用 (0.8.BUILD_NUMBER)
+    info!("Starting SikuliX IDE v{}", env!("SIKULID_VERSION"));
     info!("Core library version: {}", sikulid::VERSION);
 
     tauri::Builder::default()
@@ -195,6 +197,7 @@ fn main() {
             analyze_python_version,
             analyze_script_content,
             get_core_version,
+            get_ide_version,
             // Script execution
             execution::run_script,
             execution::run_script_streaming,
@@ -400,6 +403,15 @@ fn analyze_script_content(content: &str) -> String {
 fn get_core_version() -> String {
     debug!("Core version requested: {}", sikulid::VERSION);
     sikulid::VERSION.to_string()
+}
+
+/// Get IDE version (auto-incremented build version)
+/// IDEバージョンを取得（自動インクリメントされたビルドバージョン）
+#[tauri::command]
+fn get_ide_version() -> String {
+    let version = env!("SIKULID_VERSION");
+    debug!("IDE version requested: {}", version);
+    version.to_string()
 }
 
 // ============================================================================

@@ -7,6 +7,7 @@ use std::path::PathBuf;
 mod runner;
 mod bundle;
 mod converter;
+mod hotkey;
 mod python;
 mod repl;
 

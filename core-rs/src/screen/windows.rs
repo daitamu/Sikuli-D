@@ -9,8 +9,8 @@ use std::sync::Mutex;
 
 #[cfg(target_os = "windows")]
 use windows::{
-    Win32::Foundation::*, Win32::Graphics::Gdi::*, Win32::UI::Input::KeyboardAndMouse::*,
-    Win32::UI::WindowsAndMessaging::*,
+    Win32::Foundation::*, Win32::Graphics::Gdi::*, Win32::UI::HiDpi::*,
+    Win32::UI::Input::KeyboardAndMouse::*, Win32::UI::WindowsAndMessaging::*,
 };
 
 // ============================================================================
@@ -31,20 +31,48 @@ pub fn get_number_screens() -> u32 {
 pub struct MonitorInfo {
     /// Monitor index (0 = primary) / モニターインデックス（0 = プライマリ）
     pub index: u32,
-    /// X position / X座標
+    /// X position (logical pixels) / X座標（論理ピクセル）
     pub x: i32,
-    /// Y position / Y座標
+    /// Y position (logical pixels) / Y座標（論理ピクセル）
     pub y: i32,
-    /// Width in pixels / 幅（ピクセル）
+    /// Width (logical pixels) / 幅（論理ピクセル）
     pub width: u32,
-    /// Height in pixels / 高さ（ピクセル）
+    /// Height (logical pixels) / 高さ（論理ピクセル）
     pub height: u32,
     /// Is primary monitor / プライマリモニターかどうか
     pub is_primary: bool,
+    /// DPI scale factor (1.0 = 100%, 1.5 = 150%, 2.0 = 200%)
+    /// DPIスケールファクター
+    pub scale_factor: f64,
 }
 
 #[cfg(target_os = "windows")]
 static MONITOR_LIST: Mutex<Vec<MonitorInfo>> = Mutex::new(Vec::new());
+
+/// Get DPI scale factor for a monitor
+/// モニターのDPIスケールファクターを取得
+#[cfg(target_os = "windows")]
+fn get_monitor_dpi(hmonitor: HMONITOR) -> f64 {
+    unsafe {
+        let mut dpi_x: u32 = 96;
+        let mut dpi_y: u32 = 96;
+
+        // Try to get per-monitor DPI (Windows 8.1+)
+        if GetDpiForMonitor(hmonitor, MDT_EFFECTIVE_DPI, &mut dpi_x, &mut dpi_y).is_ok() {
+            return dpi_x as f64 / 96.0;
+        }
+
+        // Fallback to system DPI
+        let hdc = GetDC(HWND::default());
+        if !hdc.is_invalid() {
+            let dpi = GetDeviceCaps(hdc, LOGPIXELSX);
+            ReleaseDC(HWND::default(), hdc);
+            return dpi as f64 / 96.0;
+        }
+
+        1.0 // Default scale factor
+    }
+}
 
 /// Callback for EnumDisplayMonitors
 #[cfg(target_os = "windows")]
@@ -62,6 +90,9 @@ unsafe extern "system" fn monitor_enum_callback(
     };
 
     if GetMonitorInfoW(hmonitor, &mut mi).as_bool() {
+        // Get DPI scale factor for this monitor
+        let scale_factor = get_monitor_dpi(hmonitor);
+
         let info = MonitorInfo {
             index: 0, // Will be assigned after sorting
             x: mi.rcMonitor.left,
@@ -69,6 +100,7 @@ unsafe extern "system" fn monitor_enum_callback(
             width: (mi.rcMonitor.right - mi.rcMonitor.left) as u32,
             height: (mi.rcMonitor.bottom - mi.rcMonitor.top) as u32,
             is_primary: (mi.dwFlags & MONITORINFOF_PRIMARY) != 0,
+            scale_factor,
         };
 
         if let Ok(mut list) = MONITOR_LIST.lock() {
@@ -151,13 +183,21 @@ pub fn get_screen_dimensions(index: u32) -> Result<(u32, u32)> {
 /// Capture the entire screen
 #[cfg(target_os = "windows")]
 pub fn capture_screen(index: u32) -> Result<DynamicImage> {
-    let (width, height) = get_screen_dimensions(index)?;
-    capture_region(index, &Region::new(0, 0, width, height))
+    // Get monitor info to get the correct origin for this screen
+    let monitor = get_monitor_info(index).ok_or_else(|| {
+        SikulixError::ScreenCaptureError(format!("Monitor {} not found", index))
+    })?;
+    // Use monitor's global coordinates
+    capture_region(&Region::new(monitor.x, monitor.y, monitor.width, monitor.height))
 }
 
-/// Capture a specific region of the screen
+/// Capture a specific region of the screen (using global coordinates)
+/// 画面の特定領域をキャプチャ（グローバル座標使用）
+///
+/// Region coordinates are in global logical pixels across all monitors.
+/// Regionの座標は全モニターにわたるグローバル論理ピクセルです。
 #[cfg(target_os = "windows")]
-pub fn capture_region(_index: u32, region: &Region) -> Result<DynamicImage> {
+pub fn capture_region(region: &Region) -> Result<DynamicImage> {
     unsafe {
         let hdc_screen = GetDC(HWND::default());
         if hdc_screen.is_invalid() {
@@ -728,6 +768,7 @@ pub struct MonitorInfo {
     pub width: u32,
     pub height: u32,
     pub is_primary: bool,
+    pub scale_factor: f64,
 }
 
 #[cfg(not(target_os = "windows"))]
@@ -756,7 +797,7 @@ pub fn capture_screen(_index: u32) -> Result<DynamicImage> {
 }
 
 #[cfg(not(target_os = "windows"))]
-pub fn capture_region(_index: u32, _region: &Region) -> Result<DynamicImage> {
+pub fn capture_region(_region: &Region) -> Result<DynamicImage> {
     Err(SikulixError::ScreenCaptureError("Windows-only".to_string()))
 }
 

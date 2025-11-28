@@ -458,6 +458,19 @@ export function useTauri() {
     }
   }, [])
 
+  /**
+   * Get IDE version (auto-incremented build version)
+   * IDEバージョンを取得（自動インクリメントされたビルドバージョン）
+   */
+  const getIdeVersion = useCallback(async (): Promise<string> => {
+    try {
+      return await invoke<string>('get_ide_version')
+    } catch (error) {
+      console.error('Failed to get IDE version:', error)
+      return '0.8.0' // fallback
+    }
+  }, [])
+
   return {
     runScript,
     runScriptStreaming,
@@ -477,6 +490,7 @@ export function useTauri() {
     loadImageAsBase64,
     minimizeWindow,
     showWindow,
+    getIdeVersion,
   }
 }
 

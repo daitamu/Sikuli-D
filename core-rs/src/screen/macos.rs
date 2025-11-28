@@ -85,28 +85,14 @@ pub fn capture_screen(index: u32) -> Result<DynamicImage> {
     cg_image_to_dynamic_image(&cg_image)
 }
 
-/// Capture a specific region of the screen
+/// Capture a specific region of the screen (using global coordinates)
+/// 画面の特定領域をキャプチャ（グローバル座標使用）
+///
+/// Region coordinates are in global logical pixels across all monitors.
+/// Regionの座標は全モニターにわたるグローバル論理ピクセルです。
 #[cfg(target_os = "macos")]
-pub fn capture_region(index: u32, region: &Region) -> Result<DynamicImage> {
+pub fn capture_region(region: &Region) -> Result<DynamicImage> {
     use core_graphics::geometry::{CGRect, CGSize};
-
-    // Validate monitor index exists
-    let _display_id = if index == 0 {
-        unsafe { CGMainDisplayID() }
-    } else {
-        let displays = CGDisplay::active_displays().map_err(|e| {
-            SikulixError::ScreenCaptureError(format!("Failed to get displays: {:?}", e))
-        })?;
-
-        if (index as usize) < displays.len() {
-            displays[index as usize]
-        } else {
-            return Err(SikulixError::ScreenCaptureError(format!(
-                "Monitor {} not found",
-                index
-            )));
-        }
-    };
 
     let rect = CGRect::new(
         &CGPoint::new(region.x as f64, region.y as f64),
@@ -602,7 +588,7 @@ pub fn capture_screen(_index: u32) -> Result<DynamicImage> {
 }
 
 #[cfg(not(target_os = "macos"))]
-pub fn capture_region(_index: u32, _region: &Region) -> Result<DynamicImage> {
+pub fn capture_region(_region: &Region) -> Result<DynamicImage> {
     Err(SikulixError::ScreenCaptureError(
         "macOS implementation pending".to_string(),
     ))

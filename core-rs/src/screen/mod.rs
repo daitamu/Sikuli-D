@@ -37,6 +37,10 @@ mod macos;
 #[cfg(target_os = "linux")]
 mod linux;
 
+/// Coordinate conversion utilities for DPI scaling
+/// DPIスケーリング用の座標変換ユーティリティ
+pub mod coordinates;
+
 /// Screen capture and control
 /// スクリーンキャプチャと制御
 ///
@@ -76,9 +80,76 @@ impl Screen {
         }
     }
 
+    /// Get the screen index
+    /// スクリーンインデックスを取得
+    pub fn get_index(&self) -> u32 {
+        self.index
+    }
+
     /// Get the primary screen
     pub fn primary() -> Self {
         Self::new(0)
+    }
+
+    /// Get all connected screens
+    /// 接続されているすべてのスクリーンを取得
+    ///
+    /// # Example / 使用例
+    ///
+    /// ```no_run
+    /// use sikulid::Screen;
+    ///
+    /// let screens = Screen::all();
+    /// for screen in screens {
+    ///     println!("Screen {}", screen.get_index());
+    /// }
+    /// ```
+    pub fn all() -> Vec<Screen> {
+        let count = Self::get_number_screens();
+        (0..count).map(Screen::new).collect()
+    }
+
+    /// Get DPI scale factor for this screen
+    /// このスクリーンのDPIスケールファクターを取得
+    ///
+    /// Returns 1.0 (100%) by default if scale factor cannot be determined.
+    /// スケールファクターを取得できない場合は1.0（100%）を返します。
+    ///
+    /// # Example / 使用例
+    ///
+    /// ```no_run
+    /// use sikulid::Screen;
+    ///
+    /// let screen = Screen::primary();
+    /// let scale = screen.get_scale_factor();
+    /// println!("Scale factor: {}%", scale * 100.0);
+    /// ```
+    pub fn get_scale_factor(&self) -> f64 {
+        Self::get_scale_factor_impl(self.index)
+    }
+
+    #[cfg(target_os = "windows")]
+    fn get_scale_factor_impl(index: u32) -> f64 {
+        windows::get_monitor_info(index)
+            .map(|m| m.scale_factor)
+            .unwrap_or(1.0)
+    }
+
+    #[cfg(target_os = "macos")]
+    fn get_scale_factor_impl(_index: u32) -> f64 {
+        // TODO: Implement macOS DPI detection
+        1.0
+    }
+
+    #[cfg(target_os = "linux")]
+    fn get_scale_factor_impl(_index: u32) -> f64 {
+        // TODO: Implement Linux DPI detection
+        1.0
+    }
+
+    #[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux")))]
+    fn get_scale_factor_impl(_index: u32) -> f64 {
+        1.0
     }
 
     /// Get the number of connected screens/monitors
@@ -204,7 +275,7 @@ impl Screen {
 
     #[cfg(target_os = "windows")]
     fn capture_region_impl(&self, region: &Region) -> Result<DynamicImage> {
-        windows::capture_region(self.index, region)
+        windows::capture_region(region)
     }
 
     #[cfg(target_os = "macos")]
@@ -219,7 +290,7 @@ impl Screen {
 
     #[cfg(target_os = "macos")]
     fn capture_region_impl(&self, region: &Region) -> Result<DynamicImage> {
-        macos::capture_region(self.index, region)
+        macos::capture_region(region)
     }
 
     #[cfg(target_os = "linux")]
@@ -234,7 +305,7 @@ impl Screen {
 
     #[cfg(target_os = "linux")]
     fn capture_region_impl(&self, region: &Region) -> Result<DynamicImage> {
-        linux::capture_region(self.index, region)
+        linux::capture_region(region)
     }
 
     // Fallback for unsupported platforms

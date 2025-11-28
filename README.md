@@ -44,11 +44,11 @@ A modern desktop application for creating and running automation scripts.
 - Plugin system for extensibility
 - Japanese/English UI
 
-  - シンタックスハイライト対応の Monaco ベースエディタ
-  - 領域選択による視覚的なスクリーンキャプチャ
-  - プロジェクト管理（.sikuli 形式）
-  - 拡張用プラグインシステム
-  - 日本語/英語 UI
+- シンタックスハイライト対応の Monaco ベースエディタ
+- 領域選択による視覚的なスクリーンキャプチャ
+- プロジェクト管理（.sikuli 形式）
+- 拡張用プラグインシステム
+- 日本語/英語 UI
 
 See [ide-rs-tauri/README.md](ide-rs-tauri/README.md) for details.
 詳細は [ide-rs-tauri/README.md](ide-rs-tauri/README.md) を参照。
@@ -64,10 +64,10 @@ A standalone Python runtime for executing automation scripts.
 - REPL mode for interactive development
 - Headless execution support
 
-  - Python 2/3 の自動検出と変換
-  - Python インタプリタ内蔵（インストール不要）
-  - 対話的開発用の REPL モード
-  - ヘッドレス実行対応
+- Python 2/3 の自動検出と変換
+- Python インタプリタ内蔵（インストール不要）
+- 対話的開発用の REPL モード
+- ヘッドレス実行対応
 
 See [runtime-rs/README.md](runtime-rs/README.md) for details.
 詳細は [runtime-rs/README.md](runtime-rs/README.md) を参照。

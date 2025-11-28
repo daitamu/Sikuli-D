@@ -63,6 +63,9 @@ function App() {
   // When enabled, IDE window minimizes when script runs
   const [hideMode, setHideMode] = useState(false)
 
+  // IDE version from Rust backend / RustバックエンドからのIDEバージョン
+  const [ideVersion, setIdeVersion] = useState('0.8.0')
+
   // Manual stop flag / 手動停止フラグ
   // Used to suppress "exit code: unknown" message when user manually stops the script
   const isManualStopRef = useRef(false)
@@ -81,6 +84,7 @@ function App() {
     loadImageAsBase64,
     minimizeWindow,
     showWindow,
+    getIdeVersion,
   } = useTauri()
 
   // Listen to Tauri events / Tauriイベントをリッスン
@@ -169,6 +173,12 @@ function App() {
   useEffect(() => {
     hideModeRef.current = hideMode
   }, [hideMode])
+
+  // Fetch IDE version on mount
+  // マウント時にIDEバージョンを取得
+  useEffect(() => {
+    getIdeVersion().then(setIdeVersion)
+  }, [getIdeVersion])
 
   // Global shortcut for stopping script (Shift+Alt+C)
   // スクリプト停止用グローバルショートカット (Shift+Alt+C)
@@ -524,6 +534,7 @@ function App() {
         isSimpleModeAvailable={isSimpleModeAvailable}
         hideMode={hideMode}
         onHideModeChange={setHideMode}
+        version={ideVersion}
       />
 
       {/* Main Content / メインコンテンツ */}

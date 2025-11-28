@@ -5,11 +5,14 @@
 //! lib2to3を使用した自動Python 2→Python 3変換に対応。
 
 use std::path::Path;
+use std::sync::Arc;
 use std::time::Duration;
 use anyhow::{Result, Context, bail};
 use std::process::{Command, Stdio};
 use std::io::{BufRead, BufReader};
 use wait_timeout::ChildExt;
+
+use crate::hotkey::StopSignal;
 
 /// Execute a Python script with Sikuli-D API
 /// Sikuli-D API付きでPythonスクリプトを実行
@@ -17,11 +20,24 @@ use wait_timeout::ChildExt;
 /// This function automatically detects Python 2 code and converts it to Python 3
 /// using lib2to3 before execution.
 /// Python 2コードを自動検出し、実行前にlib2to3でPython 3に変換します。
+#[allow(dead_code)]
 pub fn execute_script(
     script_path: &Path,
     args: &[String],
     workdir: Option<&Path>,
     timeout_secs: u64,
+) -> Result<()> {
+    execute_script_with_signal(script_path, args, workdir, timeout_secs, None)
+}
+
+/// Execute a Python script with Sikuli-D API and optional stop signal
+/// Sikuli-D API付きでPythonスクリプトを実行（オプションの停止シグナル付き）
+pub fn execute_script_with_signal(
+    script_path: &Path,
+    args: &[String],
+    workdir: Option<&Path>,
+    timeout_secs: u64,
+    stop_signal: Option<Arc<StopSignal>>,
 ) -> Result<()> {
     log::info!("Executing Python script: {}", script_path.display());
 
@@ -60,7 +76,7 @@ pub fn execute_script(
     };
 
     // Execute the script
-    let result = execute_python_script(&script_to_run, args, workdir, timeout_secs);
+    let result = execute_python_script(&script_to_run, args, workdir, timeout_secs, stop_signal);
 
     // Clean up temporary file
     if let Some(temp) = temp_file {
@@ -257,6 +273,7 @@ fn execute_python_script(
     args: &[String],
     workdir: Option<&Path>,
     timeout_secs: u64,
+    stop_signal: Option<Arc<StopSignal>>,
 ) -> Result<()> {
     // Find Python interpreter
     let python_cmd = find_python()?;
@@ -314,21 +331,42 @@ fn execute_python_script(
         }
     });
 
-    // Wait for completion (with optional timeout)
-    let status = if timeout_secs > 0 {
-        let timeout_duration = Duration::from_secs(timeout_secs);
-        match child.wait_timeout(timeout_duration).context("Failed to wait for process")? {
-            Some(status) => status,
-            None => {
-                // Timeout occurred - kill the process
+    // Poll interval for checking stop signal (100ms)
+    let poll_interval = Duration::from_millis(100);
+    let start_time = std::time::Instant::now();
+    let timeout_duration = if timeout_secs > 0 {
+        Some(Duration::from_secs(timeout_secs))
+    } else {
+        None
+    };
+
+    // Polling loop: check for stop signal and timeout
+    let status = loop {
+        // Check stop signal
+        if let Some(ref signal) = stop_signal {
+            if signal.is_stop_requested() {
+                log::warn!("Stop signal received, killing process...");
+                let _ = child.kill();
+                let _ = child.wait(); // Reap the zombie process
+                bail!("Script interrupted by user (Shift+Alt+C) / ユーザーによりスクリプトが中断されました (Shift+Alt+C)");
+            }
+        }
+
+        // Check timeout
+        if let Some(timeout) = timeout_duration {
+            if start_time.elapsed() >= timeout {
                 log::warn!("Script execution timed out after {}s, killing process...", timeout_secs);
                 let _ = child.kill();
                 let _ = child.wait(); // Reap the zombie process
                 bail!("Script execution timed out after {}s / スクリプト実行がタイムアウトしました ({}秒)", timeout_secs, timeout_secs);
             }
         }
-    } else {
-        child.wait().context("Failed to wait for process")?
+
+        // Wait for process with short timeout
+        match child.wait_timeout(poll_interval).context("Failed to wait for process")? {
+            Some(status) => break status,
+            None => continue, // Process still running
+        }
     };
 
     // Wait for output threads

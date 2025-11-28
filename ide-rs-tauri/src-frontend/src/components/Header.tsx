@@ -14,6 +14,7 @@ interface HeaderProps {
   isSimpleModeAvailable?: boolean  // Whether Simple/Flow modes are available
   hideMode: boolean  // Whether to hide IDE when script runs
   onHideModeChange: (hide: boolean) => void
+  version: string  // IDE version from Rust backend
 }
 
 /**
@@ -32,6 +33,7 @@ export function Header({
   isSimpleModeAvailable = true,
   hideMode,
   onHideModeChange,
+  version,
 }: HeaderProps) {
   return (
     <header className="h-12 bg-dark-surface border-b border-dark-border flex items-center justify-between px-4 drag">
@@ -39,7 +41,7 @@ export function Header({
       <div className="flex items-center gap-4 no-drag">
         <div className="flex items-center gap-2">
           <h1 className="text-lg font-semibold text-sikuli-400">Sikuli-D IDE</h1>
-          <span className="text-xs text-gray-500">v0.8.1</span>
+          <span className="text-xs text-gray-500">v{version}</span>
         </div>
 
         {/* File Operations */}
@@ -123,20 +125,6 @@ export function Header({
           </button>
         </div>
 
-        {/* Hide Mode Checkbox */}
-        <label
-          className="flex items-center gap-2 cursor-pointer select-none"
-          title="Hide IDE window when script runs (Shift+Alt+C to stop and restore)"
-        >
-          <input
-            type="checkbox"
-            checked={hideMode}
-            onChange={(e) => onHideModeChange(e.target.checked)}
-            className="w-4 h-4 rounded border-gray-500 bg-dark-bg text-sikuli-500 focus:ring-sikuli-500 focus:ring-offset-dark-bg cursor-pointer"
-          />
-          <span className="text-sm text-gray-400">Hide</span>
-        </label>
-
         {/* Run/Stop Button */}
         {isRunning ? (
           <button
@@ -157,6 +145,20 @@ export function Header({
             <span className="text-sm font-medium">Run</span>
           </button>
         )}
+
+        {/* Hide Mode Checkbox */}
+        <label
+          className="flex items-center gap-2 cursor-pointer select-none"
+          title="Hide IDE window when script runs (Shift+Alt+C to stop and restore)"
+        >
+          <input
+            type="checkbox"
+            checked={hideMode}
+            onChange={(e) => onHideModeChange(e.target.checked)}
+            className="w-4 h-4 rounded border-gray-500 bg-dark-bg text-sikuli-500 focus:ring-sikuli-500 focus:ring-offset-dark-bg cursor-pointer"
+          />
+          <span className="text-sm text-gray-400">Hide</span>
+        </label>
       </div>
 
       {/* Right Controls */}
