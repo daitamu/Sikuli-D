@@ -305,6 +305,31 @@ pub fn mouse_middle_click() -> Result<()> {
     Ok(())
 }
 
+/// FFI bindings for CGEventCreateScrollWheelEvent2
+/// CGEventCreateScrollWheelEvent2 用の FFI バインディング
+#[cfg(target_os = "macos")]
+mod scroll_ffi {
+    use core_graphics::event_source::CGEventSourceRef;
+    use std::ffi::c_void;
+
+    /// CGScrollEventUnit - Line-based scrolling (value = 0)
+    pub const K_CG_SCROLL_EVENT_UNIT_LINE: u32 = 0;
+
+    #[link(name = "CoreGraphics", kind = "framework")]
+    extern "C" {
+        /// Creates a scroll wheel event
+        /// See: https://developer.apple.com/documentation/coregraphics/1541327-cgeventcreatescrollwheelevent2
+        pub fn CGEventCreateScrollWheelEvent2(
+            source: CGEventSourceRef,
+            units: u32,
+            wheel_count: u32,
+            wheel1: i32,
+            wheel2: i32,
+            wheel3: i32,
+        ) -> *mut c_void;
+    }
+}
+
 /// Scroll mouse wheel vertically
 /// マウスホイールを垂直スクロール
 ///
@@ -315,21 +340,34 @@ pub fn mouse_middle_click() -> Result<()> {
 ///   ホイールクリック数（正 = 上、負 = 下）
 #[cfg(target_os = "macos")]
 pub fn mouse_scroll(clicks: i32) -> Result<()> {
+    use core_graphics::event_source::CGEventSourceRef;
+    use std::mem::transmute;
+
     let source = CGEventSource::new(CGEventSourceStateID::HIDSystemState)
         .map_err(|_| SikulixError::MouseError("Failed to create event source".to_string()))?;
 
-    // Create scroll wheel event
+    // Create scroll wheel event using FFI
     // On macOS, positive values scroll up (wheel away from user)
-    let event = CGEvent::new_scroll_event(
-        source,
-        core_graphics::event::ScrollEventUnit::Line,
-        1,      // wheel_count
-        clicks, // delta1 (vertical)
-        0,      // delta2 (horizontal)
-        0,      // delta3
-    )
-    .map_err(|_| SikulixError::MouseError("Failed to create scroll event".to_string()))?;
+    let source_ref: CGEventSourceRef = unsafe { transmute(source) };
+    let event_ref = unsafe {
+        scroll_ffi::CGEventCreateScrollWheelEvent2(
+            source_ref,
+            scroll_ffi::K_CG_SCROLL_EVENT_UNIT_LINE,
+            1,      // wheel_count
+            clicks, // delta1 (vertical)
+            0,      // delta2 (horizontal)
+            0,      // delta3
+        )
+    };
 
+    if event_ref.is_null() {
+        return Err(SikulixError::MouseError(
+            "Failed to create scroll event".to_string(),
+        ));
+    }
+
+    // Wrap the raw pointer in CGEvent and post
+    let event: CGEvent = unsafe { transmute(event_ref) };
     event.post(CGEventTapLocation::HID);
     Ok(())
 }
@@ -344,20 +382,33 @@ pub fn mouse_scroll(clicks: i32) -> Result<()> {
 ///   ホイールクリック数（正 = 右、負 = 左）
 #[cfg(target_os = "macos")]
 pub fn mouse_scroll_horizontal(clicks: i32) -> Result<()> {
+    use core_graphics::event_source::CGEventSourceRef;
+    use std::mem::transmute;
+
     let source = CGEventSource::new(CGEventSourceStateID::HIDSystemState)
         .map_err(|_| SikulixError::MouseError("Failed to create event source".to_string()))?;
 
-    // Create scroll wheel event for horizontal scrolling
-    let event = CGEvent::new_scroll_event(
-        source,
-        core_graphics::event::ScrollEventUnit::Line,
-        2,      // wheel_count (2 for horizontal)
-        0,      // delta1 (vertical)
-        clicks, // delta2 (horizontal)
-        0,      // delta3
-    )
-    .map_err(|_| SikulixError::MouseError("Failed to create scroll event".to_string()))?;
+    // Create scroll wheel event for horizontal scrolling using FFI
+    let source_ref: CGEventSourceRef = unsafe { transmute(source) };
+    let event_ref = unsafe {
+        scroll_ffi::CGEventCreateScrollWheelEvent2(
+            source_ref,
+            scroll_ffi::K_CG_SCROLL_EVENT_UNIT_LINE,
+            2,      // wheel_count (2 for horizontal)
+            0,      // delta1 (vertical)
+            clicks, // delta2 (horizontal)
+            0,      // delta3
+        )
+    };
 
+    if event_ref.is_null() {
+        return Err(SikulixError::MouseError(
+            "Failed to create scroll event".to_string(),
+        ));
+    }
+
+    // Wrap the raw pointer in CGEvent and post
+    let event: CGEvent = unsafe { transmute(event_ref) };
     event.post(CGEventTapLocation::HID);
     Ok(())
 }
