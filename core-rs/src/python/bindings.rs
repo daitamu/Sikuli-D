@@ -5,13 +5,13 @@
 //! このモジュールは、コア Sikuli-D 機能の Python バインディングを提供します。
 
 #[cfg(feature = "python")]
-use pyo3::prelude::*;
+use pyo3::exceptions::{PyIOError, PyRuntimeError, PyValueError};
 #[cfg(feature = "python")]
-use pyo3::exceptions::{PyRuntimeError, PyValueError, PyIOError};
+use pyo3::prelude::*;
 
 use crate::{
-    Region, Match, Pattern, Screen, Mouse, Keyboard, Key, ImageMatcher,
-    Result, SikulixError, Observer,
+    ImageMatcher, Key, Keyboard, Match, Mouse, Observer, Pattern, Region, Result, Screen,
+    SikulixError,
 };
 
 // ============================================================================
@@ -21,29 +21,27 @@ use crate::{
 #[cfg(feature = "python")]
 fn to_pyerr(err: SikulixError) -> PyErr {
     match err {
-        SikulixError::ImageNotFound => {
-            PyRuntimeError::new_err("Image not found on screen")
-        }
+        SikulixError::ImageNotFound => PyRuntimeError::new_err("Image not found on screen"),
         SikulixError::ImageLoadError(msg) => {
             PyValueError::new_err(format!("Failed to load image: {}", msg))
         }
         SikulixError::ScreenCaptureError(msg) => {
             PyRuntimeError::new_err(format!("Screen capture failed: {}", msg))
         }
-        SikulixError::FindFailed { pattern_name, timeout_secs } => {
-            PyRuntimeError::new_err(
-                format!("FindFailed: {} not found within {}s", pattern_name, timeout_secs)
-            )
-        }
+        SikulixError::FindFailed {
+            pattern_name,
+            timeout_secs,
+        } => PyRuntimeError::new_err(format!(
+            "FindFailed: {} not found within {}s",
+            pattern_name, timeout_secs
+        )),
         SikulixError::MouseError(msg) => {
             PyRuntimeError::new_err(format!("Mouse operation failed: {}", msg))
         }
         SikulixError::KeyboardError(msg) => {
             PyRuntimeError::new_err(format!("Keyboard operation failed: {}", msg))
         }
-        SikulixError::IoError(e) => {
-            PyIOError::new_err(e.to_string())
-        }
+        SikulixError::IoError(e) => PyIOError::new_err(e.to_string()),
         _ => PyRuntimeError::new_err(err.to_string()),
     }
 }
@@ -80,9 +78,7 @@ impl PyScreen {
     /// Get screen dimensions (width, height)
     /// 画面サイズを取得 (幅, 高さ)
     fn dimensions(&mut self) -> PyResult<(u32, u32)> {
-        self.inner
-            .dimensions()
-            .map_err(to_pyerr)
+        self.inner.dimensions().map_err(to_pyerr)
     }
 
     /// Get screen region
@@ -189,20 +185,30 @@ impl PyRegion {
 
     // Getters for properties
     #[getter]
-    fn x(&self) -> i32 { self.inner.x }
+    fn x(&self) -> i32 {
+        self.inner.x
+    }
 
     #[getter]
-    fn y(&self) -> i32 { self.inner.y }
+    fn y(&self) -> i32 {
+        self.inner.y
+    }
 
     #[getter]
-    fn width(&self) -> u32 { self.inner.width }
+    fn width(&self) -> u32 {
+        self.inner.width
+    }
 
     #[getter]
-    fn height(&self) -> u32 { self.inner.height }
+    fn height(&self) -> u32 {
+        self.inner.height
+    }
 
     fn __repr__(&self) -> String {
-        format!("Region({}, {}, {}, {})",
-            self.inner.x, self.inner.y, self.inner.width, self.inner.height)
+        format!(
+            "Region({}, {}, {}, {})",
+            self.inner.x, self.inner.y, self.inner.width, self.inner.height
+        )
     }
 }
 
@@ -243,7 +249,9 @@ impl PyMatch {
     /// マッチ領域を取得
     #[getter]
     fn region(&self) -> PyRegion {
-        PyRegion { inner: self.inner.region }
+        PyRegion {
+            inner: self.inner.region,
+        }
     }
 
     /// Click at match center
@@ -277,15 +285,22 @@ impl PyMatch {
             self.inner.highlight_with_duration(s)
         } else {
             self.inner.highlight()
-        }.map_err(to_pyerr)
+        }
+        .map_err(to_pyerr)
     }
 
     fn __repr__(&self) -> String {
-        format!("Match(score={:.2}, region={})",
+        format!(
+            "Match(score={:.2}, region={})",
             self.inner.score,
-            format!("Region({}, {}, {}, {})",
-                self.inner.region.x, self.inner.region.y,
-                self.inner.region.width, self.inner.region.height))
+            format!(
+                "Region({}, {}, {}, {})",
+                self.inner.region.x,
+                self.inner.region.y,
+                self.inner.region.width,
+                self.inner.region.height
+            )
+        )
     }
 }
 
@@ -427,38 +442,57 @@ impl PyLocation {
     /// Create offset location
     /// オフセット位置を作成
     fn offset(&self, dx: i32, dy: i32) -> Self {
-        Self { x: self.x + dx, y: self.y + dy }
+        Self {
+            x: self.x + dx,
+            y: self.y + dy,
+        }
     }
 
     /// Get location above
     /// 上の位置を取得
     fn above(&self, dy: i32) -> Self {
-        Self { x: self.x, y: self.y - dy }
+        Self {
+            x: self.x,
+            y: self.y - dy,
+        }
     }
 
     /// Get location below
     /// 下の位置を取得
     fn below(&self, dy: i32) -> Self {
-        Self { x: self.x, y: self.y + dy }
+        Self {
+            x: self.x,
+            y: self.y + dy,
+        }
     }
 
     /// Get location to left
     /// 左の位置を取得
     fn left(&self, dx: i32) -> Self {
-        Self { x: self.x - dx, y: self.y }
+        Self {
+            x: self.x - dx,
+            y: self.y,
+        }
     }
 
     /// Get location to right
     /// 右の位置を取得
     fn right(&self, dx: i32) -> Self {
-        Self { x: self.x + dx, y: self.y }
+        Self {
+            x: self.x + dx,
+            y: self.y,
+        }
     }
 
     #[getter(x)]
-    fn get_x_prop(&self) -> i32 { self.x }
+    fn get_x_prop(&self) -> i32 {
+        self.x
+    }
 
     #[getter(y)]
-    fn get_y_prop(&self) -> i32 { self.y }
+    fn get_y_prop(&self) -> i32 {
+        self.y
+    }
 
     fn __repr__(&self) -> String {
         format!("Location({}, {})", self.x, self.y)
@@ -723,7 +757,8 @@ fn wait(py: Python, pattern: &str, timeout: Option<f64>) -> PyResult<PyMatch> {
         let pat = Pattern::from_file(pattern).map_err(to_pyerr)?;
         let matcher = ImageMatcher::new();
 
-        let result = matcher.wait(&screen, &pat, timeout.unwrap_or(3.0))
+        let result = matcher
+            .wait(&screen, &pat, timeout.unwrap_or(3.0))
             .map_err(to_pyerr)?;
 
         Ok(PyMatch { inner: result })
@@ -740,7 +775,8 @@ fn exists(py: Python, pattern: &str, timeout: Option<f64>) -> PyResult<Option<Py
         let pat = Pattern::from_file(pattern).map_err(to_pyerr)?;
         let matcher = ImageMatcher::new();
 
-        let result = matcher.exists(&screen, &pat, timeout.unwrap_or(0.0))
+        let result = matcher
+            .exists(&screen, &pat, timeout.unwrap_or(0.0))
             .map_err(to_pyerr)?;
 
         Ok(result.map(|m| PyMatch { inner: m }))
@@ -794,7 +830,9 @@ fn resolve_target(target: &PyAny) -> PyResult<(i32, i32)> {
         return Ok(r.center());
     }
 
-    Err(PyValueError::new_err("Invalid target: expected (x, y), Location, Match, or Region"))
+    Err(PyValueError::new_err(
+        "Invalid target: expected (x, y), Location, Match, or Region",
+    ))
 }
 
 /// Click at coordinates or current position
@@ -870,7 +908,8 @@ fn paste(text: &str) -> PyResult<()> {
 #[cfg(feature = "python")]
 #[pyfunction]
 fn hotkey(keys: Vec<String>) -> PyResult<()> {
-    let key_enum: Vec<Key> = keys.iter()
+    let key_enum: Vec<Key> = keys
+        .iter()
         .map(|s| parse_key(s))
         .collect::<std::result::Result<Vec<_>, _>>()
         .map_err(|e| PyValueError::new_err(e))?;
@@ -1045,11 +1084,8 @@ impl PyObserver {
     ///     similarity: Optional similarity threshold (default 0.7) / 類似度閾値
     #[pyo3(name = "onAppear")]
     fn on_appear(&mut self, pattern: &str, callback: Py<PyAny>, similarity: Option<f64>) {
-        self.appear_handlers.push((
-            pattern.to_string(),
-            similarity.unwrap_or(0.7),
-            callback,
-        ));
+        self.appear_handlers
+            .push((pattern.to_string(), similarity.unwrap_or(0.7), callback));
     }
 
     /// Register a callback for when a pattern vanishes
@@ -1061,11 +1097,8 @@ impl PyObserver {
     ///     similarity: Optional similarity threshold (default 0.7) / 類似度閾値
     #[pyo3(name = "onVanish")]
     fn on_vanish(&mut self, pattern: &str, callback: Py<PyAny>, similarity: Option<f64>) {
-        self.vanish_handlers.push((
-            pattern.to_string(),
-            similarity.unwrap_or(0.7),
-            callback,
-        ));
+        self.vanish_handlers
+            .push((pattern.to_string(), similarity.unwrap_or(0.7), callback));
     }
 
     /// Register a callback for visual changes in the region
@@ -1076,7 +1109,8 @@ impl PyObserver {
     ///     callback: Function called with change amount / 変化量と呼ばれる関数
     #[pyo3(name = "onChange")]
     fn on_change(&mut self, threshold: f64, callback: Py<PyAny>) {
-        self.change_handlers.push((threshold.clamp(0.0, 1.0), callback));
+        self.change_handlers
+            .push((threshold.clamp(0.0, 1.0), callback));
     }
 
     /// Start observing with timeout (blocking)
@@ -1110,9 +1144,9 @@ impl PyObserver {
             }
 
             // Allow Python threads during capture
-            let screenshot = py.allow_threads(|| {
-                screen.capture_region(&self.region)
-            }).map_err(to_pyerr)?;
+            let screenshot = py
+                .allow_threads(|| screen.capture_region(&self.region))
+                .map_err(to_pyerr)?;
 
             // Process appear handlers
             for (pattern_path, similarity, callback) in &self.appear_handlers {
@@ -1126,7 +1160,8 @@ impl PyObserver {
             }
 
             // Process vanish handlers
-            for (i, (pattern_path, similarity, callback)) in self.vanish_handlers.iter().enumerate() {
+            for (i, (pattern_path, similarity, callback)) in self.vanish_handlers.iter().enumerate()
+            {
                 if let Ok(pat) = Pattern::from_file(pattern_path) {
                     let pat = pat.similar(*similarity);
                     match matcher.find(&screenshot, &pat) {
@@ -1186,7 +1221,10 @@ impl PyObserver {
     fn __repr__(&self) -> String {
         format!(
             "Observer(region=({}, {}, {}, {}), interval={}ms, appear={}, vanish={}, change={})",
-            self.region.x, self.region.y, self.region.width, self.region.height,
+            self.region.x,
+            self.region.y,
+            self.region.width,
+            self.region.height,
             self.interval_ms,
             self.appear_handlers.len(),
             self.vanish_handlers.len(),
@@ -1266,20 +1304,45 @@ fn parse_key(s: &str) -> std::result::Result<Key, String> {
             let c = s.chars().next().unwrap().to_ascii_uppercase();
             if c.is_ascii_alphabetic() {
                 match c {
-                    'A' => Ok(Key::A), 'B' => Ok(Key::B), 'C' => Ok(Key::C), 'D' => Ok(Key::D),
-                    'E' => Ok(Key::E), 'F' => Ok(Key::F), 'G' => Ok(Key::G), 'H' => Ok(Key::H),
-                    'I' => Ok(Key::I), 'J' => Ok(Key::J), 'K' => Ok(Key::K), 'L' => Ok(Key::L),
-                    'M' => Ok(Key::M), 'N' => Ok(Key::N), 'O' => Ok(Key::O), 'P' => Ok(Key::P),
-                    'Q' => Ok(Key::Q), 'R' => Ok(Key::R), 'S' => Ok(Key::S), 'T' => Ok(Key::T),
-                    'U' => Ok(Key::U), 'V' => Ok(Key::V), 'W' => Ok(Key::W), 'X' => Ok(Key::X),
-                    'Y' => Ok(Key::Y), 'Z' => Ok(Key::Z),
+                    'A' => Ok(Key::A),
+                    'B' => Ok(Key::B),
+                    'C' => Ok(Key::C),
+                    'D' => Ok(Key::D),
+                    'E' => Ok(Key::E),
+                    'F' => Ok(Key::F),
+                    'G' => Ok(Key::G),
+                    'H' => Ok(Key::H),
+                    'I' => Ok(Key::I),
+                    'J' => Ok(Key::J),
+                    'K' => Ok(Key::K),
+                    'L' => Ok(Key::L),
+                    'M' => Ok(Key::M),
+                    'N' => Ok(Key::N),
+                    'O' => Ok(Key::O),
+                    'P' => Ok(Key::P),
+                    'Q' => Ok(Key::Q),
+                    'R' => Ok(Key::R),
+                    'S' => Ok(Key::S),
+                    'T' => Ok(Key::T),
+                    'U' => Ok(Key::U),
+                    'V' => Ok(Key::V),
+                    'W' => Ok(Key::W),
+                    'X' => Ok(Key::X),
+                    'Y' => Ok(Key::Y),
+                    'Z' => Ok(Key::Z),
                     _ => Err(format!("Unknown key: {}", s)),
                 }
             } else if c.is_ascii_digit() {
                 match c {
-                    '0' => Ok(Key::Num0), '1' => Ok(Key::Num1), '2' => Ok(Key::Num2),
-                    '3' => Ok(Key::Num3), '4' => Ok(Key::Num4), '5' => Ok(Key::Num5),
-                    '6' => Ok(Key::Num6), '7' => Ok(Key::Num7), '8' => Ok(Key::Num8),
+                    '0' => Ok(Key::Num0),
+                    '1' => Ok(Key::Num1),
+                    '2' => Ok(Key::Num2),
+                    '3' => Ok(Key::Num3),
+                    '4' => Ok(Key::Num4),
+                    '5' => Ok(Key::Num5),
+                    '6' => Ok(Key::Num6),
+                    '7' => Ok(Key::Num7),
+                    '8' => Ok(Key::Num8),
                     '9' => Ok(Key::Num9),
                     _ => Err(format!("Unknown key: {}", s)),
                 }

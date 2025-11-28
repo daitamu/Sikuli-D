@@ -323,10 +323,10 @@ pub fn mouse_scroll(clicks: i32) -> Result<()> {
     let event = CGEvent::new_scroll_event(
         source,
         core_graphics::event::ScrollEventUnit::Line,
-        1,        // wheel_count
-        clicks,   // delta1 (vertical)
-        0,        // delta2 (horizontal)
-        0,        // delta3
+        1,      // wheel_count
+        clicks, // delta1 (vertical)
+        0,      // delta2 (horizontal)
+        0,      // delta3
     )
     .map_err(|_| SikulixError::MouseError("Failed to create scroll event".to_string()))?;
 
@@ -351,10 +351,10 @@ pub fn mouse_scroll_horizontal(clicks: i32) -> Result<()> {
     let event = CGEvent::new_scroll_event(
         source,
         core_graphics::event::ScrollEventUnit::Line,
-        2,        // wheel_count (2 for horizontal)
-        0,        // delta1 (vertical)
-        clicks,   // delta2 (horizontal)
-        0,        // delta3
+        2,      // wheel_count (2 for horizontal)
+        0,      // delta1 (vertical)
+        clicks, // delta2 (horizontal)
+        0,      // delta3
     )
     .map_err(|_| SikulixError::MouseError("Failed to create scroll event".to_string()))?;
 

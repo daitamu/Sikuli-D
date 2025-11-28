@@ -35,12 +35,12 @@
 //! handle.join().unwrap()?;
 //! ```
 
-use crate::{Match, Pattern, Region, Result};
 use crate::image::ImageMatcher;
 use crate::screen::Screen;
+use crate::{Match, Pattern, Region, Result};
 use image::DynamicImage;
-use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, Mutex};
 use std::thread::{self, JoinHandle};
 use std::time::{Duration, Instant};
 
@@ -819,7 +819,10 @@ mod tests {
         let img2 = DynamicImage::ImageLuma8(GrayImage::from_pixel(10, 10, Luma([255u8])));
 
         let diff = calculate_image_difference(&img1, &img2);
-        assert!(diff > 0.9, "Completely different images should have high difference");
+        assert!(
+            diff > 0.9,
+            "Completely different images should have high difference"
+        );
     }
 
     #[test]
@@ -854,7 +857,7 @@ mod tests {
         // Test threshold clamping
         // 閾値のクランプをテスト
         observer.on_change(-0.5, |_| {}); // Should be clamped to 0.0
-        observer.on_change(1.5, |_| {});  // Should be clamped to 1.0
+        observer.on_change(1.5, |_| {}); // Should be clamped to 1.0
 
         let handlers = observer.change_handlers.lock().unwrap();
         assert_eq!(handlers.len(), 2);

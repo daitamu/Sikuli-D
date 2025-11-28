@@ -616,7 +616,12 @@ impl Debugger {
     /// Notify breakpoint hit
     /// ブレークポイントヒットを通知
     pub fn notify_breakpoint_hit(&self, file: PathBuf, line: u32, hit_count: u32) {
-        info!("Breakpoint hit at {}:{} (count: {})", file.display(), line, hit_count);
+        info!(
+            "Breakpoint hit at {}:{} (count: {})",
+            file.display(),
+            line,
+            hit_count
+        );
         self.set_state(DebugState::Paused);
         self.notify_event(DebugEvent::BreakpointHit {
             file,
@@ -732,18 +737,8 @@ mod tests {
     fn test_call_stack() {
         let dbg = Debugger::new();
 
-        let frame1 = CallFrame::new(
-            0,
-            "main".to_string(),
-            PathBuf::from("test.py"),
-            10,
-        );
-        let frame2 = CallFrame::new(
-            1,
-            "helper".to_string(),
-            PathBuf::from("test.py"),
-            20,
-        );
+        let frame1 = CallFrame::new(0, "main".to_string(), PathBuf::from("test.py"), 10);
+        let frame2 = CallFrame::new(1, "helper".to_string(), PathBuf::from("test.py"), 20);
 
         dbg.push_frame(frame1);
         dbg.push_frame(frame2);
@@ -762,12 +757,7 @@ mod tests {
         let dbg = Debugger::new();
 
         // Add local variable
-        let mut frame = CallFrame::new(
-            0,
-            "main".to_string(),
-            PathBuf::from("test.py"),
-            10,
-        );
+        let mut frame = CallFrame::new(0, "main".to_string(), PathBuf::from("test.py"), 10);
         frame.add_local("x".to_string(), VariableValue::Int(42));
         frame.add_local("y".to_string(), VariableValue::String("hello".to_string()));
 
@@ -793,7 +783,10 @@ mod tests {
     fn test_variable_value_display() {
         assert_eq!(format!("{}", VariableValue::Int(42)), "42");
         assert_eq!(format!("{}", VariableValue::Float(3.14)), "3.14");
-        assert_eq!(format!("{}", VariableValue::String("hello".to_string())), "\"hello\"");
+        assert_eq!(
+            format!("{}", VariableValue::String("hello".to_string())),
+            "\"hello\""
+        );
         assert_eq!(format!("{}", VariableValue::Bool(true)), "true");
         assert_eq!(format!("{}", VariableValue::None), "None");
     }

@@ -17,15 +17,15 @@ pub mod timeout;
 pub use app::App;
 pub use color::{get_color, save_region_capture, save_screen_capture};
 pub use highlight::Highlight;
+pub use image::ocr::{read_text, read_text_japanese, read_text_region};
 pub use image::ImageMatcher;
 pub use image::{OcrConfig, OcrEngine, OcrLanguage, OcrResult};
-pub use image::ocr::{read_text, read_text_japanese, read_text_region};
 pub use location::Location;
 pub use observer::Observer;
 pub use python::{PythonVersion, SyntaxAnalyzer};
 pub use screen::{Key, Keyboard, Mouse, Screen};
 pub use timeout::{
-    with_timeout, with_timeout_and_cancel, wait_for_condition, wait_for_condition_with_cancel,
+    wait_for_condition, wait_for_condition_with_cancel, with_timeout, with_timeout_and_cancel,
     CancellationToken, DefaultTimeouts, TimeoutGuard,
 };
 
@@ -72,10 +72,7 @@ pub enum SikulixError {
         timeout_secs: f64,
     },
     #[error("Script execution timed out after {timeout_secs}s: {script}")]
-    ScriptTimeout {
-        script: String,
-        timeout_secs: f64,
-    },
+    ScriptTimeout { script: String, timeout_secs: f64 },
 }
 
 pub type Result<T> = std::result::Result<T, SikulixError>;
@@ -137,9 +134,15 @@ pub struct Color {
 }
 
 impl Color {
-    pub fn new(r: u8, g: u8, b: u8, a: u8) -> Self { Self { r, g, b, a } }
-    pub fn rgb(r: u8, g: u8, b: u8) -> Self { Self { r, g, b, a: 255 } }
-    pub fn to_hex(&self) -> String { format!("#{:02X}{:02X}{:02X}", self.r, self.g, self.b) }
+    pub fn new(r: u8, g: u8, b: u8, a: u8) -> Self {
+        Self { r, g, b, a }
+    }
+    pub fn rgb(r: u8, g: u8, b: u8) -> Self {
+        Self { r, g, b, a: 255 }
+    }
+    pub fn to_hex(&self) -> String {
+        format!("#{:02X}{:02X}{:02X}", self.r, self.g, self.b)
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -151,27 +154,62 @@ pub struct Region {
 }
 
 impl Region {
-    pub fn new(x: i32, y: i32, width: u32, height: u32) -> Self { Self { x, y, width, height } }
+    pub fn new(x: i32, y: i32, width: u32, height: u32) -> Self {
+        Self {
+            x,
+            y,
+            width,
+            height,
+        }
+    }
     pub fn from_corners(x1: i32, y1: i32, x2: i32, y2: i32) -> Self {
         let (min_x, max_x) = if x1 <= x2 { (x1, x2) } else { (x2, x1) };
         let (min_y, max_y) = if y1 <= y2 { (y1, y2) } else { (y2, y1) };
-        Self { x: min_x, y: min_y, width: (max_x - min_x) as u32, height: (max_y - min_y) as u32 }
+        Self {
+            x: min_x,
+            y: min_y,
+            width: (max_x - min_x) as u32,
+            height: (max_y - min_y) as u32,
+        }
     }
-    pub fn center(&self) -> (i32, i32) { (self.x + (self.width as i32 / 2), self.y + (self.height as i32 / 2)) }
-    pub fn top_left(&self) -> (i32, i32) { (self.x, self.y) }
-    pub fn bottom_right(&self) -> (i32, i32) { (self.x + self.width as i32, self.y + self.height as i32) }
-    pub fn area(&self) -> u64 { self.width as u64 * self.height as u64 }
+    pub fn center(&self) -> (i32, i32) {
+        (
+            self.x + (self.width as i32 / 2),
+            self.y + (self.height as i32 / 2),
+        )
+    }
+    pub fn top_left(&self) -> (i32, i32) {
+        (self.x, self.y)
+    }
+    pub fn bottom_right(&self) -> (i32, i32) {
+        (self.x + self.width as i32, self.y + self.height as i32)
+    }
+    pub fn area(&self) -> u64 {
+        self.width as u64 * self.height as u64
+    }
     pub fn contains(&self, x: i32, y: i32) -> bool {
-        x >= self.x && x < self.x + self.width as i32 && y >= self.y && y < self.y + self.height as i32
+        x >= self.x
+            && x < self.x + self.width as i32
+            && y >= self.y
+            && y < self.y + self.height as i32
     }
     pub fn intersects(&self, other: &Region) -> bool {
-        self.x < other.x + other.width as i32 && self.x + self.width as i32 > other.x
-            && self.y < other.y + other.height as i32 && self.y + self.height as i32 > other.y
+        self.x < other.x + other.width as i32
+            && self.x + self.width as i32 > other.x
+            && self.y < other.y + other.height as i32
+            && self.y + self.height as i32 > other.y
     }
-    pub fn offset(&self, dx: i32, dy: i32) -> Self { Self { x: self.x + dx, y: self.y + dy, ..*self } }
+    pub fn offset(&self, dx: i32, dy: i32) -> Self {
+        Self {
+            x: self.x + dx,
+            y: self.y + dy,
+            ..*self
+        }
+    }
     pub fn expand(&self, amount: i32) -> Self {
         Self {
-            x: self.x - amount, y: self.y - amount,
+            x: self.x - amount,
+            y: self.y - amount,
             width: (self.width as i32 + 2 * amount).max(0) as u32,
             height: (self.height as i32 + 2 * amount).max(0) as u32,
         }
@@ -181,7 +219,16 @@ impl Region {
         let y1 = self.y.max(other.y);
         let x2 = (self.x + self.width as i32).min(other.x + other.width as i32);
         let y2 = (self.y + self.height as i32).min(other.y + other.height as i32);
-        if x1 < x2 && y1 < y2 { Some(Self { x: x1, y: y1, width: (x2 - x1) as u32, height: (y2 - y1) as u32 }) } else { None }
+        if x1 < x2 && y1 < y2 {
+            Some(Self {
+                x: x1,
+                y: y1,
+                width: (x2 - x1) as u32,
+                height: (y2 - y1) as u32,
+            })
+        } else {
+            None
+        }
     }
 }
 
@@ -192,12 +239,24 @@ pub struct Match {
 }
 
 impl Match {
-    pub fn new(region: Region, score: f64) -> Self { Self { region, score } }
-    pub fn center(&self) -> (i32, i32) { self.region.center() }
-    pub fn target(&self) -> (i32, i32) { self.region.center() }
-    pub fn is_good_match(&self, threshold: f64) -> bool { self.score >= threshold }
-    pub fn score_percent(&self) -> String { format!("{:.1}%", self.score * 100.0) }
-    pub fn highlight(&self) -> Result<()> { self.highlight_with_duration(2.0) }
+    pub fn new(region: Region, score: f64) -> Self {
+        Self { region, score }
+    }
+    pub fn center(&self) -> (i32, i32) {
+        self.region.center()
+    }
+    pub fn target(&self) -> (i32, i32) {
+        self.region.center()
+    }
+    pub fn is_good_match(&self, threshold: f64) -> bool {
+        self.score >= threshold
+    }
+    pub fn score_percent(&self) -> String {
+        format!("{:.1}%", self.score * 100.0)
+    }
+    pub fn highlight(&self) -> Result<()> {
+        self.highlight_with_duration(2.0)
+    }
     pub fn highlight_with_duration(&self, seconds: f64) -> Result<()> {
         let hl = Highlight::new(self.region);
         let _ = hl.show_for(seconds);
@@ -213,21 +272,49 @@ pub struct Pattern {
 }
 
 impl Default for Pattern {
-    fn default() -> Self { Self { image_data: Vec::new(), similarity: 0.7, target_offset: (0, 0) } }
+    fn default() -> Self {
+        Self {
+            image_data: Vec::new(),
+            similarity: 0.7,
+            target_offset: (0, 0),
+        }
+    }
 }
 
 impl Pattern {
-    pub fn new(image_data: Vec<u8>) -> Self { Self { image_data, ..Default::default() } }
-    pub fn from_file(path: &str) -> Result<Self> { Ok(Self::new(std::fs::read(path)?)) }
-    pub fn similar(mut self, similarity: f64) -> Self { self.similarity = similarity.clamp(0.0, 1.0); self }
-    pub fn target_offset(mut self, x: i32, y: i32) -> Self { self.target_offset = (x, y); self }
-    pub fn is_valid(&self) -> bool { !self.image_data.is_empty() }
-    pub fn data_size(&self) -> usize { self.image_data.len() }
+    pub fn new(image_data: Vec<u8>) -> Self {
+        Self {
+            image_data,
+            ..Default::default()
+        }
+    }
+    pub fn from_file(path: &str) -> Result<Self> {
+        Ok(Self::new(std::fs::read(path)?))
+    }
+    pub fn similar(mut self, similarity: f64) -> Self {
+        self.similarity = similarity.clamp(0.0, 1.0);
+        self
+    }
+    pub fn target_offset(mut self, x: i32, y: i32) -> Self {
+        self.target_offset = (x, y);
+        self
+    }
+    pub fn is_valid(&self) -> bool {
+        !self.image_data.is_empty()
+    }
+    pub fn data_size(&self) -> usize {
+        self.image_data.len()
+    }
 }
 
-pub fn sleep(seconds: f64) { std::thread::sleep(std::time::Duration::from_secs_f64(seconds)); }
+pub fn sleep(seconds: f64) {
+    std::thread::sleep(std::time::Duration::from_secs_f64(seconds));
+}
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
-pub fn init() { env_logger::init(); log::info!("SikuliX Core {} initialized", VERSION); }
+pub fn init() {
+    env_logger::init();
+    log::info!("SikuliX Core {} initialized", VERSION);
+}
 
 #[cfg(test)]
 mod tests {

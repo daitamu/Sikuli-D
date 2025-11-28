@@ -10,9 +10,7 @@ use std::process::Command;
 #[cfg(target_os = "linux")]
 use x11rb::connection::Connection;
 #[cfg(target_os = "linux")]
-use x11rb::protocol::xproto::{
-    AtomEnum, ClientMessageEvent, ConnectionExt, EventMask, Window,
-};
+use x11rb::protocol::xproto::{AtomEnum, ClientMessageEvent, ConnectionExt, EventMask, Window};
 #[cfg(target_os = "linux")]
 use x11rb::rust_connection::RustConnection;
 
@@ -36,9 +34,7 @@ pub fn open_application(path: &str) -> Result<crate::App> {
     // 必要に応じてパスと引数を分割
     let parts: Vec<&str> = path.split_whitespace().collect();
     if parts.is_empty() {
-        return Err(SikulixError::AppError(
-            "Empty application path".to_string(),
-        ));
+        return Err(SikulixError::AppError("Empty application path".to_string()));
     }
 
     let exe = parts[0];
@@ -46,10 +42,9 @@ pub fn open_application(path: &str) -> Result<crate::App> {
 
     // Spawn the process
     // プロセスを起動
-    let child = Command::new(exe)
-        .args(args)
-        .spawn()
-        .map_err(|e| SikulixError::AppError(format!("Failed to spawn application '{}': {}", exe, e)))?;
+    let child = Command::new(exe).args(args).spawn().map_err(|e| {
+        SikulixError::AppError(format!("Failed to spawn application '{}': {}", exe, e))
+    })?;
 
     let pid = child.id();
 
@@ -145,12 +140,8 @@ fn find_window_by_pid(pid: u32) -> Result<Option<Window>> {
             .map_err(|e| SikulixError::AppError(format!("Failed to get property reply: {}", e)))?;
 
         if prop.value.len() >= 4 {
-            let window_pid = u32::from_ne_bytes([
-                prop.value[0],
-                prop.value[1],
-                prop.value[2],
-                prop.value[3],
-            ]);
+            let window_pid =
+                u32::from_ne_bytes([prop.value[0], prop.value[1], prop.value[2], prop.value[3]]);
 
             if window_pid == pid {
                 return Ok(Some(window));

@@ -142,8 +142,13 @@ fn show_highlight_impl(region: &Region, config: &HighlightConfig) -> Result<()> 
         // ハイライト情報をログ出力
         info!(
             "HIGHLIGHT: Region [{}x{}+{}+{}] color=RGB({}, {}, {})",
-            region.width, region.height, region.x, region.y,
-            config.color.0, config.color.1, config.color.2
+            region.width,
+            region.height,
+            region.x,
+            region.y,
+            config.color.0,
+            config.color.1,
+            config.color.2
         );
 
         // Sleep for the duration
@@ -157,24 +162,22 @@ fn show_highlight_impl(region: &Region, config: &HighlightConfig) -> Result<()> 
 
     // Connect to X11 server
     // X11サーバーに接続
-    let (conn, screen_num) = RustConnection::connect(None).map_err(|e| {
-        SikulixError::PlatformError(format!("Failed to connect to X11: {}", e))
-    })?;
+    let (conn, screen_num) = RustConnection::connect(None)
+        .map_err(|e| SikulixError::PlatformError(format!("Failed to connect to X11: {}", e)))?;
 
     let setup = conn.setup();
     let screen = &setup.roots[screen_num];
 
     // Generate window ID
     // ウィンドウIDを生成
-    let window = conn.generate_id().map_err(|e| {
-        SikulixError::PlatformError(format!("Failed to generate window ID: {}", e))
-    })?;
+    let window = conn
+        .generate_id()
+        .map_err(|e| SikulixError::PlatformError(format!("Failed to generate window ID: {}", e)))?;
 
     // Calculate border pixel value (RGB to X11 pixel format)
     // 境界線ピクセル値を計算（RGBからX11ピクセルフォーマットへ）
-    let border_pixel = config.color.0 as u32
-        | ((config.color.1 as u32) << 8)
-        | ((config.color.2 as u32) << 16);
+    let border_pixel =
+        config.color.0 as u32 | ((config.color.1 as u32) << 8) | ((config.color.2 as u32) << 16);
 
     // Create window attributes
     // ウィンドウ属性を作成
@@ -192,17 +195,17 @@ fn show_highlight_impl(region: &Region, config: &HighlightConfig) -> Result<()> 
     // Create the window
     // ウィンドウを作成
     conn.create_window(
-        COPY_DEPTH_FROM_PARENT, // depth
-        window,                   // wid
-        screen.root,              // parent
-        region.x as i16,          // x
-        region.y as i16,          // y
-        region.width as u16,      // width
-        region.height as u16,     // height
+        COPY_DEPTH_FROM_PARENT,     // depth
+        window,                     // wid
+        screen.root,                // parent
+        region.x as i16,            // x
+        region.y as i16,            // y
+        region.width as u16,        // width
+        region.height as u16,       // height
         config.border_width as u16, // border_width
-        WindowClass::INPUT_OUTPUT, // class
-        screen.root_visual,       // visual
-        &values,                  // value_list
+        WindowClass::INPUT_OUTPUT,  // class
+        screen.root_visual,         // visual
+        &values,                    // value_list
     )
     .map_err(|e| SikulixError::PlatformError(format!("Failed to create window: {}", e)))?;
 
@@ -283,19 +286,10 @@ fn try_set_transparency(conn: &impl Connection, window: Window) -> Result<()> {
 /// 非Linuxプラットフォーム用のスタブ実装
 #[cfg(not(target_os = "linux"))]
 pub fn highlight(region: &Region, duration_ms: u64, color: Color) -> Result<()> {
-    warn!(
-        "Linux highlight overlay not available on this platform. Logging only."
-    );
+    warn!("Linux highlight overlay not available on this platform. Logging only.");
     info!(
         "HIGHLIGHT: Region [{}x{}+{}+{}] color=RGB({}, {}, {}) duration={}ms",
-        region.width,
-        region.height,
-        region.x,
-        region.y,
-        color.r,
-        color.g,
-        color.b,
-        duration_ms
+        region.width, region.height, region.x, region.y, color.r, color.g, color.b, duration_ms
     );
     if duration_ms > 0 {
         thread::sleep(Duration::from_millis(duration_ms));
@@ -307,9 +301,7 @@ pub fn highlight(region: &Region, duration_ms: u64, color: Color) -> Result<()> 
 /// 非Linuxプラットフォーム用のスタブ実装
 #[cfg(not(target_os = "linux"))]
 pub fn show_highlight(region: &Region, config: &HighlightConfig) -> Result<()> {
-    warn!(
-        "Linux highlight overlay not available on this platform. Logging only."
-    );
+    warn!("Linux highlight overlay not available on this platform. Logging only.");
     info!(
         "HIGHLIGHT: Region [{}x{}+{}+{}] color=RGB({}, {}, {}) border_width={} duration={}ms",
         region.width,

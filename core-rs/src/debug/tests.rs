@@ -103,12 +103,7 @@ fn test_current_position() {
 fn test_call_stack() {
     let debugger = Debugger::new();
 
-    let frame1 = CallFrame::new(
-        0,
-        "main".to_string(),
-        PathBuf::from("main.py"),
-        10,
-    );
+    let frame1 = CallFrame::new(0, "main".to_string(), PathBuf::from("main.py"), 10);
     let frame2 = CallFrame::new(
         1,
         "helper_function".to_string(),
@@ -135,14 +130,12 @@ fn test_call_stack() {
 fn test_local_variables() {
     let debugger = Debugger::new();
 
-    let mut frame = CallFrame::new(
-        0,
-        "test_func".to_string(),
-        PathBuf::from("test.py"),
-        10,
-    );
+    let mut frame = CallFrame::new(0, "test_func".to_string(), PathBuf::from("test.py"), 10);
     frame.add_local("x".to_string(), VariableValue::Int(42));
-    frame.add_local("name".to_string(), VariableValue::String("Alice".to_string()));
+    frame.add_local(
+        "name".to_string(),
+        VariableValue::String("Alice".to_string()),
+    );
     frame.add_local("flag".to_string(), VariableValue::Bool(true));
 
     debugger.push_frame(frame);
@@ -167,17 +160,15 @@ fn test_all_variables() {
     let debugger = Debugger::new();
 
     // Add local variables
-    let mut frame = CallFrame::new(
-        0,
-        "main".to_string(),
-        PathBuf::from("test.py"),
-        5,
-    );
+    let mut frame = CallFrame::new(0, "main".to_string(), PathBuf::from("test.py"), 5);
     frame.add_local("local_var".to_string(), VariableValue::Int(100));
     debugger.push_frame(frame);
 
     // Add global variables
-    debugger.update_global("global_var".to_string(), VariableValue::String("test".to_string()));
+    debugger.update_global(
+        "global_var".to_string(),
+        VariableValue::String("test".to_string()),
+    );
 
     let all_vars = debugger.get_variables(Scope::All);
     assert_eq!(all_vars.len(), 2);
@@ -210,7 +201,10 @@ fn test_variable_value_dict() {
     use std::collections::HashMap;
     let mut map = HashMap::new();
     map.insert("key1".to_string(), VariableValue::Int(10));
-    map.insert("key2".to_string(), VariableValue::String("value".to_string()));
+    map.insert(
+        "key2".to_string(),
+        VariableValue::String("value".to_string()),
+    );
     let dict = VariableValue::Dict(map);
 
     let s = format!("{}", dict);
@@ -284,12 +278,7 @@ fn test_reset() {
     // Set up some state
     debugger.add_breakpoint("test.py", 10);
     debugger.set_current_position(PathBuf::from("test.py"), 10);
-    let frame = CallFrame::new(
-        0,
-        "main".to_string(),
-        PathBuf::from("test.py"),
-        10,
-    );
+    let frame = CallFrame::new(0, "main".to_string(), PathBuf::from("test.py"), 10);
     debugger.push_frame(frame);
     debugger.update_global("var".to_string(), VariableValue::Int(42));
     debugger.pause().unwrap();
@@ -325,12 +314,7 @@ fn test_debug_state_display() {
 fn test_evaluate_expression_simple_variable() {
     let debugger = Debugger::new();
 
-    let mut frame = CallFrame::new(
-        0,
-        "main".to_string(),
-        PathBuf::from("test.py"),
-        5,
-    );
+    let mut frame = CallFrame::new(0, "main".to_string(), PathBuf::from("test.py"), 5);
     frame.add_local("x".to_string(), VariableValue::Int(42));
     debugger.push_frame(frame);
 

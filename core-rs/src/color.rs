@@ -1,8 +1,8 @@
 //! Color and screen capture utility functions
 //! 色とスクリーンキャプチャユーティリティ関数
 
-use crate::{Color, Region, Result, SikulixError};
 use crate::screen::Screen;
+use crate::{Color, Region, Result, SikulixError};
 use std::path::Path;
 
 /// Get the color of a pixel at the specified screen coordinates
@@ -320,7 +320,10 @@ mod tests {
         let temp_path = "test_large.jpg";
 
         let result = save_region_capture(&region, temp_path);
-        assert!(result.is_ok(), "save_region_capture should succeed for large region");
+        assert!(
+            result.is_ok(),
+            "save_region_capture should succeed for large region"
+        );
 
         // Clean up
         let _ = std::fs::remove_file(temp_path);

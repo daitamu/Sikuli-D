@@ -184,11 +184,15 @@ pub fn get_screen_dimensions(index: u32) -> Result<(u32, u32)> {
 #[cfg(target_os = "windows")]
 pub fn capture_screen(index: u32) -> Result<DynamicImage> {
     // Get monitor info to get the correct origin for this screen
-    let monitor = get_monitor_info(index).ok_or_else(|| {
-        SikulixError::ScreenCaptureError(format!("Monitor {} not found", index))
-    })?;
+    let monitor = get_monitor_info(index)
+        .ok_or_else(|| SikulixError::ScreenCaptureError(format!("Monitor {} not found", index)))?;
     // Use monitor's global coordinates
-    capture_region(&Region::new(monitor.x, monitor.y, monitor.width, monitor.height))
+    capture_region(&Region::new(
+        monitor.x,
+        monitor.y,
+        monitor.width,
+        monitor.height,
+    ))
 }
 
 /// Capture a specific region of the screen (using global coordinates)

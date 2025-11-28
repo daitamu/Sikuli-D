@@ -341,9 +341,9 @@ pub fn mouse_scroll(clicks: i32) -> Result<()> {
 
     // In X11: button 4 = scroll up, button 5 = scroll down
     let (button, count) = if clicks >= 0 {
-        (4u8, clicks.unsigned_abs())  // Button 4 = scroll up
+        (4u8, clicks.unsigned_abs()) // Button 4 = scroll up
     } else {
-        (5u8, clicks.unsigned_abs())  // Button 5 = scroll down
+        (5u8, clicks.unsigned_abs()) // Button 5 = scroll down
     };
 
     for _ in 0..count {
@@ -381,9 +381,9 @@ pub fn mouse_scroll_horizontal(clicks: i32) -> Result<()> {
 
     // In X11: button 6 = scroll left, button 7 = scroll right
     let (button, count) = if clicks >= 0 {
-        (7u8, clicks.unsigned_abs())  // Button 7 = scroll right
+        (7u8, clicks.unsigned_abs()) // Button 7 = scroll right
     } else {
-        (6u8, clicks.unsigned_abs())  // Button 6 = scroll left
+        (6u8, clicks.unsigned_abs()) // Button 6 = scroll left
     };
 
     for _ in 0..count {

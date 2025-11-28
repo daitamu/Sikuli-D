@@ -293,11 +293,7 @@ where
 ///
 /// Returns Ok(T) if operation completes, TimeoutError if timeout occurs, or error if cancelled
 /// 完了すればOk(T)、タイムアウトならTimeoutError、キャンセルされればエラーを返す
-pub fn with_timeout_and_cancel<T, F>(
-    timeout: Duration,
-    token: CancellationToken,
-    f: F,
-) -> Result<T>
+pub fn with_timeout_and_cancel<T, F>(timeout: Duration, token: CancellationToken, f: F) -> Result<T>
 where
     F: FnOnce(CancellationToken) -> Result<T> + Send + 'static,
     T: Send + 'static,
@@ -409,9 +405,7 @@ where
     loop {
         if token.is_cancelled() {
             log::warn!("Wait cancelled by user");
-            return Err(SikulixError::PlatformError(
-                "Wait cancelled".to_string(),
-            ));
+            return Err(SikulixError::PlatformError("Wait cancelled".to_string()));
         }
 
         if condition() {
@@ -629,10 +623,8 @@ mod tests {
             token_clone.cancel();
         });
 
-        let result: Result<i32> = with_timeout_and_cancel(
-            Duration::from_secs(10),
-            token,
-            |token| {
+        let result: Result<i32> =
+            with_timeout_and_cancel(Duration::from_secs(10), token, |token| {
                 for _ in 0..100 {
                     if token.is_cancelled() {
                         return Err(SikulixError::PlatformError("Cancelled".to_string()));
@@ -640,8 +632,7 @@ mod tests {
                     thread::sleep(Duration::from_millis(50));
                 }
                 Ok(42)
-            },
-        );
+            });
 
         assert!(result.is_err());
     }
@@ -649,14 +640,10 @@ mod tests {
     #[test]
     fn test_wait_for_condition_success() {
         let mut counter = 0;
-        let result = wait_for_condition(
-            Duration::from_secs(2),
-            Duration::from_millis(50),
-            || {
-                counter += 1;
-                counter >= 5
-            },
-        );
+        let result = wait_for_condition(Duration::from_secs(2), Duration::from_millis(50), || {
+            counter += 1;
+            counter >= 5
+        });
 
         assert!(result.is_ok());
         assert!(counter >= 5);

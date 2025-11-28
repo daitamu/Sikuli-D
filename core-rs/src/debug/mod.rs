@@ -22,10 +22,7 @@ pub use debugger::{
 
 // Re-export highlight functionality
 // ハイライト機能を再エクスポート
-pub use highlight::{
-    highlight, highlight_match, show_highlight_with_config, HighlightConfig,
-};
-
+pub use highlight::{highlight, highlight_match, show_highlight_with_config, HighlightConfig};
 
 #[cfg(test)]
 mod tests;

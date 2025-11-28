@@ -24,8 +24,8 @@
 //! Keyboard::hotkey(&[Key::Ctrl, Key::S]).unwrap();
 //! ```
 
-use crate::{Match, Pattern, Region, Result, SikulixError};
 use crate::image::ImageMatcher;
+use crate::{Match, Pattern, Region, Result, SikulixError};
 use image::DynamicImage;
 
 #[cfg(target_os = "windows")]

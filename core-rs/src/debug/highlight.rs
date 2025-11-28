@@ -85,7 +85,6 @@ mod windows_impl {
     use windows::Win32::System::LibraryLoader::GetModuleHandleW;
     use windows::Win32::UI::WindowsAndMessaging::*;
 
-
     /// Show highlight overlay on Windows
     /// Windowsでハイライトオーバーレイを表示
     pub fn show_highlight(region: &Region, config: &HighlightConfig) -> Result<()> {
@@ -134,7 +133,8 @@ mod windows_impl {
                 HMENU::default(),
                 hinstance,
                 None,
-            ).map_err(|e| {
+            )
+            .map_err(|e| {
                 SikulixError::PlatformError(format!("Failed to create overlay window: {}", e))
             })?;
 
@@ -198,7 +198,9 @@ mod windows_impl {
         // Create pen with specified color and width
         // 指定された色と幅でペンを作成
         let color_ref = COLORREF(
-            config.color.0 as u32 | ((config.color.1 as u32) << 8) | ((config.color.2 as u32) << 16),
+            config.color.0 as u32
+                | ((config.color.1 as u32) << 8)
+                | ((config.color.2 as u32) << 16),
         );
 
         let pen = CreatePen(PS_SOLID, config.border_width as i32, color_ref);
@@ -288,11 +290,14 @@ mod linux_impl {
     pub fn show_highlight(region: &Region, config: &HighlightConfig) -> Result<()> {
         // Delegate to the Linux-specific implementation
         // Linux固有の実装に委譲
-        crate::debug::highlight_linux::show_highlight(region, &crate::debug::highlight_linux::HighlightConfig {
-            color: config.color,
-            border_width: config.border_width,
-            duration_ms: config.duration_ms,
-        })
+        crate::debug::highlight_linux::show_highlight(
+            region,
+            &crate::debug::highlight_linux::HighlightConfig {
+                color: config.color,
+                border_width: config.border_width,
+                duration_ms: config.duration_ms,
+            },
+        )
     }
 }
 

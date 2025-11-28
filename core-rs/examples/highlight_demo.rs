@@ -69,9 +69,9 @@ fn main() {
     println!("例4: 複数の同時ハイライト");
 
     let regions = vec![
-        (Region::new(150, 150, 150, 100), Color::rgb(255, 0, 0)),   // Red
-        (Region::new(250, 200, 150, 100), Color::rgb(0, 255, 0)),   // Green
-        (Region::new(350, 250, 150, 100), Color::rgb(0, 0, 255)),   // Blue
+        (Region::new(150, 150, 150, 100), Color::rgb(255, 0, 0)), // Red
+        (Region::new(250, 200, 150, 100), Color::rgb(0, 255, 0)), // Green
+        (Region::new(350, 250, 150, 100), Color::rgb(0, 0, 255)), // Blue
     ];
 
     for (region, color) in regions {
@@ -90,7 +90,10 @@ fn main() {
     let match_result = sikulid::Match::new(match_region, 0.95);
 
     match sikulid::debug::highlight_match(&match_result, 2000) {
-        Ok(()) => println!("✓ Match highlight shown (score: {})", match_result.score_percent()),
+        Ok(()) => println!(
+            "✓ Match highlight shown (score: {})",
+            match_result.score_percent()
+        ),
         Err(e) => println!("✗ Failed: {}", e),
     }
 

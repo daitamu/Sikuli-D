@@ -241,7 +241,11 @@ impl ImageMatcher {
 
         // Sort by score descending (unstable is faster)
         // スコア降順でソート（不安定ソートの方が高速）
-        matches.sort_unstable_by(|a, b| b.score.partial_cmp(&a.score).unwrap_or(std::cmp::Ordering::Equal));
+        matches.sort_unstable_by(|a, b| {
+            b.score
+                .partial_cmp(&a.score)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
 
         // Pre-allocate suppression flags
         // 抑制フラグを事前割り当て
@@ -1073,8 +1077,11 @@ fn calculate_ncc_with_stats(
 fn calculate_overlap_fast(a: &Region, b: &Region) -> f64 {
     // Early exit if regions don't overlap at all
     // 領域が全く重ならない場合は早期終了
-    if a.x + a.width as i32 <= b.x || b.x + b.width as i32 <= a.x
-        || a.y + a.height as i32 <= b.y || b.y + b.height as i32 <= a.y {
+    if a.x + a.width as i32 <= b.x
+        || b.x + b.width as i32 <= a.x
+        || a.y + a.height as i32 <= b.y
+        || b.y + b.height as i32 <= a.y
+    {
         return 0.0;
     }
 
@@ -1371,10 +1378,7 @@ mod tests {
         let img2 = GrayImage::from_raw(0, 0, vec![]).unwrap();
 
         let change = calculate_change_percent(&img1, &img2);
-        assert!(
-            change < f64::EPSILON,
-            "Empty images should have 0% change"
-        );
+        assert!(change < f64::EPSILON, "Empty images should have 0% change");
     }
 
     #[test]

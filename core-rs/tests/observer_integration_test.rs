@@ -5,8 +5,8 @@
 //! これらのテストは実際の画面キャプチャでObserver機能を検証します。
 
 use sikulid::{Observer, Pattern, Region};
-use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
 
@@ -62,7 +62,10 @@ fn test_observer_on_change_detection() {
 
     // Change count depends on screen activity
     // 変化カウントは画面アクティビティに依存
-    println!("Total changes detected: {}", change_count.load(Ordering::SeqCst));
+    println!(
+        "Total changes detected: {}",
+        change_count.load(Ordering::SeqCst)
+    );
 }
 
 #[test]
@@ -75,8 +78,8 @@ fn test_observer_pattern_appear() {
 
     // This test requires a pattern image file
     // このテストにはパターン画像ファイルが必要
-    let pattern = Pattern::from_file("tests/fixtures/test_button.png")
-        .expect("Test pattern not found");
+    let pattern =
+        Pattern::from_file("tests/fixtures/test_button.png").expect("Test pattern not found");
 
     let found = Arc::new(Mutex::new(false));
     let found_clone = Arc::clone(&found);

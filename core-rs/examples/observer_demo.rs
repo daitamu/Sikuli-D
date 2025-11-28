@@ -69,8 +69,9 @@ fn background_observation_example() {
     // Note: This requires a valid pattern image
     // 注意: これには有効なパターン画像が必要
     let pattern = Pattern::new(vec![
-        137, 80, 78, 71, 13, 10, 26, 10, // Minimal PNG header
-        // In real usage, load from file: Pattern::from_file("button.png").unwrap()
+        137, 80, 78, 71, 13, 10, 26,
+        10, // Minimal PNG header
+           // In real usage, load from file: Pattern::from_file("button.png").unwrap()
     ]);
 
     observer.on_appear(pattern, |m| {

@@ -175,10 +175,8 @@ pub fn highlight_with_config(region: &Region, config: &HighlightConfig) -> Resul
 
     unsafe {
         // Get the autorelease pool
-        let pool: *mut objc::runtime::Object = objc::msg_send![
-            objc::class!(NSAutoreleasePool),
-            new
-        ];
+        let pool: *mut objc::runtime::Object =
+            objc::msg_send![objc::class!(NSAutoreleasePool), new];
 
         let result = create_highlight_window(region, config);
 
@@ -243,7 +241,8 @@ unsafe fn create_highlight_window(
     let _: () = objc::msg_send![window, setContentView: view];
 
     // Show the window
-    let _: () = objc::msg_send![window, makeKeyAndOrderFront: std::ptr::null::<objc::runtime::Object>()];
+    let _: () =
+        objc::msg_send![window, makeKeyAndOrderFront: std::ptr::null::<objc::runtime::Object>()];
 
     debug!("Created highlight window at region {:?}", region);
     Ok(HighlightHandle::new(window, *region))
@@ -256,10 +255,8 @@ unsafe fn configure_window(
     config: &HighlightConfig,
 ) -> Result<()> {
     // Set background color (clear or semi-transparent)
-    let clear_color: *mut objc::runtime::Object = objc::msg_send![
-        objc::class!(NSColor),
-        clearColor
-    ];
+    let clear_color: *mut objc::runtime::Object =
+        objc::msg_send![objc::class!(NSColor), clearColor];
     let _: () = objc::msg_send![window, setBackgroundColor: clear_color];
 
     // Make window transparent
@@ -377,10 +374,8 @@ fn make_nsrect(x: f64, y: f64, width: f64, height: f64) -> NSRect {
 /// プライマリスクリーンの高さを取得（座標変換用）
 fn get_screen_height() -> Result<f64> {
     unsafe {
-        let main_screen: *mut objc::runtime::Object = objc::msg_send![
-            objc::class!(NSScreen),
-            mainScreen
-        ];
+        let main_screen: *mut objc::runtime::Object =
+            objc::msg_send![objc::class!(NSScreen), mainScreen];
 
         if main_screen.is_null() {
             return Err(SikulixError::PlatformError(

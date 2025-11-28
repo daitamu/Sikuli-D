@@ -263,9 +263,8 @@ impl PythonRuntime {
 /// Convenience function to detect system Python
 /// システムPythonを検出する便利関数
 pub fn detect_system_python() -> Result<PythonEnvironment> {
-    PythonEnvironment::detect_system().ok_or_else(|| {
-        SikulixError::PythonError("Python not found on system".to_string())
-    })
+    PythonEnvironment::detect_system()
+        .ok_or_else(|| SikulixError::PythonError("Python not found on system".to_string()))
 }
 
 /// Convenience function to detect all Python environments
@@ -590,7 +589,10 @@ mod tests {
         // However, the current implementation may detect it
         // This is an edge case that could be improved
         let version = SyntaxAnalyzer::detect_version(source);
-        assert!(matches!(version, PythonVersion::Python2 | PythonVersion::Unknown));
+        assert!(matches!(
+            version,
+            PythonVersion::Python2 | PythonVersion::Unknown
+        ));
     }
 
     #[test]
@@ -709,7 +711,10 @@ for i in range(10):
 "#;
         // This might be detected as Python3 due to f-string, or Unknown
         let version = SyntaxAnalyzer::detect_version(source);
-        assert!(matches!(version, PythonVersion::Python3 | PythonVersion::Unknown));
+        assert!(matches!(
+            version,
+            PythonVersion::Python3 | PythonVersion::Unknown
+        ));
     }
 
     #[test]
