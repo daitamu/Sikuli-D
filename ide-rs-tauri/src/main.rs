@@ -17,7 +17,7 @@ use sikulid::{PythonVersion, SyntaxAnalyzer};
 use std::fs;
 use std::path::PathBuf;
 use std::sync::Mutex;
-use tauri::{AppHandle, Manager, State};
+use tauri::{AppHandle, Manager, State, Window};
 
 // ============================================================================
 // Application State / アプリケーション状態
@@ -155,6 +155,7 @@ fn main() {
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .manage(AppState::default())
         .manage(capture::CaptureState::default())
         .manage(debug::DebugPanelState::new())
@@ -304,7 +305,10 @@ fn main() {
             image_library::delete_image_command,
             image_library::rename_image_command,
             image_library::find_unused_images_command,
-            image_library::import_images_command
+            image_library::import_images_command,
+            // Window control (Hide mode)
+            minimize_window,
+            show_window
         ])
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { .. } = event {
@@ -712,6 +716,28 @@ fn load_app_settings(app: AppHandle, state: State<AppState>) {
             .collect();
         info!("Loaded {} recent files", recent.len());
     }
+}
+
+// ============================================================================
+// Window Control Commands / ウィンドウ制御コマンド
+// ============================================================================
+
+/// Minimize the IDE window (for Hide mode)
+/// IDEウィンドウを最小化（Hideモード用）
+#[tauri::command]
+fn minimize_window(window: Window) -> Result<(), String> {
+    info!("Minimizing window for Hide mode");
+    window.minimize().map_err(|e| e.to_string())
+}
+
+/// Show and restore the IDE window
+/// IDEウィンドウを表示・復元
+#[tauri::command]
+fn show_window(window: Window) -> Result<(), String> {
+    info!("Restoring window from Hide mode");
+    window.show().map_err(|e| e.to_string())?;
+    window.unminimize().map_err(|e| e.to_string())?;
+    window.set_focus().map_err(|e| e.to_string())
 }
 
 // ============================================================================

@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Screen Capture</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.3);
+      cursor: crosshair;
+      overflow: hidden;
+      -webkit-user-select: none;
+         -moz-user-select: none;
+              user-select: none;
+    }
+
+    #selection {
+      position: absolute;
+      border: 2px solid #00ff00;
+      background: rgba(0, 255, 0, 0.1);
+      display: none;
+      pointer-events: none;
+    }
+
+    #info {
+      position: fixed;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 4px;
+      font-family: sans-serif;
+      font-size: 14px;
+      z-index: 1000;
+    }
+
+    #dimensions {
+      position: absolute;
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 4px 8px;
+      border-radius: 2px;
+      font-family: monospace;
+      font-size: 12px;
+      display: none;
+      pointer-events: none;
+    }
+
+    #error {
+      position: fixed;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255, 0, 0, 0.8);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 4px;
+      font-family: sans-serif;
+      font-size: 14px;
+      display: none;
+      z-index: 1000;
+    }
+  </style>
+</head>
+<body>
+  <div id="info">Click and drag to select a region. Press ESC to cancel.</div>
+  <div id="selection"></div>
+  <div id="dimensions"></div>
+  <div id="error"></div>
+
+  <script>
+    // Debug logging
+    function log(msg) {
+      console.log('[Capture]', msg);
+    }
+
+    function showError(msg) {
+      const errorEl = document.getElementById('error');
+      errorEl.textContent = msg;
+      errorEl.style.display = 'block';
+      console.error('[Capture Error]', msg);
+    }
+
+    // Get invoke function - try multiple paths for Tauri v2 compatibility
+    let invoke = null;
+
+    function initTauri() {
+      log('Initializing Tauri API...');
+      log('window.__TAURI__: ' + (typeof window.__TAURI__));
+
+      if (window.__TAURI__) {
+        log('__TAURI__ keys: ' + Object.keys(window.__TAURI__).join(', '));
+
+        // Tauri v2 structure
+        if (window.__TAURI__.core && typeof window.__TAURI__.core.invoke === 'function') {
+          invoke = window.__TAURI__.core.invoke;
+          log('Using window.__TAURI__.core.invoke');
+          return true;
+        }
+
+        // Alternative: direct invoke on __TAURI__
+        if (typeof window.__TAURI__.invoke === 'function') {
+          invoke = window.__TAURI__.invoke;
+          log('Using window.__TAURI__.invoke');
+          return true;
+        }
+      }
+
+      // Check for internals
+      if (window.__TAURI_INTERNALS__) {
+        log('__TAURI_INTERNALS__ found');
+        if (typeof window.__TAURI_INTERNALS__.invoke === 'function') {
+          invoke = window.__TAURI_INTERNALS__.invoke;
+          log('Using window.__TAURI_INTERNALS__.invoke');
+          return true;
+        }
+      }
+
+      showError('Tauri API not available');
+      return false;
+    }
+
+    // Wait for DOM and Tauri to be ready
+    document.addEventListener('DOMContentLoaded', () => {
+      log('DOM ready, waiting for Tauri...');
+
+      // Try to init immediately
+      if (!initTauri()) {
+        // Wait a bit and retry
+        setTimeout(() => {
+          if (!initTauri()) {
+            showError('Failed to initialize Tauri API after retry');
+          }
+        }, 500);
+      }
+    });
+
+    let isSelecting = false;
+    let startX = 0;
+    let startY = 0;
+    let currentX = 0;
+    let currentY = 0;
+
+    const selection = document.getElementById('selection');
+    const dimensions = document.getElementById('dimensions');
+
+    function updateSelection() {
+      const x = Math.min(startX, currentX);
+      const y = Math.min(startY, currentY);
+      const width = Math.abs(currentX - startX);
+      const height = Math.abs(currentY - startY);
+
+      selection.style.left = x + 'px';
+      selection.style.top = y + 'px';
+      selection.style.width = width + 'px';
+      selection.style.height = height + 'px';
+
+      // Update dimensions display
+      dimensions.textContent = width + ' x ' + height;
+      dimensions.style.left = (x + width + 10) + 'px';
+      dimensions.style.top = (y + height + 10) + 'px';
+    }
+
+    document.addEventListener('mousedown', (e) => {
+      if (e.button !== 0) return; // Left click only
+
+      isSelecting = true;
+      startX = e.clientX;
+      startY = e.clientY;
+      currentX = e.clientX;
+      currentY = e.clientY;
+
+      selection.style.display = 'block';
+      dimensions.style.display = 'block';
+      updateSelection();
+      log('Selection started at ' + startX + ', ' + startY);
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (!isSelecting) return;
+
+      currentX = e.clientX;
+      currentY = e.clientY;
+      updateSelection();
+    });
+
+    document.addEventListener('mouseup', async (e) => {
+      if (!isSelecting || e.button !== 0) return;
+      isSelecting = false;
+
+      const x = Math.min(startX, currentX);
+      const y = Math.min(startY, currentY);
+      const width = Math.abs(currentX - startX);
+      const height = Math.abs(currentY - startY);
+
+      log('Selection ended: x=' + x + ', y=' + y + ', w=' + width + ', h=' + height);
+
+      // Only capture if selection has meaningful size
+      if (width > 5 && height > 5) {
+        if (!invoke) {
+          showError('Invoke not available');
+          return;
+        }
+
+        try {
+          log('Calling capture_region...');
+          const result = await invoke('capture_region', {
+            region: {
+              x: Math.round(x),
+              y: Math.round(y),
+              width: Math.round(width),
+              height: Math.round(height)
+            }
+          });
+          log('Capture result: ' + JSON.stringify(result));
+        } catch (err) {
+          showError('Capture failed: ' + err);
+        }
+      } else {
+        // Cancel if selection is too small
+        log('Selection too small, cancelling...');
+        if (invoke) {
+          try {
+            await invoke('cancel_capture');
+          } catch (err) {
+            showError('Cancel failed: ' + err);
+          }
+        }
+      }
+    });
+
+    document.addEventListener('keydown', async (e) => {
+      if (e.key === 'Escape') {
+        log('ESC pressed, cancelling...');
+        if (invoke) {
+          try {
+            await invoke('cancel_capture');
+          } catch (err) {
+            showError('Cancel failed: ' + err);
+          }
+        }
+      }
+    });
+  </script>
+</body>
+</html>

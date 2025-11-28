@@ -1,7 +1,7 @@
 //! Script Execution Engine / スクリプト実行エンジン
 //!
-//! Provides script execution functionality by calling sikulix CLI (runtime-rs) as a subprocess.
-//! sikulix CLI (runtime-rs) をサブプロセスとして呼び出すことでスクリプト実行機能を提供します。
+//! Provides script execution functionality by calling sikulid CLI (runtime-rs) as a subprocess.
+//! sikulid CLI (runtime-rs) をサブプロセスとして呼び出すことでスクリプト実行機能を提供します。
 //!
 //! Design principle: IDE does NOT use core-rs directly, it delegates to runtime-rs.
 //! 設計原則：IDEはcore-rsを直接使用せず、runtime-rsに委譲します。
@@ -138,27 +138,74 @@ impl ScriptProcessState {
 // Script Executor / スクリプト実行エンジン
 // ============================================================================
 
-/// Script executor that calls sikulix CLI
-/// sikulix CLIを呼び出すスクリプト実行エンジン
+/// Script executor that calls sikulid CLI
+/// sikulid CLIを呼び出すスクリプト実行エンジン
 pub struct ScriptExecutor {
-    sikulix_path: PathBuf,
+    sikulid_path: PathBuf,
 }
 
 impl ScriptExecutor {
     /// Create new script executor
     /// 新しいスクリプト実行エンジンを作成
     pub fn new() -> Self {
-        // Try to find sikulix binary in PATH
-        // PATH内でsikulixバイナリを探す
-        let sikulix_path = if cfg!(target_os = "windows") {
-            PathBuf::from("sikulix.exe")
+        let sikulid_path = Self::find_sikulid_binary();
+        debug!("ScriptExecutor initialized with path: {:?}", sikulid_path);
+        Self { sikulid_path }
+    }
+
+    /// Find sikulid binary in various locations
+    /// 様々な場所でsikulidバイナリを検索
+    fn find_sikulid_binary() -> PathBuf {
+        let exe_name = if cfg!(target_os = "windows") {
+            "sikulid.exe"
         } else {
-            PathBuf::from("sikulix")
+            "sikulid"
         };
 
-        debug!("ScriptExecutor initialized with path: {:?}", sikulix_path);
+        // 1. Check next to the IDE executable (production)
+        // IDE実行ファイルの隣をチェック（本番環境）
+        if let Ok(exe_path) = std::env::current_exe() {
+            if let Some(exe_dir) = exe_path.parent() {
+                let sikulid_path = exe_dir.join(exe_name);
+                debug!("Checking for sikulid at: {:?}", sikulid_path);
+                if sikulid_path.exists() {
+                    info!("Found sikulid at: {:?}", sikulid_path);
+                    return sikulid_path;
+                }
 
-        Self { sikulix_path }
+                // 2. Check in workspace target/release (development)
+                // ワークスペースのtarget/releaseをチェック（開発環境）
+                let mut current = exe_dir.to_path_buf();
+                for _ in 0..10 {
+                    // Check target/release
+                    let release_path = current.join("target").join("release").join(exe_name);
+                    debug!("Checking for sikulid at: {:?}", release_path);
+                    if release_path.exists() {
+                        info!("Found sikulid at: {:?}", release_path);
+                        return release_path;
+                    }
+
+                    // Check target/debug
+                    let debug_path = current.join("target").join("debug").join(exe_name);
+                    debug!("Checking for sikulid at: {:?}", debug_path);
+                    if debug_path.exists() {
+                        info!("Found sikulid at: {:?}", debug_path);
+                        return debug_path;
+                    }
+
+                    if let Some(parent) = current.parent() {
+                        current = parent.to_path_buf();
+                    } else {
+                        break;
+                    }
+                }
+            }
+        }
+
+        // 3. Fallback to PATH
+        // PATHにフォールバック
+        warn!("sikulid not found in known locations, falling back to PATH");
+        PathBuf::from(exe_name)
     }
 
     /// Execute script and wait for completion
@@ -324,27 +371,41 @@ impl ScriptExecutor {
 
         tokio::spawn(async move {
             // Wait for process to complete
-            let exit_code = {
+            // Note: We DON'T remove from HashMap here - we need the process handle for stop_script
+            // プロセスをHashMapから削除しない - stop_scriptでハンドルが必要
+            let exit_code = loop {
+                // Check if process still exists (might be killed by stop_script)
                 let mut processes = processes_complete.lock().await;
-                if let Some(mut running) = processes.remove(&pid_complete) {
-                    let duration = running.start_time.elapsed();
-                    match running.child.wait().await {
-                        Ok(status) => {
+                if let Some(running) = processes.get_mut(&pid_complete) {
+                    // Try to check if process has exited
+                    match running.child.try_wait() {
+                        Ok(Some(status)) => {
+                            // Process has exited - now remove from HashMap
+                            let duration = running.start_time.elapsed();
                             let code = status.code();
                             info!(
                                 "[{}] Process completed: exit_code={:?}, duration={:?}",
                                 pid_complete, code, duration
                             );
-                            code
+                            processes.remove(&pid_complete);
+                            break code;
+                        }
+                        Ok(None) => {
+                            // Process still running - drop lock and wait a bit
+                            drop(processes);
+                            tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+                            continue;
                         }
                         Err(e) => {
-                            error!("[{}] Failed to wait for process: {}", pid_complete, e);
-                            None
+                            error!("[{}] Failed to check process status: {}", pid_complete, e);
+                            processes.remove(&pid_complete);
+                            break None;
                         }
                     }
                 } else {
-                    warn!("[{}] Process not found in state", pid_complete);
-                    None
+                    // Process was removed by stop_script
+                    debug!("[{}] Process was stopped externally", pid_complete);
+                    break None;
                 }
             };
 
@@ -372,7 +433,7 @@ impl ScriptExecutor {
     ) -> Result<Command, String> {
         debug!("Building command for script: {}", script_path);
 
-        let mut cmd = Command::new(&self.sikulix_path);
+        let mut cmd = Command::new(&self.sikulid_path);
 
         // Add 'run' subcommand
         cmd.arg("run").arg(script_path);
@@ -538,7 +599,7 @@ mod tests {
     #[test]
     fn test_script_executor_creation() {
         let executor = ScriptExecutor::new();
-        assert!(executor.sikulix_path.to_string_lossy().contains("sikulix"));
+        assert!(executor.sikulid_path.to_string_lossy().contains("sikulid"));
     }
 
     #[test]

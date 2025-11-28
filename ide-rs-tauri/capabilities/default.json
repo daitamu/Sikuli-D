@@ -1,27 +1,52 @@
 {
   "$schema": "./gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Default capabilities for SikuliX IDE",
+  "description": "Default capabilities for Sikuli-D IDE",
   "windows": ["main", "capture-overlay"],
   "permissions": [
     "core:default",
     "shell:allow-open",
     "shell:allow-execute",
-    "dialog:allow-open",
-    "dialog:allow-save",
-    "dialog:allow-message",
-    "dialog:allow-ask",
-    "dialog:allow-confirm",
-    "fs:allow-read-text-file",
-    "fs:allow-write-text-file",
-    "fs:allow-read-file",
-    "fs:allow-write-file",
-    "fs:allow-read-dir",
-    "fs:allow-mkdir",
+    "dialog:default",
+    "global-shortcut:default",
+    {
+      "identifier": "fs:default",
+      "allow": [{ "path": "**" }]
+    },
+    {
+      "identifier": "fs:allow-read-text-file",
+      "allow": [{ "path": "**" }]
+    },
+    {
+      "identifier": "fs:allow-write-text-file",
+      "allow": [{ "path": "**" }]
+    },
+    {
+      "identifier": "fs:allow-read-file",
+      "allow": [{ "path": "**" }]
+    },
+    {
+      "identifier": "fs:allow-write-file",
+      "allow": [{ "path": "**" }]
+    },
+    {
+      "identifier": "fs:allow-read-dir",
+      "allow": [{ "path": "**" }]
+    },
+    {
+      "identifier": "fs:allow-mkdir",
+      "allow": [{ "path": "**" }]
+    },
+    {
+      "identifier": "fs:allow-exists",
+      "allow": [{ "path": "**" }]
+    },
+    {
+      "identifier": "fs:allow-stat",
+      "allow": [{ "path": "**" }]
+    },
     "fs:allow-remove",
     "fs:allow-rename",
-    "fs:allow-copy-file",
-    "fs:allow-exists",
-    "fs:allow-stat"
+    "fs:allow-copy-file"
   ]
 }

@@ -31,7 +31,7 @@ pub fn execute_script(
 
     // Detect Python version
     let python_version = detect_python_version(&source);
-    log::info!("Detected Python version: {:?}", python_version);
+    log::debug!("Detected Python version: {}", python_version);
 
     // Convert Python 2 code if needed
     let (script_to_run, temp_file) = if python_version == PythonVersionDetected::Python2 {
@@ -80,10 +80,21 @@ pub enum PythonVersionDetected {
     Python2,
     /// Python 3 syntax detected / Python 3構文を検出
     Python3,
-    /// Could be either version / どちらのバージョンか不明
+    /// Could be either version (compatible with both) / どちらのバージョンでも動作可能
     Unknown,
     /// Mixed Python 2/3 syntax / Python 2/3混在構文
     Mixed,
+}
+
+impl std::fmt::Display for PythonVersionDetected {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            PythonVersionDetected::Python2 => write!(f, "Python2 only"),
+            PythonVersionDetected::Python3 => write!(f, "Python3 only"),
+            PythonVersionDetected::Unknown => write!(f, "Python2/3 OK"),
+            PythonVersionDetected::Mixed => write!(f, "Python2/3 Mixed"),
+        }
+    }
 }
 
 /// Detect Python version from source code
@@ -384,38 +395,64 @@ pub fn find_python() -> Result<PythonCommand> {
 /// sikulid_apiの親ディレクトリを返し、`sikulid_api`と`sikuli`（互換モジュール）
 /// の両方をインポートできるようにします。
 pub fn get_sikulid_api_path() -> Result<String> {
+    log::debug!("Searching for sikulid_api...");
+
     // First check if we're in development
     let exe_path = std::env::current_exe()?;
+    log::debug!("Executable path: {}", exe_path.display());
+
     if let Some(parent) = exe_path.parent() {
         // Check for sikulid_api next to executable
         let api_path = parent.join("sikulid_api");
+        log::debug!("Checking: {}", api_path.display());
         if api_path.exists() {
-            // Return parent directory, not the sikulid_api directory itself
-            // sikulid_apiディレクトリ自体ではなく、親ディレクトリを返す
+            log::debug!("Found sikulid_api at: {}", parent.display());
             return Ok(parent.to_string_lossy().to_string());
         }
 
         // Check in parent directories (development)
-        for ancestor in parent.ancestors().take(5) {
-            let api_path = ancestor.join("runtime-rs").join("sikulid_api");
+        // Walk up the directory tree looking for runtime-rs/sikulid_api
+        let mut current = parent.to_path_buf();
+        for _ in 0..10 {
+            let api_path = current.join("runtime-rs").join("sikulid_api");
+            log::debug!("Checking: {}", api_path.display());
             if api_path.exists() {
-                // Return runtime-rs directory as parent
-                // 親としてruntime-rsディレクトリを返す
-                return Ok(ancestor.join("runtime-rs").to_string_lossy().to_string());
+                let result = current.join("runtime-rs").to_string_lossy().to_string();
+                log::debug!("Found sikulid_api at: {}", result);
+                return Ok(result);
+            }
+
+            // Also check for sikulid_api directly (installed location)
+            let direct_path = current.join("sikulid_api");
+            if direct_path.exists() {
+                let result = current.to_string_lossy().to_string();
+                log::debug!("Found sikulid_api at: {}", result);
+                return Ok(result);
+            }
+
+            if let Some(p) = current.parent() {
+                current = p.to_path_buf();
+            } else {
+                break;
             }
         }
     }
 
     // Fallback to current directory
     let current = std::env::current_dir()?;
+    log::debug!("Checking current directory: {}", current.display());
     let api_path = current.join("sikulid_api");
     if api_path.exists() {
-        // Return current directory
-        // 現在のディレクトリを返す
         return Ok(current.to_string_lossy().to_string());
     }
 
-    bail!("sikulid_api not found")
+    // Also check for runtime-rs/sikulid_api from current directory
+    let api_path = current.join("runtime-rs").join("sikulid_api");
+    if api_path.exists() {
+        return Ok(current.join("runtime-rs").to_string_lossy().to_string());
+    }
+
+    bail!("sikulid_api not found. Please ensure runtime-rs/sikulid_api exists.")
 }
 
 #[cfg(test)]

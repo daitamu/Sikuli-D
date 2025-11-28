@@ -1,0 +1,101 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Base styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1e1e1e;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #424242;
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Custom utility classes */
+@layer utilities {
+  .no-drag {
+    -webkit-app-region: no-drag;
+  }
+
+  .drag {
+    -webkit-app-region: drag;
+  }
+}
+
+/* Flow mode canvas styles */
+.flow-canvas {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* Node styles for flow mode */
+.flow-node {
+  @apply bg-dark-surface border border-dark-border rounded-lg shadow-lg;
+  min-width: 150px;
+}
+
+.flow-node-header {
+  @apply px-3 py-2 border-b border-dark-border flex items-center gap-2;
+}
+
+.flow-node-body {
+  @apply p-3;
+}
+
+/* Connection port styles */
+.flow-port {
+  @apply w-3 h-3 rounded-full bg-sikuli-500 border-2 border-dark-bg;
+  cursor: crosshair;
+}
+
+.flow-port:hover {
+  @apply bg-sikuli-400 scale-125;
+}
+
+/* Simple mode list styles */
+.script-line {
+  @apply flex items-center gap-2 px-3 py-2 border-b border-dark-border;
+  @apply hover:bg-dark-hover cursor-pointer;
+}
+
+.script-line.selected {
+  @apply bg-dark-active border-l-2 border-l-sikuli-500;
+}
+
+.script-line.nested {
+  @apply ml-6;
+}
+
+/* Drag and drop styles */
+.dragging {
+  @apply opacity-50;
+}
+
+.drop-target {
+  @apply border-2 border-dashed border-sikuli-500;
+}

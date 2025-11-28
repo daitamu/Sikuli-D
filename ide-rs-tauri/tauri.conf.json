@@ -1,16 +1,19 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "SikuliX IDE",
-  "version": "0.8.0",
+  "productName": "Sikuli-D IDE",
+  "version": "0.8.1",
   "identifier": "com.sikulix.ide",
   "build": {
-    "frontendDist": "dist"
+    "devUrl": "http://localhost:5173",
+    "frontendDist": "src-frontend/dist",
+    "beforeDevCommand": "cd src-frontend && npm run dev",
+    "beforeBuildCommand": "cd src-frontend && npm run build"
   },
   "app": {
     "withGlobalTauri": true,
     "windows": [
       {
-        "title": "SikuliX IDE",
+        "title": "Sikuli-D IDE",
         "width": 1024,
         "height": 768,
         "minWidth": 800,

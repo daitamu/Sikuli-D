@@ -62,9 +62,12 @@ pub async fn start_capture(app: AppHandle, state: State<'_, CaptureState>) -> Re
         }
     }
 
-    // Mark capture as active
+    // Mark capture as active and clear last capture path
     if let Ok(mut active) = state.capture_active.lock() {
         *active = true;
+    }
+    if let Ok(mut last_path) = state.last_capture_path.lock() {
+        *last_path = None;
     }
 
     // Create capture overlay window
