@@ -10,7 +10,11 @@ version = 2
 
 # Ignore specific advisories (if needed)
 # 特定のアドバイザリを無視（必要な場合）
-ignore = []
+ignore = [
+    # paste crate is unmaintained but still functional and widely used
+    # paste クレートはメンテナンスされていないが機能的で広く使用されている
+    "RUSTSEC-2024-0436",
+]
 
 # License configuration
 # ライセンス設定
