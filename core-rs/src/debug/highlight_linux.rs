@@ -16,6 +16,8 @@ use x11rb::protocol::xproto::*;
 #[cfg(target_os = "linux")]
 use x11rb::rust_connection::RustConnection;
 #[cfg(target_os = "linux")]
+use x11rb::wrapper::ConnectionExt as _;
+#[cfg(target_os = "linux")]
 use x11rb::COPY_DEPTH_FROM_PARENT;
 
 /// Configuration for highlight overlay display

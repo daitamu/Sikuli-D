@@ -66,6 +66,8 @@ pub enum SikulixError {
     },
     #[error("Operation cancelled: {0}")]
     Cancelled(String),
+    #[error("Application error: {0}")]
+    AppError(String),
     #[error("Wait condition not met within {timeout_secs}s: {condition}")]
     WaitTimeout {
         condition: String,

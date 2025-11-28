@@ -148,7 +148,7 @@ fn test_local_variables() {
 fn test_global_variables() {
     let debugger = Debugger::new();
 
-    debugger.update_global("PI".to_string(), VariableValue::Float(3.14159));
+    debugger.update_global("TEST_VALUE".to_string(), VariableValue::Float(2.5));
     debugger.update_global("DEBUG".to_string(), VariableValue::Bool(true));
 
     let globals = debugger.get_variables(Scope::Global);
@@ -177,7 +177,7 @@ fn test_all_variables() {
 #[test]
 fn test_variable_value_display() {
     assert_eq!(format!("{}", VariableValue::Int(42)), "42");
-    assert_eq!(format!("{}", VariableValue::Float(3.14)), "3.14");
+    assert_eq!(format!("{}", VariableValue::Float(2.5)), "2.5");
     assert_eq!(
         format!("{}", VariableValue::String("hello".to_string())),
         "\"hello\""
@@ -327,9 +327,9 @@ fn test_evaluate_expression_simple_variable() {
 fn test_evaluate_expression_global_variable() {
     let debugger = Debugger::new();
 
-    debugger.update_global("PI".to_string(), VariableValue::Float(3.14));
+    debugger.update_global("TEST_VALUE".to_string(), VariableValue::Float(2.5));
 
-    let result = debugger.evaluate_expression("PI");
+    let result = debugger.evaluate_expression("TEST_VALUE");
     assert!(result.is_ok());
 }
 

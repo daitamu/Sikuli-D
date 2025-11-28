@@ -442,7 +442,7 @@ mod tests {
         // Test that Location implements Clone
         // LocationがCloneを実装していることをテスト
         let loc1 = Location::new(100, 200);
-        let loc2 = loc1.clone();
+        let loc2 = loc1;
         assert_eq!(loc1, loc2);
     }
 

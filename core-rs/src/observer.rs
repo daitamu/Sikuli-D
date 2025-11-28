@@ -81,6 +81,7 @@ type ChangeHandler = Box<dyn Fn(f64) + Send + 'static>;
 ///
 /// ObserverはスレッドセーフなストップシグナルにArc<AtomicBool>を使用し、
 /// 共有状態の保護にArc<Mutex<T>>を使用します。全てのコールバックはSend + 'staticである必要があります。
+#[allow(clippy::type_complexity)]
 pub struct Observer {
     /// Region to observe
     /// 監視対象の領域
@@ -394,7 +395,7 @@ impl Observer {
         let running = Arc::clone(&self.running);
         let interval_ms = self.interval_ms;
         let region = self.region;
-        let matcher = self.matcher.clone();
+        let matcher = self.matcher;
         let appear_handlers = Arc::clone(&self.appear_handlers);
         let vanish_handlers = Arc::clone(&self.vanish_handlers);
         let change_handlers = Arc::clone(&self.change_handlers);

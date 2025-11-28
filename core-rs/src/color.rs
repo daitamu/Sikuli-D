@@ -95,16 +95,10 @@ pub fn save_screen_capture(path: &str) -> Result<String> {
     // Save with appropriate format
     match extension.as_str() {
         "png" => img.save(path).map_err(|e| {
-            SikulixError::IoError(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                format!("Failed to save PNG: {}", e),
-            ))
+            SikulixError::IoError(std::io::Error::other(format!("Failed to save PNG: {}", e)))
         })?,
         "jpg" | "jpeg" => img.save(path).map_err(|e| {
-            SikulixError::IoError(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                format!("Failed to save JPEG: {}", e),
-            ))
+            SikulixError::IoError(std::io::Error::other(format!("Failed to save JPEG: {}", e)))
         })?,
         _ => {
             return Err(SikulixError::IoError(std::io::Error::new(
@@ -159,16 +153,10 @@ pub fn save_region_capture(region: &Region, path: &str) -> Result<String> {
     // Save with appropriate format
     match extension.as_str() {
         "png" => img.save(path).map_err(|e| {
-            SikulixError::IoError(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                format!("Failed to save PNG: {}", e),
-            ))
+            SikulixError::IoError(std::io::Error::other(format!("Failed to save PNG: {}", e)))
         })?,
         "jpg" | "jpeg" => img.save(path).map_err(|e| {
-            SikulixError::IoError(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                format!("Failed to save JPEG: {}", e),
-            ))
+            SikulixError::IoError(std::io::Error::other(format!("Failed to save JPEG: {}", e)))
         })?,
         _ => {
             return Err(SikulixError::IoError(std::io::Error::new(

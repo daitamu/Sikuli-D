@@ -1298,8 +1298,8 @@ mod tests {
         assert!(result.is_ok());
         let (x, y) = result.unwrap();
         // Position should be reasonable (multi-monitor setups can have negative coordinates)
-        assert!(x >= -10000 && x <= 100000);
-        assert!(y >= -10000 && y <= 100000);
+        assert!((-10000..=100000).contains(&x));
+        assert!((-10000..=100000).contains(&y));
     }
 
     // ========================================================================

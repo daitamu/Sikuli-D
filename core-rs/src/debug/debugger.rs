@@ -310,10 +310,7 @@ impl Debugger {
     pub fn add_breakpoint(&self, file: &str, line: u32) {
         info!("Adding breakpoint at {}:{}", file, line);
         let mut breakpoints = self.breakpoints.lock().unwrap();
-        breakpoints
-            .entry(file.to_string())
-            .or_insert_with(Vec::new)
-            .push(line);
+        breakpoints.entry(file.to_string()).or_default().push(line);
     }
 
     /// Remove a breakpoint from the specified file and line
@@ -764,7 +761,7 @@ mod tests {
         dbg.push_frame(frame);
 
         // Add global variable
-        dbg.update_global("global_var".to_string(), VariableValue::Float(3.14));
+        dbg.update_global("global_var".to_string(), VariableValue::Float(2.5));
 
         // Get local variables
         let locals = dbg.get_variables(Scope::Local);
@@ -782,7 +779,7 @@ mod tests {
     #[test]
     fn test_variable_value_display() {
         assert_eq!(format!("{}", VariableValue::Int(42)), "42");
-        assert_eq!(format!("{}", VariableValue::Float(3.14)), "3.14");
+        assert_eq!(format!("{}", VariableValue::Float(2.5)), "2.5");
         assert_eq!(
             format!("{}", VariableValue::String("hello".to_string())),
             "\"hello\""

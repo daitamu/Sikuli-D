@@ -1291,8 +1291,8 @@ mod tests {
         // 半分のピクセルが大きく異なる2つの画像を作成
         let data1 = vec![0u8; 100];
         let mut data2 = vec![0u8; 100];
-        for i in 0..50 {
-            data2[i] = 255; // Change first 50 pixels
+        for pixel in data2.iter_mut().take(50) {
+            *pixel = 255; // Change first 50 pixels
         }
 
         let img1 = GrayImage::from_raw(10, 10, data1).unwrap();

@@ -44,7 +44,7 @@ fn benchmark_screen_capture_region(c: &mut Criterion) {
 fn benchmark_screen_dimensions(c: &mut Criterion) {
     let mut group = c.benchmark_group("screen_dimensions");
 
-    let screen = Screen::primary();
+    let mut screen = Screen::primary();
 
     group.bench_function("get_dimensions", |b| {
         b.iter(|| {
