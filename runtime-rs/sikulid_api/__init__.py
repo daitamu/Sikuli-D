@@ -290,6 +290,40 @@ from time import sleep
 # グローバルSCREENインスタンスを初期化
 SCREEN = Screen(0)
 
+
+def getScreen(index=0):
+    """Get a Screen object for the specified monitor / 指定されたモニターの Screen オブジェクトを取得
+
+    Args:
+        index: Monitor index (0 = primary) / モニターインデックス (0 = プライマリ)
+
+    Returns:
+        Screen object for the specified monitor / 指定されたモニターの Screen オブジェクト
+
+    Example:
+        # Get primary screen / プライマリスクリーンを取得
+        screen = getScreen()
+
+        # Get second monitor / 2番目のモニターを取得
+        screen2 = getScreen(1)
+    """
+    return Screen(index)
+
+
+def getNumberScreens():
+    """Get the number of connected screens/monitors / 接続されている画面/モニターの数を取得
+
+    Returns:
+        Number of screens / 画面数
+
+    Example:
+        num = getNumberScreens()
+        for i in range(num):
+            screen = getScreen(i)
+    """
+    return Screen.get_number_screens()
+
+
 # Image path management / 画像パス管理
 _bundle_path = None
 _image_paths = []
@@ -527,6 +561,8 @@ __all__ = [
     "Settings",
     "FindFailed",
     "SCREEN",
+    "getScreen",
+    "getNumberScreens",
     # Find functions / 検索関数
     "find",
     "find_all",

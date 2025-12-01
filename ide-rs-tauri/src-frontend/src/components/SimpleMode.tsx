@@ -167,7 +167,7 @@ export function SimpleMode({
     const isContainer = line.type === 'if' || line.type === 'loop'
 
     return (
-      <div key={line.id}>
+      <div key={line.id} className="group">
         <div
           draggable
           onDragStart={(e) => handleDragStart(e, line.id)}
@@ -175,13 +175,19 @@ export function SimpleMode({
           onDrop={(e) => handleDrop(e, line.id)}
           onDragLeave={() => setDragOverId(null)}
           onClick={() => onSelectLine(line.id)}
-          className={`script-line ${isSelected ? 'selected' : ''} ${
-            dragOverId === line.id ? 'drop-target' : ''
+          className={`script-line transition-all duration-200 ${
+            isSelected 
+              ? 'bg-sikuli-500/10 border-l-4 border-l-sikuli-500 border-y border-y-transparent' 
+              : 'border-l-4 border-l-transparent border-b border-b-dark-border/30 hover:bg-dark-surface'
+          } ${
+            dragOverId === line.id ? 'drop-target ring-2 ring-sikuli-500 ring-inset' : ''
           }`}
           style={{ paddingLeft: `${depth * 24 + 12}px` }}
         >
           {/* Drag Handle / ドラッグハンドル */}
-          <GripVertical size={14} className="text-gray-500 cursor-grab" />
+          <div className="p-1 text-gray-600 group-hover:text-gray-400 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity">
+            <GripVertical size={14} />
+          </div>
 
           {/* Collapse Toggle / 折りたたみトグル */}
           {isContainer && (
@@ -190,7 +196,7 @@ export function SimpleMode({
                 e.stopPropagation()
                 onUpdateLine(line.id, { isCollapsed: !line.isCollapsed })
               }}
-              className="p-0.5 hover:bg-dark-hover rounded"
+              className="p-0.5 text-gray-500 hover:text-gray-300 hover:bg-dark-hover rounded transition-colors"
             >
               {line.isCollapsed ? (
                 <ChevronRight size={14} />
@@ -201,33 +207,37 @@ export function SimpleMode({
           )}
 
           {/* Command Icon / コマンドアイコン */}
-          <IconComponent size={16} className="text-sikuli-400" />
+          <div className={`p-1.5 rounded-md ${isSelected ? 'bg-sikuli-500 text-white shadow-md' : 'bg-dark-bg text-gray-400 group-hover:text-sikuli-400 group-hover:bg-dark-surface border border-dark-border/50'}`}>
+            <IconComponent size={14} strokeWidth={2} />
+          </div>
 
           {/* Command Label / コマンドラベル */}
-          <span className="text-sm flex-1">
-            {label.en}
-            <span className="text-gray-500 text-xs ml-2">({label.ja})</span>
-          </span>
+          <div className="flex-1 flex flex-col justify-center ml-1">
+            <span className={`text-sm font-medium ${isSelected ? 'text-sikuli-100' : 'text-gray-300'}`}>
+              {label.en}
+            </span>
+            {/* Optional: show JA label on hover or subtitle? Keeping it minimal for now */}
+          </div>
 
           {/* Image Thumbnail / 画像サムネイル */}
           {line.target && (
-            <div className="w-8 h-8 bg-dark-bg rounded border border-dark-border overflow-hidden flex items-center justify-center">
+            <div className="relative w-8 h-8 bg-dark-bg rounded-md border border-dark-border overflow-hidden flex items-center justify-center shrink-0 shadow-sm group-hover:border-sikuli-500/50 transition-colors">
+              <div className="absolute inset-0 bg-[url('/transparent-grid.png')] opacity-20"></div>
               {line.target.startsWith('data:') ? (
-                <img src={line.target} alt="target" className="w-full h-full object-cover" />
+                <img src={line.target} alt="target" className="w-full h-full object-contain relative z-10" />
               ) : line.target.match(/\.(png|jpg|jpeg|gif|bmp)$/i) ? (
                 <img
                   src={convertFileSrc(line.target)}
                   alt="target"
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain relative z-10"
                   onError={(e) => {
-                    // Fallback to icon if image fails to load
                     const target = e.target as HTMLImageElement
                     target.style.display = 'none'
                     target.parentElement?.classList.add('show-fallback')
                   }}
                 />
               ) : (
-                <Image size={16} className="text-gray-500" />
+                <Image size={14} className="text-gray-500 relative z-10" />
               )}
             </div>
           )}
@@ -239,13 +249,13 @@ export function SimpleMode({
               value={line.params || ''}
               onChange={(e) => onUpdateLine(line.id, { params: e.target.value })}
               onClick={(e) => e.stopPropagation()}
-              placeholder="Text to type..."
-              className="w-32 px-2 py-1 text-xs bg-dark-bg border border-dark-border rounded"
+              placeholder="Type here..."
+              className="w-40 px-2 py-1 text-xs bg-dark-bg border border-dark-border rounded focus:border-sikuli-500 focus:ring-1 focus:ring-sikuli-500 outline-none transition-all text-gray-200 font-mono placeholder-gray-600"
             />
           )}
 
           {line.type === 'wait' && (
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 bg-dark-bg border border-dark-border rounded px-2 py-1 focus-within:border-sikuli-500 focus-within:ring-1 focus-within:ring-sikuli-500 transition-all">
               <input
                 type="number"
                 value={line.params || '1'}
@@ -253,15 +263,15 @@ export function SimpleMode({
                 onClick={(e) => e.stopPropagation()}
                 min="0"
                 step="0.1"
-                className="w-16 px-2 py-1 text-xs bg-dark-bg border border-dark-border rounded"
+                className="w-12 bg-transparent border-none outline-none text-xs font-mono text-gray-200 text-right p-0"
               />
-              <span className="text-xs text-gray-500">sec</span>
+              <span className="text-[10px] text-gray-500 font-medium">s</span>
             </div>
           )}
 
           {/* Similarity / 一致率 */}
           {line.similarity !== undefined && (
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-2 bg-dark-bg/50 px-2 py-1 rounded border border-transparent hover:border-dark-border transition-colors">
               <input
                 type="range"
                 value={line.similarity}
@@ -272,9 +282,9 @@ export function SimpleMode({
                 min="0"
                 max="1"
                 step="0.05"
-                className="w-16"
+                className="w-16 accent-sikuli-500 h-1 bg-dark-surface rounded cursor-pointer"
               />
-              <span className="text-xs text-gray-500 w-8">
+              <span className="text-[10px] font-mono text-gray-400 w-8 text-right">
                 {Math.round(line.similarity * 100)}%
               </span>
             </div>
@@ -286,7 +296,8 @@ export function SimpleMode({
               e.stopPropagation()
               onDeleteLine(line.id)
             }}
-            className="p-1 text-gray-500 hover:text-red-400 hover:bg-dark-hover rounded opacity-0 group-hover:opacity-100 transition-opacity"
+            className="ml-2 p-1.5 text-gray-600 hover:text-red-400 hover:bg-red-500/10 rounded opacity-0 group-hover:opacity-100 transition-all"
+            title="Delete line"
           >
             <Trash2 size={14} />
           </button>
@@ -294,11 +305,13 @@ export function SimpleMode({
 
         {/* Children (for If/Loop) / 子要素（If/Loop用） */}
         {isContainer && !line.isCollapsed && line.children && (
-          <div className="border-l-2 border-dark-border ml-6">
+          <div className="border-l border-dark-border/30 ml-[29px] relative">
+             {/* Connection line visual aid */}
+             <div className="absolute top-0 bottom-0 left-0 w-px bg-gradient-to-b from-dark-border/50 to-transparent"></div>
             {line.children.map((child) => renderLine(child, depth + 1))}
             {line.children.length === 0 && (
-              <div className="px-6 py-2 text-xs text-gray-500 italic">
-                Drop commands here / ここにコマンドをドロップ
+              <div className="ml-3 my-1 px-3 py-2 text-xs text-gray-600 italic border border-dashed border-dark-border/50 rounded bg-dark-bg/30">
+                Drop commands here
               </div>
             )}
           </div>

@@ -70,29 +70,33 @@ export function Console({ entries, onClear, onClose }: ConsoleProps) {
   }, [entries])
 
   return (
-    <div className="h-48 bg-dark-surface border-t border-dark-border flex flex-col">
+    <div className="h-48 bg-dark-surface/95 backdrop-blur border-t border-dark-border flex flex-col shadow-lg z-20">
       {/* Header */}
-      <div className="flex items-center justify-between px-3 py-1.5 border-b border-dark-border">
-        <h3 className="text-sm font-medium text-gray-400">Console</h3>
+      <div className="flex items-center justify-between px-4 py-2 border-b border-dark-border/50 bg-dark-surface">
+        <div className="flex items-center gap-2">
+           <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Console Output</h3>
+           <span className="text-[10px] bg-dark-bg px-1.5 py-0.5 rounded text-gray-500">{entries.length}</span>
+        </div>
+        
         <div className="flex items-center gap-1">
           <button
             onClick={handleCopy}
             disabled={entries.length === 0}
-            className="p-1 text-gray-500 hover:text-gray-300 hover:bg-dark-hover rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="p-1.5 text-gray-500 hover:text-gray-200 hover:bg-dark-hover rounded-md transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
             title="Copy to Clipboard"
           >
             {copied ? <Check size={14} className="text-green-400" /> : <Copy size={14} />}
           </button>
           <button
             onClick={onClear}
-            className="p-1 text-gray-500 hover:text-gray-300 hover:bg-dark-hover rounded transition-colors"
+            className="p-1.5 text-gray-500 hover:text-red-400 hover:bg-dark-hover rounded-md transition-colors"
             title="Clear Console"
           >
             <Trash2 size={14} />
           </button>
           <button
             onClick={onClose}
-            className="p-1 text-gray-500 hover:text-gray-300 hover:bg-dark-hover rounded transition-colors"
+            className="p-1.5 text-gray-500 hover:text-gray-200 hover:bg-dark-hover rounded-md transition-colors"
             title="Close Console"
           >
             <X size={14} />
@@ -101,20 +105,22 @@ export function Console({ entries, onClear, onClose }: ConsoleProps) {
       </div>
 
       {/* Log Entries */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto font-mono text-xs">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto font-mono text-[11px] leading-relaxed p-2 bg-dark-bg">
         {entries.length === 0 ? (
-          <div className="flex items-center justify-center h-full text-gray-500">
-            No output yet
+          <div className="flex flex-col items-center justify-center h-full text-gray-600 gap-2">
+            <div className="p-3 rounded-full bg-dark-surface border border-dark-border/50">
+               <span className="text-xl opacity-50">_</span>
+            </div>
+            <span>Ready for output</span>
           </div>
         ) : (
           entries.map((entry) => (
             <div
               key={entry.id}
-              className={'px-3 py-1 border-b border-dark-border/50 ' + getLevelStyles(entry.level)}
+              className={'px-2 py-1 rounded my-0.5 flex items-start gap-2 ' + getLevelStyles(entry.level)}
             >
-              <span className="text-gray-500 mr-2">[{formatTime(entry.timestamp)}]</span>
-              <span className="uppercase text-xs mr-2">[{entry.level}]</span>
-              <span>{entry.message}</span>
+              <span className="text-gray-600 shrink-0 font-medium select-none">{formatTime(entry.timestamp)}</span>
+              <span className="break-all">{entry.message}</span>
             </div>
           ))
         )}

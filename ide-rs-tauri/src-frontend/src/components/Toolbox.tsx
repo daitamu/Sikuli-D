@@ -107,48 +107,48 @@ export function Toolbox({ onAddCommand }: ToolboxProps) {
         draggable
         onDragStart={(e) => handleDragStart(e, item.type)}
         onClick={() => onAddCommand(item.type)}
-        className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer bg-dark-bg hover:bg-dark-hover border border-transparent hover:border-dark-border transition-all"
+        className="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-grab active:cursor-grabbing bg-dark-surface border border-dark-border/50 hover:border-sikuli-500/50 hover:bg-dark-hover hover:shadow-md transition-all duration-200 group"
         title={`${item.label} / ${item.labelJa}`}
       >
-        {IconComponent && <IconComponent size={18} />}
+        {IconComponent && <div className="p-1.5 bg-dark-bg rounded text-sikuli-400 group-hover:text-sikuli-300 group-hover:bg-sikuli-500/10 transition-colors"><IconComponent size={16} strokeWidth={2} /></div>}
         <div className="flex flex-col">
-          <span className="text-sm">{item.label}</span>
-          <span className="text-xs text-gray-500">{item.labelJa}</span>
+          <span className="text-xs font-medium text-gray-300 group-hover:text-white transition-colors">{item.label}</span>
+          <span className="text-[10px] text-gray-500 group-hover:text-gray-400 transition-colors">{item.labelJa}</span>
         </div>
       </div>
     )
   }
 
   return (
-    <aside className="w-48 bg-dark-surface border-r border-dark-border flex flex-col overflow-hidden">
+    <aside className="w-56 bg-dark-sidebar border-r border-dark-border flex flex-col overflow-hidden">
       {/* Header / ヘッダー */}
-      <div className="px-3 py-2 border-b border-dark-border">
-        <h2 className="text-sm font-medium text-gray-400">Toolbox</h2>
+      <div className="px-4 py-3 border-b border-dark-border/50 bg-dark-sidebar">
+        <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Toolbox</h2>
       </div>
 
       {/* Scrollable Content / スクロール可能なコンテンツ */}
-      <div className="flex-1 overflow-y-auto p-2 space-y-4">
+      <div className="flex-1 overflow-y-auto p-3 space-y-6">
         {/* Logic Section / ロジックセクション */}
         <div>
-          <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2 px-1">
-            Logic
+          <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3 px-1 opacity-70">
+            Flow Control
           </h3>
-          <div className="space-y-1">{logicItems.map(renderItem)}</div>
+          <div className="space-y-2">{logicItems.map(renderItem)}</div>
         </div>
 
         {/* Actions Section / アクションセクション */}
         <div>
-          <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2 px-1">
+          <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3 px-1 opacity-70">
             Actions
           </h3>
-          <div className="space-y-1">{actionItems.map(renderItem)}</div>
+          <div className="space-y-2">{actionItems.map(renderItem)}</div>
         </div>
       </div>
 
       {/* Help Text / ヘルプテキスト */}
-      <div className="px-3 py-2 border-t border-dark-border">
-        <p className="text-xs text-gray-500">
-          Click or drag to add commands
+      <div className="px-4 py-3 border-t border-dark-border/50 bg-dark-sidebar text-center">
+        <p className="text-[10px] text-gray-500">
+          Drag items to the editor
         </p>
       </div>
     </aside>

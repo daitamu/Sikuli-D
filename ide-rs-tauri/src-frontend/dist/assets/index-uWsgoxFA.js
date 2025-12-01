@@ -1,0 +1,1 @@
+import{C as i,i as a}from"./main-C1uCKRv7.js";async function s(r,e){const n=new i;return n.onmessage=e,await a("plugin:global-shortcut|register",{shortcuts:Array.isArray(r)?r:[r],handler:n})}async function o(r){return await a("plugin:global-shortcut|unregister",{shortcuts:Array.isArray(r)?r:[r]})}export{s as register,o as unregister};

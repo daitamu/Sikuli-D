@@ -21,15 +21,16 @@ export default {
           900: '#0c4a6e',
           950: '#082f49',
         },
-        // Dark theme colors
+        // Dark theme colors (Modern Zinc Palette)
         'dark': {
-          'bg': '#1e1e1e',
-          'surface': '#252526',
-          'border': '#3c3c3c',
-          'text': '#cccccc',
-          'text-muted': '#858585',
-          'hover': '#2a2d2e',
-          'active': '#37373d',
+          'bg': '#18181b',      // zinc-900
+          'surface': '#27272a', // zinc-800
+          'sidebar': '#202022', // Slightly lighter than bg
+          'border': '#3f3f46',  // zinc-700
+          'text': '#e4e4e7',    // zinc-200
+          'text-muted': '#a1a1aa', // zinc-400
+          'hover': '#3f3f46',   // zinc-700
+          'active': '#52525b',  // zinc-600
         }
       },
       fontFamily: {

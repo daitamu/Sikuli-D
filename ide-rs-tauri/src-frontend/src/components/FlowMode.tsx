@@ -215,9 +215,9 @@ export function FlowMode({
     return (
       <div
         key={node.id}
-        className={`flow-node absolute cursor-move border-t-2 ${colorClass} ${
-          isSelected ? 'ring-2 ring-sikuli-500' : ''
-        } ${draggingNode === node.id ? 'opacity-75' : ''}`}
+        className={`flow-node absolute cursor-move group ${
+          isSelected ? 'ring-2 ring-sikuli-500 ring-offset-2 ring-offset-dark-bg' : ''
+        } ${draggingNode === node.id ? 'opacity-75 scale-105 shadow-2xl' : ''}`}
         style={{
           left: node.flowConfig.x,
           top: node.flowConfig.y,
@@ -227,24 +227,32 @@ export function FlowMode({
         onMouseDown={(e) => handleNodeMouseDown(e, node)}
       >
         {/* Node Header / ノードヘッダー */}
-        <div className="flow-node-header">
-          <IconComponent size={16} className="text-sikuli-400" />
-          <span className="text-sm font-medium capitalize">{node.type}</span>
+        <div className={`flow-node-header ${colorClass.replace('border-', 'border-b-')} border-b-2 bg-dark-bg/50`}>
+          <div className={`p-1 rounded-md ${colorClass.replace('border-', 'bg-').replace('500', '500/20')} ${colorClass.replace('border-', 'text-').replace('500', '400')}`}>
+            <IconComponent size={14} strokeWidth={2.5} />
+          </div>
+          <span className="text-xs font-bold text-gray-200 capitalize tracking-wide">{node.type}</span>
         </div>
 
         {/* Node Body / ノードボディ */}
-        <div className="flow-node-body text-xs space-y-2">
+        <div className="flow-node-body text-xs space-y-3">
           {/* Image Target / 画像ターゲット */}
           {(node.type === 'click' || node.type === 'find' || node.type === 'if') && (
-            <div className="w-full h-12 bg-dark-bg rounded border border-dark-border flex items-center justify-center">
+            <div className="w-full h-16 bg-dark-bg rounded-lg border border-dark-border/50 flex items-center justify-center overflow-hidden relative group-hover:border-gray-600 transition-colors">
               {node.target ? (
-                <img
-                  src={node.target}
-                  alt="target"
-                  className="max-w-full max-h-full object-contain"
-                />
+                <>
+                  <div className="absolute inset-0 bg-[url('/transparent-grid.png')] opacity-10"></div>
+                  <img
+                    src={node.target}
+                    alt="target"
+                    className="max-w-full max-h-full object-contain relative z-10"
+                  />
+                </>
               ) : (
-                <span className="text-gray-500">Click to capture</span>
+                <div className="flex flex-col items-center gap-1 text-gray-600">
+                   <MousePointer2 size={16} />
+                   <span className="text-[10px]">No target</span>
+                </div>
               )}
             </div>
           )}
@@ -257,13 +265,14 @@ export function FlowMode({
               onChange={(e) => onUpdateLine(node.id, { params: e.target.value })}
               onMouseDown={(e) => e.stopPropagation()}
               placeholder="Text..."
-              className="w-full px-2 py-1 bg-dark-bg border border-dark-border rounded text-xs"
+              className="w-full px-2 py-1.5 bg-dark-bg border border-dark-border rounded text-xs focus:border-sikuli-500 focus:ring-1 focus:ring-sikuli-500 transition-all"
             />
           )}
 
           {/* Wait Time / 待機時間 */}
           {node.type === 'wait' && (
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-2 bg-dark-bg border border-dark-border rounded px-2 py-1.5">
+              <Clock size={12} className="text-gray-500" />
               <input
                 type="number"
                 value={node.params || '1'}
@@ -271,39 +280,39 @@ export function FlowMode({
                 onMouseDown={(e) => e.stopPropagation()}
                 min="0"
                 step="0.1"
-                className="w-16 px-2 py-1 bg-dark-bg border border-dark-border rounded text-xs"
+                className="w-full bg-transparent border-none outline-none text-xs font-mono"
               />
-              <span className="text-gray-500">sec</span>
+              <span className="text-gray-500 text-[10px]">s</span>
             </div>
           )}
 
           {/* Similarity / 一致率 */}
           {node.similarity !== undefined && (
-            <div className="flex items-center justify-between">
-              <span className="text-gray-500">Match:</span>
-              <span>{Math.round(node.similarity * 100)}%</span>
+            <div className="flex items-center justify-between bg-dark-bg/50 rounded px-2 py-1">
+              <span className="text-[10px] text-gray-500 uppercase font-bold">Match</span>
+              <span className="font-mono text-sikuli-400">{Math.round(node.similarity * 100)}%</span>
             </div>
           )}
         </div>
 
         {/* Output Port / 出力ポート */}
-        <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 flow-port" />
+        <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 flow-port shadow-sm hover:scale-125 transition-transform" />
 
         {/* Input Port / 入力ポート */}
         {node.type !== 'start' && (
-          <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 flow-port" />
+          <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 flow-port shadow-sm hover:scale-125 transition-transform" />
         )}
 
         {/* If Node: True/False Ports / Ifノード: True/Falseポート */}
         {node.type === 'if' && (
           <>
-            <div className="absolute -bottom-1.5 left-1/4 -translate-x-1/2">
-              <div className="flow-port bg-green-500" title="True" />
-              <span className="text-xs text-green-500 mt-1 block text-center">T</span>
+            <div className="absolute -bottom-1.5 left-1/4 -translate-x-1/2 flex flex-col items-center">
+              <div className="flow-port bg-green-500 border-green-900 shadow-sm" title="True" />
+              <span className="absolute top-full text-[10px] font-bold text-green-500 mt-0.5">T</span>
             </div>
-            <div className="absolute -bottom-1.5 left-3/4 -translate-x-1/2">
-              <div className="flow-port bg-red-500" title="False" />
-              <span className="text-xs text-red-500 mt-1 block text-center">F</span>
+            <div className="absolute -bottom-1.5 left-3/4 -translate-x-1/2 flex flex-col items-center">
+              <div className="flow-port bg-red-500 border-red-900 shadow-sm" title="False" />
+              <span className="absolute top-full text-[10px] font-bold text-red-500 mt-0.5">F</span>
             </div>
           </>
         )}
@@ -312,13 +321,13 @@ export function FlowMode({
   }
 
   return (
-    <div className="h-full relative overflow-hidden bg-dark-bg">
+    <div className="h-full relative overflow-hidden bg-dark-bg group/canvas">
       {/* Canvas / キャンバス */}
       <div
         ref={canvasRef}
-        className="flow-canvas absolute inset-0 cursor-grab"
+        className="flow-canvas absolute inset-0"
         style={{
-          cursor: isPanning ? 'grabbing' : draggingNode ? 'move' : 'grab',
+          cursor: isPanning ? 'grabbing' : draggingNode ? 'grabbing' : 'grab',
         }}
         onMouseDown={handleCanvasMouseDown}
         onMouseMove={handleMouseMove}
@@ -327,7 +336,7 @@ export function FlowMode({
       >
         {/* Transform Container / 変換コンテナ */}
         <div
-          className="absolute"
+          className="absolute will-change-transform"
           style={{
             transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
             transformOrigin: '0 0',
@@ -336,9 +345,18 @@ export function FlowMode({
           {/* SVG for Connections / 接続用SVG */}
           <svg
             ref={svgRef}
-            className="absolute inset-0 pointer-events-none"
+            className="absolute inset-0 pointer-events-none overflow-visible"
             style={{ width: '5000px', height: '5000px' }}
           >
+            <defs>
+               <filter id="glow">
+                  <feGaussianBlur stdDeviation="2.5" result="coloredBlur"/>
+                  <feMerge>
+                     <feMergeNode in="coloredBlur"/>
+                     <feMergeNode in="SourceGraphic"/>
+                  </feMerge>
+               </filter>
+            </defs>
             {renderConnections()}
           </svg>
 
@@ -348,35 +366,36 @@ export function FlowMode({
       </div>
 
       {/* Zoom Controls / ズームコントロール */}
-      <div className="absolute bottom-4 right-4 flex items-center gap-2 bg-dark-surface border border-dark-border rounded-lg p-1">
+      <div className="absolute bottom-6 right-6 flex items-center gap-1 bg-dark-surface/90 backdrop-blur border border-dark-border rounded-lg p-1 shadow-lg">
         <button
           onClick={handleZoomOut}
-          className="p-2 hover:bg-dark-hover rounded"
-          title="Zoom Out / ズームアウト"
+          className="p-1.5 hover:bg-dark-hover text-gray-400 hover:text-gray-200 rounded transition-colors"
+          title="Zoom Out"
         >
           <ZoomOut size={16} />
         </button>
-        <span className="text-xs text-gray-400 min-w-12 text-center">
+        <span className="text-xs font-mono text-gray-400 min-w-[3rem] text-center select-none">
           {Math.round(zoom * 100)}%
         </span>
         <button
           onClick={handleZoomIn}
-          className="p-2 hover:bg-dark-hover rounded"
-          title="Zoom In / ズームイン"
+          className="p-1.5 hover:bg-dark-hover text-gray-400 hover:text-gray-200 rounded transition-colors"
+          title="Zoom In"
         >
           <ZoomIn size={16} />
         </button>
+        <div className="w-px h-4 bg-dark-border mx-1"></div>
         <button
           onClick={handleResetView}
-          className="p-2 hover:bg-dark-hover rounded"
-          title="Reset View / ビューをリセット"
+          className="p-1.5 hover:bg-dark-hover text-gray-400 hover:text-gray-200 rounded transition-colors"
+          title="Reset View"
         >
           <Maximize2 size={16} />
         </button>
       </div>
 
       {/* Info Overlay / 情報オーバーレイ */}
-      <div className="absolute top-4 left-4 text-xs text-gray-500">
+      <div className="absolute top-4 left-4 px-3 py-1.5 bg-dark-surface/50 backdrop-blur rounded-full border border-dark-border/30 text-[10px] text-gray-500 select-none pointer-events-none opacity-50 group-hover/canvas:opacity-100 transition-opacity">
         Scroll to zoom • Drag canvas to pan • Drag nodes to move
       </div>
     </div>

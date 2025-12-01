@@ -13,25 +13,28 @@ html, body, #root {
   height: 100%;
   width: 100%;
   overflow: hidden;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Scrollbar styling */
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #1e1e1e;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #424242;
-  border-radius: 5px;
+  background: #3f3f46; /* zinc-700 */
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #555;
+  background: #52525b; /* zinc-600 */
 }
 
 /* Custom utility classes */
@@ -43,59 +46,69 @@ html, body, #root {
   .drag {
     -webkit-app-region: drag;
   }
+  
+  .glass-panel {
+    @apply bg-dark-surface/90 backdrop-blur-sm border border-dark-border;
+  }
 }
 
 /* Flow mode canvas styles */
 .flow-canvas {
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
-  background-size: 20px 20px;
+    radial-gradient(#3f3f46 1px, transparent 1px);
+  background-size: 24px 24px;
+  background-color: #18181b;
 }
 
 /* Node styles for flow mode */
 .flow-node {
-  @apply bg-dark-surface border border-dark-border rounded-lg shadow-lg;
-  min-width: 150px;
+  @apply bg-dark-surface border border-dark-border rounded-xl shadow-xl;
+  min-width: 160px;
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.flow-node:hover {
+  @apply border-sikuli-500/50 shadow-2xl;
 }
 
 .flow-node-header {
-  @apply px-3 py-2 border-b border-dark-border flex items-center gap-2;
+  @apply px-4 py-3 border-b border-dark-border flex items-center gap-3 bg-dark-sidebar rounded-t-xl;
 }
 
 .flow-node-body {
-  @apply p-3;
+  @apply p-4;
 }
 
 /* Connection port styles */
 .flow-port {
-  @apply w-3 h-3 rounded-full bg-sikuli-500 border-2 border-dark-bg;
+  @apply w-3 h-3 rounded-full bg-sikuli-500 border-2 border-dark-bg shadow-sm;
   cursor: crosshair;
+  transition: transform 0.1s;
 }
 
 .flow-port:hover {
-  @apply bg-sikuli-400 scale-125;
+  @apply bg-sikuli-400 scale-150;
 }
 
 /* Simple mode list styles */
 .script-line {
-  @apply flex items-center gap-2 px-3 py-2 border-b border-dark-border;
-  @apply hover:bg-dark-hover cursor-pointer;
+  @apply flex items-center gap-3 px-4 py-3 border-b border-dark-border/50;
+  @apply hover:bg-dark-hover cursor-pointer transition-colors;
 }
 
 .script-line.selected {
-  @apply bg-dark-active border-l-2 border-l-sikuli-500;
+  @apply bg-sikuli-500/10 border-l-4 border-l-sikuli-500 border-b-dark-border;
 }
 
 .script-line.nested {
-  @apply ml-6;
+  @apply ml-6 border-l border-l-dark-border/30;
 }
 
 /* Drag and drop styles */
 .dragging {
-  @apply opacity-50;
+  @apply opacity-50 scale-95;
 }
 
 .drop-target {
-  @apply border-2 border-dashed border-sikuli-500;
+  @apply border-2 border-dashed border-sikuli-500 bg-sikuli-500/5 rounded-lg;
 }

@@ -37,6 +37,7 @@ class Screen(Region):
                 # Windows
                 result = subprocess.run(
                     ["powershell", "-Command",
+                     "Add-Type -AssemblyName System.Windows.Forms; "
                      "[System.Windows.Forms.Screen]::PrimaryScreen.Bounds.Width,"
                      "[System.Windows.Forms.Screen]::PrimaryScreen.Bounds.Height"],
                     capture_output=True, text=True
@@ -82,6 +83,7 @@ class Screen(Region):
                 # Windows - use PowerShell to get monitor count
                 result = subprocess.run(
                     ["powershell", "-Command",
+                     "Add-Type -AssemblyName System.Windows.Forms; "
                      "[System.Windows.Forms.Screen]::AllScreens.Count"],
                     capture_output=True, text=True
                 )

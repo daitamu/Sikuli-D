@@ -10,6 +10,7 @@ use pyo3::exceptions::{PyIOError, PyRuntimeError, PyValueError};
 use pyo3::prelude::*;
 
 use crate::{
+    image::ocr::{OcrConfig, OcrEngine, OcrLanguage},
     ImageMatcher, Key, Keyboard, Match, Mouse, Observer, Pattern, Region, Result, Screen,
     SikulixError,
 };
@@ -204,6 +205,173 @@ impl PyRegion {
         self.inner.height
     }
 
+    /// Read text from this region using OCR
+    /// この領域からOCRを使用してテキストを読み取り
+    #[pyo3(signature = (language=None))]
+    fn text(&self, language: Option<&str>) -> PyResult<String> {
+        let screen = Screen::new(0);
+        let img = screen.capture_region(&self.inner).map_err(to_pyerr)?;
+
+        let config = match language {
+            Some(lang) => {
+                let ocr_lang = match lang {
+                    "jpn" | "japanese" => OcrLanguage::Japanese,
+                    "chi_sim" | "chinese" => OcrLanguage::ChineseSimplified,
+                    "chi_tra" => OcrLanguage::ChineseTraditional,
+                    "kor" | "korean" => OcrLanguage::Korean,
+                    "deu" | "german" => OcrLanguage::German,
+                    "fra" | "french" => OcrLanguage::French,
+                    "spa" | "spanish" => OcrLanguage::Spanish,
+                    _ => OcrLanguage::English,
+                };
+                OcrConfig::new().with_language(ocr_lang)
+            }
+            None => OcrConfig::new(),
+        };
+
+        let engine = OcrEngine::with_config(config);
+        let result = engine.recognize(&img).map_err(to_pyerr)?;
+        Ok(result.text)
+    }
+
+    /// Find pattern within this region
+    /// この領域内でパターンを検索
+    ///
+    /// # Arguments / 引数
+    /// * `pattern` - Image file path / 画像ファイルパス
+    /// * `similarity` - Minimum similarity threshold (default: 0.7) / 最小類似度閾値（デフォルト: 0.7）
+    ///
+    /// # Returns / 戻り値
+    /// Match object if found, None otherwise / 見つかった場合はMatchオブジェクト、それ以外はNone
+    #[pyo3(signature = (pattern, similarity=None))]
+    fn find(&self, py: Python, pattern: &str, similarity: Option<f64>) -> PyResult<Option<PyMatch>> {
+        py.allow_threads(|| {
+            let screen = Screen::new(0);
+            let pat = match Pattern::from_file(pattern) {
+                Ok(p) => p.similar(similarity.unwrap_or(0.7)),
+                Err(SikulixError::IoError(_)) => return Ok(None),
+                Err(e) => return Err(to_pyerr(e)),
+            };
+            let matcher = ImageMatcher::new();
+            let result = matcher.find_in_region(&screen, &self.inner, &pat).map_err(to_pyerr)?;
+            Ok(result.map(|m| PyMatch { inner: m }))
+        })
+    }
+
+    /// Find all occurrences of pattern within this region
+    /// この領域内でパターンの全出現箇所を検索
+    #[pyo3(signature = (pattern, similarity=None))]
+    fn find_all(&self, py: Python, pattern: &str, similarity: Option<f64>) -> PyResult<Vec<PyMatch>> {
+        py.allow_threads(|| {
+            let screen = Screen::new(0);
+            let pat = Pattern::from_file(pattern)
+                .map_err(to_pyerr)?
+                .similar(similarity.unwrap_or(0.7));
+
+            // Capture the region and find all matches
+            let region_image = screen.capture_region(&self.inner).map_err(to_pyerr)?;
+            let matcher = ImageMatcher::new();
+            let mut results = matcher.find_all(&region_image, &pat).map_err(to_pyerr)?;
+
+            // Adjust coordinates to full screen
+            for m in &mut results {
+                m.region.x += self.inner.x;
+                m.region.y += self.inner.y;
+            }
+
+            Ok(results.into_iter().map(|m| PyMatch { inner: m }).collect())
+        })
+    }
+
+    /// Wait for pattern to appear within this region
+    /// この領域内でパターンが現れるまで待機
+    ///
+    /// # Arguments / 引数
+    /// * `pattern` - Image file path / 画像ファイルパス
+    /// * `timeout` - Timeout in seconds (default: 3.0) / タイムアウト秒数（デフォルト: 3.0）
+    /// * `similarity` - Minimum similarity threshold (default: 0.7) / 最小類似度閾値（デフォルト: 0.7）
+    #[pyo3(name = "wait")]
+    #[pyo3(signature = (pattern, timeout=None, similarity=None))]
+    fn region_wait(&self, py: Python, pattern: &str, timeout: Option<f64>, similarity: Option<f64>) -> PyResult<PyMatch> {
+        py.allow_threads(|| {
+            let screen = Screen::new(0);
+            let pat = Pattern::from_file(pattern)
+                .map_err(to_pyerr)?
+                .similar(similarity.unwrap_or(0.7));
+            let matcher = ImageMatcher::new();
+            let result = matcher.wait_in_region(&screen, &self.inner, &pat, timeout.unwrap_or(3.0)).map_err(to_pyerr)?;
+            Ok(PyMatch { inner: result })
+        })
+    }
+
+    /// Check if pattern exists within this region
+    /// この領域内にパターンが存在するか確認
+    ///
+    /// # Arguments / 引数
+    /// * `pattern` - Image file path / 画像ファイルパス
+    /// * `timeout` - Timeout in seconds (default: 0.0) / タイムアウト秒数（デフォルト: 0.0）
+    /// * `similarity` - Minimum similarity threshold (default: 0.7) / 最小類似度閾値（デフォルト: 0.7）
+    #[pyo3(signature = (pattern, timeout=None, similarity=None))]
+    fn exists(&self, py: Python, pattern: &str, timeout: Option<f64>, similarity: Option<f64>) -> PyResult<Option<PyMatch>> {
+        py.allow_threads(|| {
+            let screen = Screen::new(0);
+            let pat = match Pattern::from_file(pattern) {
+                Ok(p) => p.similar(similarity.unwrap_or(0.7)),
+                Err(SikulixError::IoError(_)) => return Ok(None),
+                Err(e) => return Err(to_pyerr(e)),
+            };
+            let matcher = ImageMatcher::new();
+            let result = matcher.exists_in_region(&screen, &self.inner, &pat, timeout.unwrap_or(0.0)).map_err(to_pyerr)?;
+            Ok(result.map(|m| PyMatch { inner: m }))
+        })
+    }
+
+    /// Click at region center
+    /// 領域の中心をクリック
+    fn click(&self) -> PyResult<()> {
+        let (x, y) = self.inner.center();
+        Mouse::move_to(x, y).map_err(to_pyerr)?;
+        Mouse::click().map_err(to_pyerr)
+    }
+
+    /// Double click at region center
+    /// 領域の中心をダブルクリック
+    fn double_click(&self) -> PyResult<()> {
+        let (x, y) = self.inner.center();
+        Mouse::move_to(x, y).map_err(to_pyerr)?;
+        Mouse::double_click().map_err(to_pyerr)
+    }
+
+    /// Right click at region center
+    /// 領域の中心を右クリック
+    fn right_click(&self) -> PyResult<()> {
+        let (x, y) = self.inner.center();
+        Mouse::move_to(x, y).map_err(to_pyerr)?;
+        Mouse::right_click().map_err(to_pyerr)
+    }
+
+    /// Highlight this region on screen
+    /// この領域を画面上でハイライト表示
+    #[pyo3(signature = (duration=None, color=None))]
+    fn highlight(&self, duration: Option<f64>, color: Option<&str>) -> PyResult<()> {
+        use crate::debug::highlight;
+        use crate::Color;
+
+        let duration_ms = (duration.unwrap_or(2.0) * 1000.0) as u64;
+        let c = match color {
+            Some("red") | None => Color::rgb(255, 0, 0),
+            Some("green") => Color::rgb(0, 255, 0),
+            Some("blue") => Color::rgb(0, 0, 255),
+            Some("yellow") => Color::rgb(255, 255, 0),
+            Some("cyan") => Color::rgb(0, 255, 255),
+            Some("magenta") => Color::rgb(255, 0, 255),
+            Some("white") => Color::rgb(255, 255, 255),
+            Some(_) => Color::rgb(255, 0, 0),
+        };
+
+        highlight(&self.inner, duration_ms, c).map_err(to_pyerr)
+    }
+
     fn __repr__(&self) -> String {
         format!(
             "Region({}, {}, {}, {})",
@@ -287,6 +455,35 @@ impl PyMatch {
             self.inner.highlight()
         }
         .map_err(to_pyerr)
+    }
+
+    /// Read text from the matched region using OCR
+    /// マッチした領域からOCRを使用してテキストを読み取り
+    #[pyo3(signature = (language=None))]
+    fn text(&self, language: Option<&str>) -> PyResult<String> {
+        let screen = Screen::new(0);
+        let img = screen.capture_region(&self.inner.region).map_err(to_pyerr)?;
+
+        let config = match language {
+            Some(lang) => {
+                let ocr_lang = match lang {
+                    "jpn" | "japanese" => OcrLanguage::Japanese,
+                    "chi_sim" | "chinese" => OcrLanguage::ChineseSimplified,
+                    "chi_tra" => OcrLanguage::ChineseTraditional,
+                    "kor" | "korean" => OcrLanguage::Korean,
+                    "deu" | "german" => OcrLanguage::German,
+                    "fra" | "french" => OcrLanguage::French,
+                    "spa" | "spanish" => OcrLanguage::Spanish,
+                    _ => OcrLanguage::English,
+                };
+                OcrConfig::new().with_language(ocr_lang)
+            }
+            None => OcrConfig::new(),
+        };
+
+        let engine = OcrEngine::with_config(config);
+        let result = engine.recognize(&img).map_err(to_pyerr)?;
+        Ok(result.text)
     }
 
     fn __repr__(&self) -> String {
@@ -1026,6 +1223,73 @@ fn drag_drop(start_x: i32, start_y: i32, end_x: i32, end_y: i32) -> PyResult<()>
 }
 
 // ============================================================================
+// OCR Functions / OCR関数
+// ============================================================================
+
+/// Read text from the entire screen using OCR
+/// 画面全体からOCRを使用してテキストを読み取り
+#[cfg(feature = "python")]
+#[pyfunction]
+#[pyo3(signature = (language=None))]
+fn read_text_screen(language: Option<&str>) -> PyResult<String> {
+    let screen = Screen::new(0);
+    let img = screen.capture().map_err(to_pyerr)?;
+
+    let config = match language {
+        Some(lang) => {
+            let ocr_lang = match lang {
+                "jpn" | "japanese" => OcrLanguage::Japanese,
+                "chi_sim" | "chinese" => OcrLanguage::ChineseSimplified,
+                "chi_tra" => OcrLanguage::ChineseTraditional,
+                "kor" | "korean" => OcrLanguage::Korean,
+                "deu" | "german" => OcrLanguage::German,
+                "fra" | "french" => OcrLanguage::French,
+                "spa" | "spanish" => OcrLanguage::Spanish,
+                _ => OcrLanguage::English,
+            };
+            OcrConfig::new().with_language(ocr_lang)
+        }
+        None => OcrConfig::new(),
+    };
+
+    let engine = OcrEngine::with_config(config);
+    let result = engine.recognize(&img).map_err(to_pyerr)?;
+    Ok(result.text)
+}
+
+/// Read text from a specific region using OCR
+/// 指定された領域からOCRを使用してテキストを読み取り
+#[cfg(feature = "python")]
+#[pyfunction]
+#[pyo3(signature = (x, y, width, height, language=None))]
+fn read_text_region(x: i32, y: i32, width: u32, height: u32, language: Option<&str>) -> PyResult<String> {
+    let screen = Screen::new(0);
+    let region = Region::new(x, y, width, height);
+    let img = screen.capture_region(&region).map_err(to_pyerr)?;
+
+    let config = match language {
+        Some(lang) => {
+            let ocr_lang = match lang {
+                "jpn" | "japanese" => OcrLanguage::Japanese,
+                "chi_sim" | "chinese" => OcrLanguage::ChineseSimplified,
+                "chi_tra" => OcrLanguage::ChineseTraditional,
+                "kor" | "korean" => OcrLanguage::Korean,
+                "deu" | "german" => OcrLanguage::German,
+                "fra" | "french" => OcrLanguage::French,
+                "spa" | "spanish" => OcrLanguage::Spanish,
+                _ => OcrLanguage::English,
+            };
+            OcrConfig::new().with_language(ocr_lang)
+        }
+        None => OcrConfig::new(),
+    };
+
+    let engine = OcrEngine::with_config(config);
+    let result = engine.recognize(&img).map_err(to_pyerr)?;
+    Ok(result.text)
+}
+
+// ============================================================================
 // PyObserver - Screen Region Observer / 画面領域オブザーバー
 // ============================================================================
 
@@ -1404,6 +1668,10 @@ fn sikulid(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(drag, m)?)?;
     m.add_function(wrap_pyfunction!(drag_to, m)?)?;
     m.add_function(wrap_pyfunction!(drag_drop, m)?)?;
+
+    // Add OCR functions
+    m.add_function(wrap_pyfunction!(read_text_screen, m)?)?;
+    m.add_function(wrap_pyfunction!(read_text_region, m)?)?;
 
     Ok(())
 }

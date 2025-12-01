@@ -256,15 +256,15 @@ export function CodeMode({ sourceCode, currentFile, pythonVersion, onSourceCodeC
         { token: 'decorator', foreground: 'C586C0' },
       ],
       colors: {
-        'editor.background': '#1E1E1E',
-        'editor.foreground': '#D4D4D4',
-        'editor.lineHighlightBackground': '#2F2F2F',
-        'editorCursor.foreground': '#FFFFFF',
+        'editor.background': '#18181b', // zinc-900
+        'editor.foreground': '#e4e4e7', // zinc-200
+        'editor.lineHighlightBackground': '#27272a', // zinc-800
+        'editorCursor.foreground': '#38bdf8', // sikuli-400
         'editor.selectionBackground': '#264F78',
         'editor.inactiveSelectionBackground': '#3A3D41',
-        'editorLineNumber.foreground': '#858585',
-        'editorLineNumber.activeForeground': '#C6C6C6',
-        'editorGutter.background': '#252526',
+        'editorLineNumber.foreground': '#71717a', // zinc-500
+        'editorLineNumber.activeForeground': '#e4e4e7', // zinc-200
+        'editorGutter.background': '#18181b', // zinc-900
       },
     })
   }, [])
@@ -273,49 +273,53 @@ export function CodeMode({ sourceCode, currentFile, pythonVersion, onSourceCodeC
   const filename = currentFile ? currentFile.split(/[/\\]/).pop() || 'script.py' : 'script.py'
 
   // Get Python version display label
-  const versionLabel = pythonVersion === 'python2' ? 'Python2 only'
-    : pythonVersion === 'python3' ? 'Python3 only'
-    : pythonVersion === 'unknown' ? 'Python2/3 OK'
+  const versionLabel = pythonVersion === 'python2' ? 'Python 2'
+    : pythonVersion === 'python3' ? 'Python 3'
+    : pythonVersion === 'unknown' ? 'Python 2/3'
     : null
 
-  const versionColor = pythonVersion === 'python2' ? 'bg-yellow-600'
-    : pythonVersion === 'python3' ? 'bg-blue-600'
-    : 'bg-green-600'
+  const versionColor = pythonVersion === 'python2' ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
+    : pythonVersion === 'python3' ? 'bg-blue-500/20 text-blue-400 border-blue-500/30'
+    : 'bg-green-500/20 text-green-400 border-green-500/30'
 
   return (
     <div className="h-full flex flex-col bg-dark-bg overflow-hidden">
       {/* Toolbar */}
-      <div className="flex items-center justify-between px-4 py-2 bg-dark-surface border-b border-dark-border">
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-400">{filename}</span>
-          {isModified && (
-            <span className="text-xs text-yellow-400">*</span>
-          )}
-          <span className="text-xs text-gray-500">({localCode.split('\n').length} lines)</span>
+      <div className="flex items-center justify-between px-4 py-2 bg-dark-surface border-b border-dark-border/50">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+             <span className="text-xs font-mono text-gray-300">{filename}</span>
+             {isModified && (
+               <span className="w-2 h-2 bg-yellow-500 rounded-full" title="Unsaved changes"></span>
+             )}
+          </div>
+          <span className="text-xs text-gray-600 border-l border-dark-border pl-4">{localCode.split('\n').length} lines</span>
           {versionLabel && (
-            <span className={'px-2 py-0.5 text-xs rounded ' + versionColor + ' text-white'}>
+            <span className={'px-2 py-0.5 text-[10px] font-medium rounded border ' + versionColor}>
               {versionLabel}
             </span>
           )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           {imageRefs.length > 0 && (
             <button
               onClick={() => setShowImagePanel(!showImagePanel)}
-              className={`flex items-center gap-1.5 px-2 py-1 text-sm rounded transition-colors ${
-                showImagePanel ? 'text-sikuli-400 bg-dark-hover' : 'text-gray-400 hover:text-gray-200 hover:bg-dark-hover'
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs rounded-md transition-colors ${
+                showImagePanel 
+                  ? 'text-sikuli-400 bg-sikuli-500/10' 
+                  : 'text-gray-400 hover:text-gray-200 hover:bg-dark-hover'
               }`}
               title="Toggle Image Panel"
             >
               <ImageIcon size={14} />
-              <span>{imageRefs.length}</span>
+              <span className="font-medium">{imageRefs.length}</span>
             </button>
           )}
           {onSave && (
             <button
               onClick={onSave}
               disabled={!isModified}
-              className="flex items-center gap-1.5 px-2 py-1 text-sm text-gray-400 hover:text-gray-200 hover:bg-dark-hover rounded transition-colors disabled:opacity-50"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-gray-400 hover:text-gray-200 hover:bg-dark-hover rounded-md transition-colors disabled:opacity-30"
               title="Save (Ctrl+S)"
             >
               <Save size={14} />
@@ -325,11 +329,11 @@ export function CodeMode({ sourceCode, currentFile, pythonVersion, onSourceCodeC
           <button
             onClick={handleCopy}
             disabled={!localCode}
-            className="flex items-center gap-1.5 px-2 py-1 text-sm text-gray-400 hover:text-gray-200 hover:bg-dark-hover rounded transition-colors disabled:opacity-50"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-gray-400 hover:text-gray-200 hover:bg-dark-hover rounded-md transition-colors disabled:opacity-30"
             title="Copy to Clipboard"
           >
             {copied ? <Check size={14} className="text-green-400" /> : <Copy size={14} />}
-            <span>{copied ? 'Copied!' : 'Copy'}</span>
+            <span>{copied ? 'Copied' : 'Copy'}</span>
           </button>
         </div>
       </div>
@@ -347,8 +351,9 @@ export function CodeMode({ sourceCode, currentFile, pythonVersion, onSourceCodeC
             onMount={handleEditorMount}
             beforeMount={handleEditorWillMount}
             options={{
-              fontSize: 14,
-              fontFamily: "'Consolas', 'Monaco', 'Courier New', monospace",
+              fontSize: 13,
+              fontFamily: "'JetBrains Mono', 'Consolas', 'Monaco', 'Courier New', monospace",
+              fontLigatures: true,
               lineNumbers: 'on',
               minimap: { enabled: false },
               scrollBeyondLastLine: false,
@@ -367,12 +372,13 @@ export function CodeMode({ sourceCode, currentFile, pythonVersion, onSourceCodeC
               smoothScrolling: true,
               contextmenu: true,
               mouseWheelZoom: true,
-              padding: { top: 8, bottom: 8 },
+              padding: { top: 12, bottom: 12 },
               scrollbar: {
                 vertical: 'visible',
                 horizontal: 'visible',
-                verticalScrollbarSize: 12,
-                horizontalScrollbarSize: 12,
+                verticalScrollbarSize: 10,
+                horizontalScrollbarSize: 10,
+                useShadows: false,
               },
             }}
           />
@@ -380,32 +386,36 @@ export function CodeMode({ sourceCode, currentFile, pythonVersion, onSourceCodeC
 
         {/* Image References Panel - SikuliX style inline image display */}
         {showImagePanel && imageRefs.length > 0 && (
-          <div className="w-48 bg-dark-surface border-l border-dark-border overflow-y-auto">
-            <div className="p-2 border-b border-dark-border">
-              <span className="text-xs text-gray-400 font-medium">Pattern Images</span>
+          <div className="w-56 bg-dark-sidebar border-l border-dark-border overflow-y-auto">
+            <div className="px-4 py-3 border-b border-dark-border/50 bg-dark-sidebar sticky top-0 z-10">
+              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Pattern Images</span>
             </div>
-            <div className="p-2 space-y-2">
+            <div className="p-3 space-y-3">
               {imageRefs.map((imagePath, index) => {
                 const imageData = imagePatterns?.get(imagePath)
                 const filename = imagePath.split(/[/\\]/).pop() || imagePath
                 return (
                   <div
                     key={index}
-                    className="bg-dark-bg rounded border border-dark-border overflow-hidden group cursor-pointer hover:border-sikuli-500 transition-colors"
+                    className="bg-dark-surface rounded-lg border border-dark-border/50 overflow-hidden group cursor-pointer hover:border-sikuli-500/50 hover:shadow-md transition-all"
                     title={imagePath}
                   >
-                    <div className="h-16 flex items-center justify-center bg-black/20">
+                    <div className="h-24 flex items-center justify-center bg-dark-bg/50 relative">
+                      <div className="absolute inset-0 bg-[url('/transparent-grid.png')] opacity-10"></div>
                       {imageData ? (
                         <img
                           src={imageData}
                           alt={filename}
-                          className="max-w-full max-h-full object-contain"
+                          className="max-w-full max-h-full object-contain relative z-10 p-2"
                         />
                       ) : (
-                        <ImageIcon size={24} className="text-gray-600" />
+                        <div className="flex flex-col items-center gap-1 text-gray-600 relative z-10">
+                          <ImageIcon size={20} />
+                          <span className="text-[10px]">Not found</span>
+                        </div>
                       )}
                     </div>
-                    <div className="px-2 py-1 text-xs text-gray-400 truncate group-hover:text-gray-200">
+                    <div className="px-3 py-2 text-xs text-gray-400 truncate font-mono border-t border-dark-border/50 group-hover:text-gray-200 group-hover:bg-dark-hover transition-colors">
                       {filename}
                     </div>
                   </div>
