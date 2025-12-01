@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useState, useRef, useEffect } from 'react'
 import { X, Trash2, Copy, Check } from 'lucide-react'
 import type { ConsoleEntry } from '../types/script'
 
@@ -13,6 +13,16 @@ interface ConsoleProps {
  */
 export function Console({ entries, onClear, onClose }: ConsoleProps) {
   const [copied, setCopied] = useState(false)
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  /**
+   * Auto-scroll to bottom when new entries are added
+   */
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+    }
+  }, [entries])
 
   /**
    * Get level-specific styles
@@ -91,7 +101,7 @@ export function Console({ entries, onClear, onClose }: ConsoleProps) {
       </div>
 
       {/* Log Entries */}
-      <div className="flex-1 overflow-y-auto font-mono text-xs">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto font-mono text-xs">
         {entries.length === 0 ? (
           <div className="flex items-center justify-center h-full text-gray-500">
             No output yet

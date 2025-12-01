@@ -66,6 +66,10 @@ function App() {
   // IDE version from Rust backend / RustバックエンドからのIDEバージョン
   const [ideVersion, setIdeVersion] = useState('0.8.0')
 
+  // Image patterns for Code mode / コードモード用画像パターン
+  // Map of image path -> base64 data URL
+  const [imagePatterns, setImagePatterns] = useState<Map<string, string>>(new Map())
+
   // Manual stop flag / 手動停止フラグ
   // Used to suppress "exit code: unknown" message when user manually stops the script
   const isManualStopRef = useRef(false)
@@ -174,11 +178,131 @@ function App() {
     hideModeRef.current = hideMode
   }, [hideMode])
 
+  // Flag to skip ImageLoader (for testing)
+  // ImageLoaderをスキップするフラグ（テスト用）
+  const skipImageLoaderRef = useRef(false)
+
+  // Expose debug API for testing (development only)
+  // テスト用デバッグAPI（開発環境のみ）
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      (window as any).__SIKULID_DEBUG__ = {
+        setCurrentFile,
+        setSourceCode,
+        setImagePatterns,
+        setViewMode,
+        skipImageLoader: (skip: boolean) => {
+          skipImageLoaderRef.current = skip
+          console.log('[Debug] skipImageLoader set to:', skip)
+        },
+        getCurrentState: () => ({
+          currentFile,
+          sourceCode: sourceCode?.substring(0, 200),
+          imagePatternsSize: imagePatterns.size,
+          imagePatternsKeys: Array.from(imagePatterns.keys()),
+          viewMode,
+          skipImageLoader: skipImageLoaderRef.current,
+        }),
+      }
+      console.log('[Debug] Debug API exposed on window.__SIKULID_DEBUG__')
+    }
+    return () => {
+      if (import.meta.env.DEV) {
+        delete (window as any).__SIKULID_DEBUG__
+      }
+    }
+  }, [currentFile, sourceCode, imagePatterns, viewMode])
+
   // Fetch IDE version on mount
   // マウント時にIDEバージョンを取得
   useEffect(() => {
     getIdeVersion().then(setIdeVersion)
   }, [getIdeVersion])
+
+  // Load images referenced in source code
+  // ソースコード内で参照されている画像を読み込み
+  useEffect(() => {
+    console.log('[ImageLoader] Effect triggered:', { sourceCode: sourceCode?.substring(0, 100), currentFile, skipImageLoader: skipImageLoaderRef.current })
+
+    // Skip if flag is set (for testing)
+    if (skipImageLoaderRef.current) {
+      console.log('[ImageLoader] Skipped (skipImageLoader flag is set)')
+      return
+    }
+
+    if (!sourceCode || !currentFile) {
+      console.log('[ImageLoader] No sourceCode or currentFile, clearing patterns')
+      setImagePatterns(new Map())
+      return
+    }
+
+    // Extract image references from code using the same regex as CodeMode
+    const STANDALONE_IMAGE_REGEX = /(?:Pattern\s*\(\s*)?["']([^"']+\.(?:png|jpg|jpeg|gif|bmp))["']/gi
+    const images: string[] = []
+    let match
+    while ((match = STANDALONE_IMAGE_REGEX.exec(sourceCode)) !== null) {
+      if (!images.includes(match[1])) {
+        images.push(match[1])
+      }
+    }
+
+    console.log('[ImageLoader] Detected images:', images)
+
+    if (images.length === 0) {
+      setImagePatterns(new Map())
+      return
+    }
+
+    // Get directory of current file for relative path resolution
+    // For .sikuli/.sikulix folders, the currentFile might be the folder itself
+    // For regular .py files, we need the parent directory
+    let currentDir = currentFile
+    if (currentFile.match(/\.(sikuli|sikulix)$/i)) {
+      // currentFile is a .sikuli folder - use it directly
+      currentDir = currentFile
+    } else if (currentFile.match(/\.(sikuli|sikulix)[/\\]/i)) {
+      // currentFile is inside a .sikuli folder (e.g., Yesman.sikuli/Yesman.py)
+      // Extract the .sikuli folder path
+      const match = currentFile.match(/^(.+\.(sikuli|sikulix))/i)
+      currentDir = match ? match[1] : currentFile.replace(/[/\\][^/\\]*$/, '')
+    } else {
+      // Regular file - get parent directory
+      currentDir = currentFile.replace(/[/\\][^/\\]*$/, '')
+    }
+    console.log('[ImageLoader] Current directory:', currentDir, '(from file:', currentFile, ')')
+
+    // Load images asynchronously
+    const loadImages = async () => {
+      const newPatterns = new Map<string, string>()
+
+      for (const imagePath of images) {
+        try {
+          // Resolve path: if relative, make it relative to current file's directory
+          let fullPath = imagePath
+          if (!imagePath.match(/^[a-zA-Z]:[/\\]/) && !imagePath.startsWith('/')) {
+            // Relative path - resolve from current file's directory
+            fullPath = `${currentDir}/${imagePath}`.replace(/\\/g, '/')
+          }
+
+          console.log('[ImageLoader] Loading image:', { imagePath, fullPath })
+          const base64 = await loadImageAsBase64(fullPath)
+          if (base64) {
+            console.log('[ImageLoader] Loaded successfully:', imagePath, base64.substring(0, 50) + '...')
+            newPatterns.set(imagePath, base64)
+          } else {
+            console.warn('[ImageLoader] loadImageAsBase64 returned null for:', fullPath)
+          }
+        } catch (err) {
+          console.error('[ImageLoader] Failed to load image:', imagePath, err)
+        }
+      }
+
+      console.log('[ImageLoader] Setting patterns, count:', newPatterns.size)
+      setImagePatterns(newPatterns)
+    }
+
+    loadImages()
+  }, [sourceCode, currentFile, loadImageAsBase64])
 
   // Global shortcut for stopping script (Shift+Alt+C)
   // スクリプト停止用グローバルショートカット (Shift+Alt+C)
@@ -225,15 +349,21 @@ function App() {
    * コンソールメッセージを追加
    */
   const addConsoleMessage = useCallback((level: ConsoleEntry['level'], message: string) => {
-    setConsoleOutput((prev) => [
-      ...prev,
-      {
+    const MAX_CONSOLE_MESSAGES = 1000
+    setConsoleOutput((prev) => {
+      const newEntry = {
         id: uuidv4(),
         timestamp: new Date(),
         level,
         message,
-      },
-    ])
+      }
+      // Limit messages to prevent memory leak
+      const newMessages = [...prev, newEntry]
+      if (newMessages.length > MAX_CONSOLE_MESSAGES) {
+        return newMessages.slice(-MAX_CONSOLE_MESSAGES)
+      }
+      return newMessages
+    })
   }, [])
 
   /**
@@ -569,6 +699,8 @@ function App() {
                 currentFile={currentFile}
                 pythonVersion={pythonVersion}
                 onSourceCodeChange={setSourceCode}
+                onSave={handleSaveFile}
+                imagePatterns={imagePatterns}
               />
             )}
           </div>
