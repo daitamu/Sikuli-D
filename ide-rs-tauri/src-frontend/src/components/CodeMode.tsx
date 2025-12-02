@@ -2,6 +2,7 @@ import { useCallback, useState, useEffect, useRef } from 'react'
 import { Copy, Check, Save, Image as ImageIcon } from 'lucide-react'
 import Editor, { OnMount, BeforeMount } from '@monaco-editor/react'
 import type { editor } from 'monaco-editor'
+import { widgetLogger } from '../utils/logger'
 
 interface CodeModeProps {
   sourceCode: string
@@ -129,7 +130,7 @@ export function CodeMode({ sourceCode, currentFile, pythonVersion, onSourceCodeC
     const editorInstance = editorRef.current
     const monaco = monacoRef.current
 
-    console.log('[ImageWidget] updateImageWidgets called', {
+    widgetLogger.debug('updateImageWidgets called', {
       hasEditor: !!editorInstance,
       hasMonaco: !!monaco,
       hasImagePatterns: !!patterns,
@@ -152,11 +153,11 @@ export function CodeMode({ sourceCode, currentFile, pythonVersion, onSourceCodeC
     const positions = findImagePositions(localCode)
     const newDecorations: editor.IModelDeltaDecoration[] = []
 
-    console.log('[ImageWidget] positions found:', positions)
+    widgetLogger.debug('positions found:', positions)
 
     positions.forEach((pos, index) => {
       const imageData = patterns.get(pos.imagePath)
-      console.log('[ImageWidget] checking image:', pos.imagePath, 'hasData:', !!imageData)
+      widgetLogger.debug('checking image:', pos.imagePath, 'hasData:', !!imageData)
       if (!imageData) return
 
       // Create decoration to highlight image path
@@ -194,7 +195,7 @@ export function CodeMode({ sourceCode, currentFile, pythonVersion, onSourceCodeC
 
       editorInstance.addContentWidget(widget)
       widgetsRef.current.push(widget)
-      console.log('[ImageWidget] Widget added:', widgetId, 'at line', pos.lineNumber, 'col', pos.endColumn)
+      widgetLogger.debug('Widget added:', widgetId, 'at line', pos.lineNumber, 'col', pos.endColumn)
     })
 
     // Apply decorations
@@ -206,7 +207,7 @@ export function CodeMode({ sourceCode, currentFile, pythonVersion, onSourceCodeC
   const imagePatternsSize = imagePatterns?.size ?? 0
   useEffect(() => {
     // Only update if we have patterns loaded or need to clear
-    console.log('[ImageWidget] useEffect triggered, imagePatternsSize:', imagePatternsSize)
+    widgetLogger.debug('useEffect triggered, imagePatternsSize:', imagePatternsSize)
     updateImageWidgets(imagePatterns)
   }, [updateImageWidgets, imagePatterns, imagePatternsSize])
 

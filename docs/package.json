@@ -1,0 +1,20 @@
+{
+  "name": "sikuli-d-docs",
+  "version": "1.0.0",
+  "description": "Documentation for Sikuli-D GUI Automation Tool",
+  "scripts": {
+    "dev": "vitepress dev",
+    "build": "vitepress build",
+    "preview": "vitepress preview"
+  },
+  "devDependencies": {
+    "vitepress": "^1.0.0"
+  },
+  "keywords": [
+    "sikuli",
+    "automation",
+    "documentation"
+  ],
+  "author": "Sikuli-D Team",
+  "license": "Apache-2.0"
+}

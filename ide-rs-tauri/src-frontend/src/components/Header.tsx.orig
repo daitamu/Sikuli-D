@@ -1,4 +1,4 @@
-import { Play, Square, Settings, LayoutList, GitBranch, FolderOpen, Save, FilePlus, Code, Menu } from 'lucide-react'
+import { Play, Square, Settings, LayoutList, GitBranch, FolderOpen, Save, FilePlus, Code } from 'lucide-react'
 import type { ViewMode } from '../types/script'
 
 interface HeaderProps {
@@ -15,7 +15,6 @@ interface HeaderProps {
   hideMode: boolean  // Whether to hide IDE when script runs
   onHideModeChange: (hide: boolean) => void
   version: string  // IDE version from Rust backend
-  onToggleSidebar?: () => void  // Toggle sidebar visibility
 }
 
 /**
@@ -35,34 +34,23 @@ export function Header({
   hideMode,
   onHideModeChange,
   version,
-  onToggleSidebar,
 }: HeaderProps) {
   return (
-    <header className="h-14 min-w-[640px] bg-dark-surface/80 backdrop-blur border-b border-dark-border flex items-center justify-between px-2 sm:px-4 drag z-50">
+    <header className="h-14 bg-dark-surface/80 backdrop-blur border-b border-dark-border flex items-center justify-between px-4 drag z-50">
       {/* App Title & File Controls */}
-      <div className="flex items-center gap-2 sm:gap-4 lg:gap-6 no-drag">
-        {/* Sidebar Toggle - visible on small screens */}
-        {onToggleSidebar && (
-          <button
-            onClick={onToggleSidebar}
-            className="lg:hidden p-2 text-gray-400 hover:text-gray-100 hover:bg-dark-hover rounded-md transition-all duration-200"
-            title="Toggle Sidebar"
-          >
-            <Menu size={18} strokeWidth={1.5} />
-          </button>
-        )}
-        <div className="flex items-center gap-2 sm:gap-2.5">
-          <div className="w-7 h-7 sm:w-8 sm:h-8 bg-sikuli-500 rounded-lg flex items-center justify-center shadow-lg shadow-sikuli-500/20">
-             <span className="text-white font-bold text-base sm:text-lg">S</span>
+      <div className="flex items-center gap-6 no-drag">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 bg-sikuli-500 rounded-lg flex items-center justify-center shadow-lg shadow-sikuli-500/20">
+             <span className="text-white font-bold text-lg">S</span>
           </div>
-          <div className="hidden sm:flex flex-col leading-none">
+          <div className="flex flex-col leading-none">
             <h1 className="text-sm font-bold text-gray-200 tracking-wide">SIKULI-D</h1>
             <span className="text-[10px] text-sikuli-400 font-mono">v{version}</span>
           </div>
         </div>
 
         {/* File Operations */}
-        <div className="flex items-center gap-1 border-l border-dark-border pl-2 sm:pl-4">
+        <div className="flex items-center gap-1 border-l border-dark-border pl-4">
           <button
             onClick={onNewFile}
             className="p-2 text-gray-400 hover:text-gray-100 hover:bg-dark-hover rounded-md transition-all duration-200"
@@ -88,7 +76,7 @@ export function Header({
 
         {/* Current File Name */}
         {currentFile && (
-          <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-dark-bg/50 rounded-md border border-dark-border/50 max-w-32 xl:max-w-64">
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-dark-bg/50 rounded-md border border-dark-border/50 max-w-64">
              <span className="text-xs text-gray-400 font-mono truncate" title={currentFile}>
                {currentFile.split(/[/\\]/).pop()}
              </span>
@@ -97,23 +85,13 @@ export function Header({
       </div>
 
       {/* Center Controls */}
-      <div className="flex items-center gap-2 sm:gap-4 lg:gap-6 no-drag">
-        {/* Sidebar Toggle - visible on small screens */}
-        {onToggleSidebar && (
-          <button
-            onClick={onToggleSidebar}
-            className="lg:hidden p-2 text-gray-400 hover:text-gray-100 hover:bg-dark-hover rounded-md transition-all duration-200"
-            title="Toggle Sidebar"
-          >
-            <Menu size={18} strokeWidth={1.5} />
-          </button>
-        )}
+      <div className="flex items-center gap-6 no-drag">
         {/* View Mode Toggle - Segmented Control */}
-        <div className="flex items-center bg-dark-bg p-0.5 sm:p-1 rounded-lg border border-dark-border/50 shadow-inner">
+        <div className="flex items-center bg-dark-bg p-1 rounded-lg border border-dark-border/50 shadow-inner">
           <button
             onClick={() => isSimpleModeAvailable && onViewModeChange('simple')}
             disabled={!isSimpleModeAvailable}
-            className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-md text-xs font-medium transition-all duration-200 ${
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200 ${
               viewMode === 'simple'
                 ? 'bg-dark-surface text-sikuli-400 shadow-sm'
                 : !isSimpleModeAvailable
@@ -123,12 +101,12 @@ export function Header({
             title={isSimpleModeAvailable ? 'Simple Mode' : 'Simple Mode (unavailable for external scripts)'}
           >
             <LayoutList size={14} />
-            <span className="hidden sm:inline">Simple</span>
+            <span>Simple</span>
           </button>
           <button
             onClick={() => isSimpleModeAvailable && onViewModeChange('flow')}
             disabled={!isSimpleModeAvailable}
-            className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-md text-xs font-medium transition-all duration-200 ${
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200 ${
               viewMode === 'flow'
                 ? 'bg-dark-surface text-sikuli-400 shadow-sm'
                 : !isSimpleModeAvailable
@@ -138,11 +116,11 @@ export function Header({
             title={isSimpleModeAvailable ? 'Flow Mode' : 'Flow Mode (unavailable for external scripts)'}
           >
             <GitBranch size={14} />
-            <span className="hidden sm:inline">Flow</span>
+            <span>Flow</span>
           </button>
           <button
             onClick={() => onViewModeChange('code')}
-            className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-md text-xs font-medium transition-all duration-200 ${
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200 ${
               viewMode === 'code'
                 ? 'bg-dark-surface text-sikuli-400 shadow-sm'
                 : 'text-gray-500 hover:text-gray-300 hover:bg-dark-hover/50'
@@ -150,7 +128,7 @@ export function Header({
             title="Code Mode"
           >
             <Code size={14} />
-            <span className="hidden sm:inline">Code</span>
+            <span>Code</span>
           </button>
         </div>
 
@@ -159,26 +137,27 @@ export function Header({
           {isRunning ? (
             <button
               onClick={onStop}
-              className="group flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 text-red-500 rounded-md transition-all duration-200 shadow-sm"
+              className="group flex items-center gap-2 px-4 py-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 text-red-500 rounded-md transition-all duration-200 shadow-sm"
               title="Stop Script (Shift+Alt+C)"
             >
               <Square size={14} className="fill-current" />
-              <span className="hidden sm:inline text-xs font-bold uppercase tracking-wider">Stop</span>
+              <span className="text-xs font-bold uppercase tracking-wider">Stop</span>
             </button>
           ) : (
             <button
               onClick={onRun}
-              className="group flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 bg-sikuli-500 hover:bg-sikuli-400 text-white rounded-md transition-all duration-200 shadow-lg shadow-sikuli-500/20 hover:shadow-sikuli-500/30 hover:-translate-y-0.5 active:translate-y-0"
+              className="group flex items-center gap-2 px-4 py-1.5 bg-sikuli-500 hover:bg-sikuli-400 text-white rounded-md transition-all duration-200 shadow-lg shadow-sikuli-500/20 hover:shadow-sikuli-500/30 hover:-translate-y-0.5 active:translate-y-0"
               title="Run Script"
             >
               <Play size={14} className="fill-current" />
-              <span className="hidden sm:inline text-xs font-bold uppercase tracking-wider">Run</span>
+              <span className="text-xs font-bold uppercase tracking-wider">Run</span>
             </button>
           )}
         </div>
 
         {/* Hide Mode Checkbox */}
-        <label className="hidden md:flex items-center gap-2 cursor-pointer select-none group"
+        <label
+          className="flex items-center gap-2 cursor-pointer select-none group"
           title="Hide IDE window when script runs (Shift+Alt+C to stop and restore)"
         >
           <div className="relative flex items-center">
@@ -192,7 +171,7 @@ export function Header({
               <polyline points="20 6 9 17 4 12"></polyline>
             </svg>
           </div>
-          <span className="hidden lg:inline text-xs text-gray-500 group-hover:text-gray-300 transition-colors">Hide on Run</span>
+          <span className="text-xs text-gray-500 group-hover:text-gray-300 transition-colors">Hide on Run</span>
         </label>
       </div>
 

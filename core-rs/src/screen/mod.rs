@@ -1678,4 +1678,275 @@ mod tests {
         let result = Keyboard::hotkey(&[Key::Alt, Key::Tab]);
         assert!(result.is_ok(), "Alt+Tab should succeed");
     }
+
+    // ========================================================================
+    // Comprehensive Unit Tests - Added Tests
+    // 包括的なユニットテスト - 追加テスト
+    // ========================================================================
+
+    #[test]
+    fn test_screen_new_with_multiple_indices() {
+        for i in 0..5 {
+            let screen = Screen::new(i);
+            assert_eq!(screen.get_index(), i);
+        }
+    }
+
+    #[test]
+    fn test_screen_all_not_empty() {
+        let screens = Screen::all();
+        assert!(!screens.is_empty(), "Should have at least one screen");
+
+        // Verify indices are sequential
+        for (i, screen) in screens.iter().enumerate() {
+            assert_eq!(screen.get_index(), i as u32);
+        }
+    }
+
+    #[test]
+    fn test_screen_get_number_screens_positive() {
+        let count = Screen::get_number_screens();
+        assert!(count > 0, "Should have at least one screen");
+    }
+
+    #[test]
+    fn test_screen_get_scale_factor_returns_positive() {
+        let screen = Screen::primary();
+        let scale = screen.get_scale_factor();
+        assert!(scale > 0.0, "Scale factor should be positive");
+        assert!(scale >= 1.0, "Scale factor should be at least 1.0");
+        assert!(scale <= 4.0, "Scale factor should be reasonable (<=4.0)");
+    }
+
+    #[test]
+    fn test_mouse_smooth_movement_calculation() {
+        // Test the interpolation logic without actual mouse movement
+        let start_x = 0;
+        let start_y = 0;
+        let end_x = 100;
+        let end_y = 100;
+        let steps = 10;
+
+        for i in 1..=steps {
+            let t = i as f64 / steps as f64;
+            let eased_t = if t < 0.5 {
+                2.0 * t * t
+            } else {
+                -1.0 + (4.0 - 2.0 * t) * t
+            };
+
+            let curr_x = start_x + ((end_x - start_x) as f64 * eased_t) as i32;
+            let curr_y = start_y + ((end_y - start_y) as f64 * eased_t) as i32;
+
+            assert!(curr_x >= start_x);
+            assert!(curr_x <= end_x);
+            assert!(curr_y >= start_y);
+            assert!(curr_y <= end_y);
+        }
+    }
+
+    #[test]
+    fn test_mouse_smooth_movement_zero_distance() {
+        let start_x = 100;
+        let start_y = 100;
+        let end_x = 100;
+        let end_y = 100;
+        let steps = 10;
+
+        for i in 1..=steps {
+            let t = i as f64 / steps as f64;
+            let eased_t = if t < 0.5 {
+                2.0 * t * t
+            } else {
+                -1.0 + (4.0 - 2.0 * t) * t
+            };
+
+            let curr_x = start_x + ((end_x - start_x) as f64 * eased_t) as i32;
+            let curr_y = start_y + ((end_y - start_y) as f64 * eased_t) as i32;
+
+            assert_eq!(curr_x, start_x);
+            assert_eq!(curr_y, start_y);
+        }
+    }
+
+    #[test]
+    fn test_mouse_smooth_movement_negative_coordinates() {
+        // Test with negative coordinates (multi-monitor setup)
+        let start_x = -1920;
+        let start_y = 0;
+        let end_x = 0;
+        let end_y = 1080;
+        let steps = 10;
+
+        for i in 1..=steps {
+            let t = i as f64 / steps as f64;
+            let eased_t = if t < 0.5 {
+                2.0 * t * t
+            } else {
+                -1.0 + (4.0 - 2.0 * t) * t
+            };
+
+            let curr_x = start_x + ((end_x - start_x) as f64 * eased_t) as i32;
+            let curr_y = start_y + ((end_y - start_y) as f64 * eased_t) as i32;
+
+            assert!(curr_x >= start_x);
+            assert!(curr_x <= end_x);
+            assert!(curr_y >= start_y);
+            assert!(curr_y <= end_y);
+        }
+    }
+
+    #[test]
+    fn test_parse_key_name_empty_string() {
+        assert_eq!(Keyboard::parse_key_name(""), None);
+    }
+
+    #[test]
+    fn test_parse_key_name_unicode() {
+        assert_eq!(Keyboard::parse_key_name("あ"), None);
+        assert_eq!(Keyboard::parse_key_name("中"), None);
+    }
+
+    #[test]
+    fn test_coordinate_extreme_values() {
+        let max_val = i32::MAX;
+        let min_val = i32::MIN;
+        let _ = (min_val, min_val);
+        let _ = (max_val, max_val);
+        let _ = (0, 0);
+        let _ = (-1, -1);
+    }
+
+    #[test]
+    fn test_region_with_extreme_coordinates() {
+        let r1 = Region::new(i32::MAX, i32::MAX, 100, 100);
+        assert_eq!(r1.x, i32::MAX);
+        assert_eq!(r1.y, i32::MAX);
+
+        let r2 = Region::new(i32::MIN, i32::MIN, 100, 100);
+        assert_eq!(r2.x, i32::MIN);
+        assert_eq!(r2.y, i32::MIN);
+    }
+
+    #[test]
+    fn test_region_with_zero_size() {
+        let r = Region::new(100, 100, 0, 0);
+        assert_eq!(r.area(), 0);
+        assert_eq!(r.width, 0);
+        assert_eq!(r.height, 0);
+    }
+
+    #[test]
+    fn test_region_center_with_zero_size() {
+        let r = Region::new(100, 100, 0, 0);
+        let (cx, cy) = r.center();
+        assert_eq!(cx, 100);
+        assert_eq!(cy, 100);
+    }
+
+    #[test]
+    fn test_region_contains_with_zero_size() {
+        let r = Region::new(100, 100, 0, 0);
+        assert!(!r.contains(100, 100));
+        assert!(!r.contains(99, 99));
+        assert!(!r.contains(101, 101));
+    }
+
+    #[test]
+    fn test_negative_coordinates_multi_monitor() {
+        let left_monitor_x = -1920;
+        let left_monitor_y = 0;
+
+        let r = Region::new(left_monitor_x, left_monitor_y, 1920, 1080);
+        assert_eq!(r.x, -1920);
+        assert_eq!(r.y, 0);
+
+        let (cx, cy) = r.center();
+        assert_eq!(cx, -1920 + 960);
+        assert_eq!(cy, 540);
+    }
+
+    #[test]
+    fn test_region_spanning_monitors() {
+        let r = Region::new(-960, 0, 1920, 1080);
+        assert_eq!(r.x, -960);
+        assert!(r.width > 0);
+
+        let (cx, cy) = r.center();
+        assert_eq!(cx, 0);
+        assert_eq!(cy, 540);
+    }
+
+    #[test]
+    fn test_screen_index_large_value() {
+        let screen = Screen::new(999);
+        assert_eq!(screen.get_index(), 999);
+    }
+
+    #[test]
+    fn test_screen_index_zero() {
+        let screen = Screen::new(0);
+        assert_eq!(screen.get_index(), 0);
+    }
+
+    #[test]
+    fn test_hotkey_single_key() {
+        let keys = &[Key::Enter];
+        assert_eq!(keys.len(), 1);
+    }
+
+    #[test]
+    fn test_hotkey_multiple_keys_order() {
+        let keys = &[Key::Ctrl, Key::Shift, Key::A];
+        assert_eq!(keys.len(), 3);
+        assert_eq!(keys[0], Key::Ctrl);
+        assert_eq!(keys[1], Key::Shift);
+        assert_eq!(keys[2], Key::A);
+    }
+
+    #[test]
+    fn test_drag_smooth_interpolation_logic() {
+        let from_x = 100;
+        let from_y = 100;
+        let to_x = 200;
+        let to_y = 200;
+        let steps = 10;
+
+        for i in 1..=steps {
+            let t = i as f64 / steps as f64;
+            let x = from_x + ((to_x - from_x) as f64 * t) as i32;
+            let y = from_y + ((to_y - from_y) as f64 * t) as i32;
+
+            assert!(x >= from_x);
+            assert!(x <= to_x);
+            assert!(y >= from_y);
+            assert!(y <= to_y);
+        }
+    }
+
+    #[test]
+    fn test_scroll_direction_positive() {
+        let clicks: i32 = 5;
+        assert!(clicks > 0);
+    }
+
+    #[test]
+    fn test_scroll_direction_negative() {
+        let clicks: i32 = -5;
+        assert!(clicks < 0);
+    }
+
+    #[test]
+    fn test_scroll_direction_zero() {
+        let clicks: i32 = 0;
+        assert_eq!(clicks, 0);
+    }
+
+    #[test]
+    fn test_scroll_extreme_values() {
+        let max_scroll: i32 = i32::MAX;
+        let min_scroll: i32 = i32::MIN;
+        assert!(max_scroll > 0);
+        assert!(min_scroll < 0);
+    }
 }

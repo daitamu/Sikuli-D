@@ -1,4 +1,5 @@
 import {
+  X,
   MousePointer2,
   Type,
   Clock,
@@ -12,6 +13,8 @@ import type { CommandType, ToolboxItem } from '../types/script'
 
 interface ToolboxProps {
   onAddCommand: (type: CommandType) => void
+  isVisible?: boolean
+  onClose?: () => void
 }
 
 /**
@@ -90,7 +93,7 @@ const iconMap: Record<string, LucideIcon> = {
  * Toolbox Component - Sidebar with draggable commands
  * ツールボックスコンポーネント - ドラッグ可能なコマンドのサイドバー
  */
-export function Toolbox({ onAddCommand }: ToolboxProps) {
+export function Toolbox({ onAddCommand, isVisible = true, onClose }: ToolboxProps) {
   const logicItems = toolboxItems.filter((item) => item.category === 'logic')
   const actionItems = toolboxItems.filter((item) => item.category === 'actions')
 
@@ -120,10 +123,19 @@ export function Toolbox({ onAddCommand }: ToolboxProps) {
   }
 
   return (
-    <aside className="w-56 bg-dark-sidebar border-r border-dark-border flex flex-col overflow-hidden">
+    <aside className={`w-56 bg-dark-sidebar border-r border-dark-border flex flex-col overflow-hidden transition-transform duration-300 ${
+      isVisible ? 'translate-x-0' : '-translate-x-full'
+    } lg:translate-x-0 absolute lg:relative z-40 h-full`}>
       {/* Header / ヘッダー */}
-      <div className="px-4 py-3 border-b border-dark-border/50 bg-dark-sidebar">
+      <div className="px-4 py-3 border-b border-dark-border/50 bg-dark-sidebar flex items-center justify-between">
         <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Toolbox</h2>
+        <button
+          onClick={onClose}
+          className="lg:hidden p-1 text-gray-400 hover:text-gray-100 hover:bg-dark-hover rounded transition-colors"
+          title="Close"
+        >
+          <X size={14} />
+        </button>
       </div>
 
       {/* Scrollable Content / スクロール可能なコンテンツ */}

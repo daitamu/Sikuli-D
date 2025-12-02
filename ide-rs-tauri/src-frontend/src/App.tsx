@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react'
 import { v4 as uuidv4 } from 'uuid'
+import { appLogger, imageLogger, debugApiLogger } from './utils/logger'
 import { Header } from './components/Header'
 import { Toolbox } from './components/Toolbox'
 import { SimpleMode } from './components/SimpleMode'
@@ -58,6 +59,9 @@ function App() {
 
   // Property panel visibility / プロパティパネル表示状態
   const [isPropertyPanelVisible, setIsPropertyPanelVisible] = useState(true)
+
+  // Toolbox sidebar visibility / ツールボックスサイドバー表示状態
+  const [isSidebarVisible, setIsSidebarVisible] = useState(true)
 
   // Hide mode state / Hideモード状態
   // When enabled, IDE window minimizes when script runs
@@ -193,7 +197,7 @@ function App() {
         setViewMode,
         skipImageLoader: (skip: boolean) => {
           skipImageLoaderRef.current = skip
-          console.log('[Debug] skipImageLoader set to:', skip)
+          debugApiLogger.debug('skipImageLoader set to:', skip)
         },
         getCurrentState: () => ({
           currentFile,
@@ -204,7 +208,7 @@ function App() {
           skipImageLoader: skipImageLoaderRef.current,
         }),
       }
-      console.log('[Debug] Debug API exposed on window.__SIKULID_DEBUG__')
+      debugApiLogger.debug('Debug API exposed on window.__SIKULID_DEBUG__')
     }
     return () => {
       if (import.meta.env.DEV) {
@@ -222,16 +226,16 @@ function App() {
   // Load images referenced in source code
   // ソースコード内で参照されている画像を読み込み
   useEffect(() => {
-    console.log('[ImageLoader] Effect triggered:', { sourceCode: sourceCode?.substring(0, 100), currentFile, skipImageLoader: skipImageLoaderRef.current })
+    imageLogger.debug('Effect triggered:', { sourceCode: sourceCode?.substring(0, 100), currentFile, skipImageLoader: skipImageLoaderRef.current })
 
     // Skip if flag is set (for testing)
     if (skipImageLoaderRef.current) {
-      console.log('[ImageLoader] Skipped (skipImageLoader flag is set)')
+      imageLogger.debug('Skipped (skipImageLoader flag is set)')
       return
     }
 
     if (!sourceCode || !currentFile) {
-      console.log('[ImageLoader] No sourceCode or currentFile, clearing patterns')
+      imageLogger.debug('No sourceCode or currentFile, clearing patterns')
       setImagePatterns(new Map())
       return
     }
@@ -246,7 +250,7 @@ function App() {
       }
     }
 
-    console.log('[ImageLoader] Detected images:', images)
+    imageLogger.debug('Detected images:', images)
 
     if (images.length === 0) {
       setImagePatterns(new Map())
@@ -269,7 +273,7 @@ function App() {
       // Regular file - get parent directory
       currentDir = currentFile.replace(/[/\\][^/\\]*$/, '')
     }
-    console.log('[ImageLoader] Current directory:', currentDir, '(from file:', currentFile, ')')
+    imageLogger.debug('Current directory:', currentDir, '(from file:', currentFile, ')')
 
     // Load images asynchronously
     const loadImages = async () => {
@@ -284,20 +288,20 @@ function App() {
             fullPath = `${currentDir}/${imagePath}`.replace(/\\/g, '/')
           }
 
-          console.log('[ImageLoader] Loading image:', { imagePath, fullPath })
+          imageLogger.debug('Loading image:', { imagePath, fullPath })
           const base64 = await loadImageAsBase64(fullPath)
           if (base64) {
-            console.log('[ImageLoader] Loaded successfully:', imagePath, base64.substring(0, 50) + '...')
+            imageLogger.debug('Loaded successfully:', imagePath, base64.substring(0, 50) + '...')
             newPatterns.set(imagePath, base64)
           } else {
-            console.warn('[ImageLoader] loadImageAsBase64 returned null for:', fullPath)
+            imageLogger.warn('loadImageAsBase64 returned null for:', fullPath)
           }
         } catch (err) {
-          console.error('[ImageLoader] Failed to load image:', imagePath, err)
+          imageLogger.error('Failed to load image:', imagePath, err)
         }
       }
 
-      console.log('[ImageLoader] Setting patterns, count:', newPatterns.size)
+      imageLogger.debug('Setting patterns, count:', newPatterns.size)
       setImagePatterns(newPatterns)
     }
 
@@ -316,7 +320,7 @@ function App() {
 
         // Register Shift+Alt+C shortcut
         await register('Shift+Alt+C', async () => {
-          console.log('Global shortcut triggered: Shift+Alt+C')
+          appLogger.debug('Global shortcut triggered: Shift+Alt+C')
           // Stop all scripts and restore window
           const success = await stopAllScripts()
           if (success) {
@@ -534,10 +538,10 @@ function App() {
   const handleOpenFile = useCallback(async () => {
     addConsoleMessage('info', 'Opening file...')
     const result = await openFileDialog()
-    console.log('openFileDialog result:', result)
+    appLogger.debug('openFileDialog result:', result)
     if (result) {
-      console.log('Script lines count:', result.script.length)
-      console.log('Script data:', JSON.stringify(result.script, null, 2).substring(0, 500))
+      appLogger.debug('Script lines count:', result.script.length)
+      appLogger.debug('Script data:', JSON.stringify(result.script, null, 2).substring(0, 500))
       const scriptToSet = result.script.length > 0 ? result.script : [
         {
           id: uuidv4(),
@@ -545,7 +549,7 @@ function App() {
           flowConfig: { x: 100, y: 100 },
         },
       ]
-      console.log('Setting script with', scriptToSet.length, 'lines')
+      appLogger.debug('Setting script with', scriptToSet.length, 'lines')
       setScript(scriptToSet)
       setCurrentFile(result.path)
       setSelectedLineId(null)
@@ -572,7 +576,7 @@ function App() {
         addConsoleMessage('info', `Opened: ${result.path}`)
       }
     } else {
-      console.log('openFileDialog returned null - user cancelled or error')
+      appLogger.debug('openFileDialog returned null - user cancelled or error')
     }
   }, [addConsoleMessage, openFileDialog])
 
@@ -649,7 +653,7 @@ function App() {
   }, [script, selectedLineId])
 
   return (
-    <div className="h-full flex flex-col bg-dark-bg text-gray-200">
+    <div className="h-full min-w-[640px] flex flex-col bg-dark-bg text-gray-200">
       {/* Header / ヘッダー */}
       <Header
         viewMode={viewMode}
@@ -665,12 +669,13 @@ function App() {
         hideMode={hideMode}
         onHideModeChange={setHideMode}
         version={ideVersion}
+        onToggleSidebar={() => setIsSidebarVisible(!isSidebarVisible)}
       />
 
       {/* Main Content / メインコンテンツ */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden relative">
         {/* Toolbox Sidebar / ツールボックスサイドバー */}
-        <Toolbox onAddCommand={addCommand} />
+        <Toolbox onAddCommand={addCommand} isVisible={isSidebarVisible} onClose={() => setIsSidebarVisible(false)} />
 
         {/* Editor Area / エディタエリア */}
         <div className="flex-1 flex flex-col overflow-hidden">

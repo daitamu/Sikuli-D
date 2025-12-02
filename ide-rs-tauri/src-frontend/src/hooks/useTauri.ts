@@ -5,6 +5,7 @@ import { open, save } from '@tauri-apps/plugin-dialog'
 import { readTextFile, writeTextFile, exists, mkdir, readFile } from '@tauri-apps/plugin-fs'
 import type { ScriptLine, ConsoleEntry } from '../types/script'
 import { parsePythonScript, detectPythonVersion, isSimpleModeScript, addSimpleModeHeader, type PythonVersion } from '../utils/pythonParser'
+import { tauriLogger } from '../utils/logger'
 
 /**
  * Capture result from backend
@@ -231,18 +232,18 @@ export function useTauri() {
   const openFileDialog = useCallback(async (): Promise<{ path: string; script: ScriptLine[]; sourceCode?: string; pythonVersion?: PythonVersion; isSimpleMode?: boolean } | null> => {
     try {
       // Open directory selection dialog for .sikuli folders
-      console.log('Opening directory selection dialog...')
+      tauriLogger.debug('Opening directory selection dialog...')
       const selected = await open({
         multiple: false,
         directory: true, // Select directories (folders)
         title: 'Open .sikuli Folder',
       })
 
-      console.log('Dialog result:', selected)
+      tauriLogger.debug('Dialog result:', selected)
       if (!selected) return null
 
       const folderPath = typeof selected === 'string' ? selected : selected[0]
-      console.log('Selected folder path:', folderPath)
+      tauriLogger.debug('Selected folder path:', folderPath)
 
       // Check if it's a .sikuli directory
       if (folderPath.endsWith('.sikuli')) {
@@ -250,42 +251,42 @@ export function useTauri() {
         const pyName = getSikuliScriptName(folderPath)
         const pyPath = `${folderPath}/${pyName}`
 
-        console.log('Checking for Python script at:', pyPath)
+        tauriLogger.debug('Checking for Python script at:', pyPath)
         const pyExists = await exists(pyPath)
-        console.log('Python script exists:', pyExists)
+        tauriLogger.debug('Python script exists:', pyExists)
 
         if (pyExists) {
           // Read Python source code (this is the only source of truth)
           const sourceCode = await readTextFile(pyPath)
-          console.log('Python content length:', sourceCode.length)
+          tauriLogger.debug('Python content length:', sourceCode.length)
 
           // Detect Python version for display (no conversion - runtime does that)
           const pythonVersion = detectPythonVersion(sourceCode)
-          console.log('Detected Python version:', pythonVersion)
+          tauriLogger.debug('Detected Python version:', pythonVersion)
 
           // Detect if script was created in Simple mode
           const isSimpleMode = isSimpleModeScript(sourceCode)
-          console.log('Is Simple mode script:', isSimpleMode)
+          tauriLogger.debug('Is Simple mode script:', isSimpleMode)
 
           // Parse Python to ScriptLine[] for Simple/Flow mode display
-          console.log(`Parsing Python script: ${pyPath}`)
+          tauriLogger.debug(`Parsing Python script: ${pyPath}`)
           const script = parsePythonScript(sourceCode, folderPath)
-          console.log('Parsed script lines:', script.length)
+          tauriLogger.debug('Parsed script lines:', script.length)
 
           return { path: folderPath, script, sourceCode, pythonVersion, isSimpleMode }
         }
 
-        console.error(`No Python script found in ${folderPath}. Expected ${pyName}`)
+        tauriLogger.error(`No Python script found in ${folderPath}. Expected ${pyName}`)
         return null
       }
 
       // For non-.sikuli paths, try to load as JSON
-      console.log('Not a .sikuli folder, trying to load as JSON')
+      tauriLogger.debug('Not a .sikuli folder, trying to load as JSON')
       const content = await readTextFile(folderPath)
       const script = JSON.parse(content) as ScriptLine[]
       return { path: folderPath, script }
     } catch (error) {
-      console.error('Failed to open file:', error)
+      tauriLogger.error('Failed to open file:', error)
       return null
     }
   }, [])
